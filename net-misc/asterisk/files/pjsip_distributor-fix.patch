@@ -1,0 +1,26 @@
+--- asterisk-13.5.0/configure.ac.old	2015-11-20 14:52:39.936577400 +0100
++++ asterisk-13.5.0/configure.ac	2015-11-20 14:53:32.111577400 +0100
+@@ -457,7 +457,6 @@
+ AST_EXT_LIB_SETUP([PGSQL], [PostgreSQL], [postgres])
+ AST_EXT_LIB_SETUP([PJPROJECT], [PJPROJECT], [pjproject])
+ AST_EXT_LIB_SETUP([POPT], [popt], [popt])
+-AST_EXT_LIB_SETUP_OPTIONAL([PJ_TRANSACTION_GRP_LOCK], [PJSIP Transaction Group Lock Support], [PJPROJECT], [pjsip])
+ AST_EXT_LIB_SETUP_OPTIONAL([PJSIP_REPLACE_MEDIA_STREAM], [PJSIP Media Stream Replacement Support], [PJPROJECT], [pjsip])
+ AST_EXT_LIB_SETUP_OPTIONAL([PJSIP_GET_DEST_INFO], [pjsip_get_dest_info support], [PJPROJECT], [pjsip])
+ AST_EXT_LIB_SETUP_OPTIONAL([PJ_SSL_CERT_LOAD_FROM_FILES2], [pj_ssl_cert_load_from_files2 support], [PJPROJECT], [pjsip])
+@@ -2076,7 +2075,14 @@
+ 
+ AST_PKG_CONFIG_CHECK([PJPROJECT], [libpjproject])
+ 
+-AST_EXT_LIB_CHECK([PJ_TRANSACTION_GRP_LOCK], [pjsip], [pjsip_tsx_create_uac2], [pjsip.h], [$PJPROJECT_LIBS], [$PJPROJECT_CFLAGS])
++AC_MSG_CHECKING(if PJPROJECT has the PJSIP Transaction Group Lock Support feature)
++AC_LINK_IFELSE(
++        [AC_LANG_PROGRAM([#include <pjsip/sip_transaction.h>],
++                        [struct pjsip_transaction pj; pj.grp_lock = NULL;])],
++        AC_MSG_RESULT(yes)
++        AC_DEFINE([HAVE_PJ_TRANSACTION_GRP_LOCK], 1, [Define to 1 if PJPROJECT has the PJSIP Transaction Group Lock Support feature.]),
++        AC_MSG_RESULT(no)
++)
+ 
+ saved_cppflags="${CPPFLAGS}"
+ saved_libs="${LIBS}"
