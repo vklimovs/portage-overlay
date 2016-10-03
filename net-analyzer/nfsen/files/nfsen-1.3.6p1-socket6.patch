@@ -1,0 +1,26 @@
+diff --git a/libexec/AbuseWhois.pm b/libexec/AbuseWhois.pm
+index 5995850..8b22dcf 100644
+--- a/libexec/AbuseWhois.pm
++++ b/libexec/AbuseWhois.pm
+@@ -39,7 +39,7 @@ package AbuseWhois;
+ use strict;
+ use warnings;
+ use Socket;
+-use Socket6;
++Socket6->import(qw(pack_sockaddr_in6 unpack_sockaddr_in6 inet_pton getaddrinfo));
+ use Sys::Syslog; 
+ use IO::Socket::INET;
+ use Log;
+diff --git a/libexec/Lookup.pm b/libexec/Lookup.pm
+index 07c3744..e156bdc 100755
+--- a/libexec/Lookup.pm
++++ b/libexec/Lookup.pm
+@@ -40,7 +40,7 @@ use warnings;
+ use Socket;
+ use IO::Socket::INET;
+ use Socket;
+-use Socket6;
++Socket6->import(qw(pack_sockaddr_in6 unpack_sockaddr_in6 inet_pton getaddrinfo));
+ use AbuseWhois;
+ use Log;
+ 
