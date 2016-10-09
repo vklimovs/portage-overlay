@@ -62,8 +62,9 @@ src_prepare() {
 		-e "/^[ \t]*'peer2'/d" \
 		-i etc/nfsen-dist.conf
 
-	epatch "${FILESDIR}"/nfsen-1.3.6p1-socket6.patch
+	epatch "${FILESDIR}"/nfsen-1.3.6p1-profileadmin.php.patch
 	epatch "${FILESDIR}"/nfsen-1.3.6p1-rrd-version.patch
+	epatch "${FILESDIR}"/nfsen-1.3.6p1-socket6-inet_pton.patch
 }
 
 src_install() {
@@ -94,6 +95,8 @@ src_install() {
 	doins ${FILESDIR}/profile.dat
 
 	cp -R html/* ${D}/${MY_HTDOCSDIR}
+	cp ${FILESDIR}/conf.php ${D}/${MY_HTDOCSDIR}
+	webapp_postinst_txt en ${FILESDIR}/postinstall-en.txt
 	webapp_src_install
 
 	fowners -R ${PN}:${PN} /var/lib/${PN}

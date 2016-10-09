@@ -1,0 +1,5 @@
+nfsen is installed. You will need to
+configure it by editing the config file:
+
+${MY_INSTALLDIR}/conf.php
+

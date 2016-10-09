@@ -1,0 +1,33 @@
+diff --git a/libexec/AbuseWhois.pm b/libexec/AbuseWhois.pm
+index 5995850..d34d73c 100644
+--- a/libexec/AbuseWhois.pm
++++ b/libexec/AbuseWhois.pm
+@@ -39,7 +39,6 @@ package AbuseWhois;
+ use strict;
+ use warnings;
+ use Socket;
+-use Socket6;
+ use Sys::Syslog; 
+ use IO::Socket::INET;
+ use Log;
+@@ -378,7 +377,7 @@ sub Reverse_name($) {
+ 
+ 	my $af = $ip =~ /:/ ? PF_INET6 : PF_INET;
+ 
+-	my $hostname = scalar gethostbyaddr(inet_pton($af, $ip), $af);
++	my $hostname = scalar gethostbyaddr(Socket::inet_pton($af, $ip), $af);
+ 
+ 	if ( !defined $hostname ) {
+ 		$hostname = '<not found>';
+diff --git a/libexec/Lookup.pm b/libexec/Lookup.pm
+index 07c3744..94b0baf 100755
+--- a/libexec/Lookup.pm
++++ b/libexec/Lookup.pm
+@@ -40,7 +40,6 @@ use warnings;
+ use Socket;
+ use IO::Socket::INET;
+ use Socket;
+-use Socket6;
+ use AbuseWhois;
+ use Log;
+ 
