@@ -5,14 +5,16 @@
 To add overlay run:
 > layman -o https://raw.githubusercontent.com/vklimovs/portage-overlay/master/repository.xml -f -a vklimovs
 
-`To avoid layman warnings about missing remote overlay add repository.xml to list overlays, like so:
+```
+To avoid layman warnings about missing remote overlay add repository.xml to list overlays, like so:
 
 #            file:///var/lib/layman/my-list.xml
 
 overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml
             https://raw.githubusercontent.com/vklimovs/portage-overlay/master/repository.xml
 
-#-----------------------------------------------------------`
+#-----------------------------------------------------------
+```
 
 ## Things of note
 
