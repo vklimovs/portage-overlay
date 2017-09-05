@@ -1,10 +1,10 @@
 name = live
 group = .
-tbegin = 1474699500
-tcreate = 1474699500
-tstart = 1474699500
-tend = 1474699500
-updated = 1474699200
+tbegin = %%CURRENT_TIME%%
+tcreate = %%CURRENT_TIME%%
+tstart = %%CURRENT_TIME%%
+tend = %%CURRENT_TIME%%
+updated = %%CURRENT_TIME%%
 expire = 0
 maxsize = 0
 size = 0

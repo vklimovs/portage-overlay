@@ -70,15 +70,6 @@ src_prepare() {
 src_install() {
 	webapp_src_preinst
 
-	dodoc ChangeLog README README.plugins
-
-	insinto ${VENDOR_LIB}/${PN}
-	doins -r libexec/*
-
-	dobin bin/nfsen bin/nfsend
-
-	doinitd ${FILESDIR}/nfsen
-
 	dodir \
 		/etc/${PN} \
 		/var/lib/${PN}/plugins \
@@ -87,12 +78,24 @@ src_install() {
 		/var/lib/${PN}/var/filters \
 		/var/lib/${PN}/var/fmt
 
+	local CURRENT_TIME=$(date +%s)
+	sed -e "s:%%CURRENT_TIME%%:${CURRENT_TIME}:" ${FILESDIR}/profile.dat > ${T}/profile.dat
+	insinto /var/lib/${PN}/profiles-stat/live
+	doins ${T}/profile.dat
+
+	insinto ${VENDOR_LIB}/${PN}
+	doins -r libexec/*
 
 	insinto /etc/${PN}
 	newins etc/nfsen-dist.conf ${PN}.conf
 
-	insinto /var/lib/${PN}/profiles-stat/live
-	doins ${FILESDIR}/profile.dat
+	dobin bin/nfsen bin/nfsend
+
+	doinitd ${FILESDIR}/nfsen
+
+	doenvd ${FILESDIR}/50nfsen
+
+	dodoc ChangeLog README README.plugins
 
 	cp -R html/* ${D}/${MY_HTDOCSDIR}
 	cp ${FILESDIR}/conf.php ${D}/${MY_HTDOCSDIR}
