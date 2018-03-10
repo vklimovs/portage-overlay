@@ -1,0 +1,4 @@
+# config file for /etc/init.d/chronograf
+
+CHRONOGRAF_DATADIR="/var/lib/chronograf"
+CHRONOGRAF_OPTS="--host 127.0.0.1 --port 8888 -b ${CHRONOGRAF_DATADIR}/chronograf-v1.db -c /usr/share/chronograf/canned"

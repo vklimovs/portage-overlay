@@ -1,0 +1,2 @@
+d /var/log/influxdb 0750 influxdb influxdb -
+d /var/lib/influxdb 0750 influxdb influxdb -
