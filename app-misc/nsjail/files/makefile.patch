@@ -1,0 +1,27 @@
+diff --git a/Makefile b/Makefile
+index 105fc96..fa18d01 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,19 +21,11 @@ ifeq ($(PKG_CONFIG),)
+ $(error "Install pkg-config to make it work")
+ endif
+ 
+-CC ?= gcc
+-CXX ?= g++
+-
+-COMMON_FLAGS += -O2 -c \
+-	-D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
+-	-fPIE \
+-	-Wformat -Wformat-security -Wno-format-nonliteral \
+-	-Wall -Wextra -Werror \
+-	-Ikafel/include
++COMMON_FLAGS += -c -D_GNU_SOURCE -Ikafel/include
+ 
+ CXXFLAGS += $(COMMON_FLAGS) $(shell pkg-config --cflags protobuf) \
+-	-std=c++11 -fno-exceptions -Wno-unused -Wno-unused-parameter
+-LDFLAGS += -pie -Wl,-z,noexecstack -lpthread $(shell pkg-config --libs protobuf)
++	-std=c++11 -fno-exceptions
++LDFLAGS += -lpthread $(shell pkg-config --libs protobuf)
+ 
+ BIN = nsjail
+ LIBS = kafel/libkafel.a
