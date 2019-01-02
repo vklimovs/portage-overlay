@@ -1,2 +1,0 @@
-d /var/lib/chronograf 0750 chronograf chronograf -
-d /var/log/chronograf 0750 chronograf chronograf -
