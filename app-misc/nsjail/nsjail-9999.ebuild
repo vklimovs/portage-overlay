@@ -12,9 +12,13 @@ EGIT_REPO_URI="https://github.com/google/${PN}"
 LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE=""
+IUSE="+netlink"
 
-DEPEND="dev-libs/protobuf"
+DEPEND="
+	dev-libs/protobuf
+	netlink? ( dev-libs/libnl:3 )
+"
+
 RDEPEND="${DEPEND}"
 
 PATCHES=( "${FILESDIR}/makefile.patch" )
