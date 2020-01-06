@@ -24,7 +24,8 @@ RDEPEND=">=sys-libs/glibc-2.10
 	jemalloc? ( dev-libs/jemalloc )
 	kerberos? ( virtual/krb5 )
 	net-libs/libpcap
-	python? ( ${PYTHON_DEPS} )
+	python? ( ${PYTHON_DEPS}
+		dev-python/pybind11[${PYTHON_USEDEP}] )
 	sendmail? ( virtual/mta )
 	sys-libs/zlib
 	tcmalloc? ( dev-util/google-perftools )"
