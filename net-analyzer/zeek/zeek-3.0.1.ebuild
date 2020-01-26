@@ -4,7 +4,7 @@
 EAPI=7
 
 PYTHON_COMPAT=( python3_{6,7,8} )
-inherit cmake-utils python-single-r1
+inherit cmake python-single-r1
 
 DESCRIPTION="The Zeek Network Security Monitor"
 HOMEPAGE="https://www.zeek.org"
@@ -15,15 +15,14 @@ KEYWORDS="~amd64 ~x86"
 IUSE="curl debug geoip2 ipsumdump ipv6 jemalloc kerberos +python sendmail \
 	static-libs tcmalloc +tools +zeekctl"
 
-RDEPEND=">=sys-libs/glibc-2.10
-	dev-libs/actor-framework:0
-	dev-libs/openssl:0
+RDEPEND="dev-libs/caf:0=
+	dev-libs/openssl:0=
 	net-libs/libpcap
-	sys-libs/zlib
+	sys-libs/zlib:0=
 	curl? ( net-misc/curl )
-	geoip2? ( dev-libs/libmaxminddb )
+	geoip2? ( dev-libs/libmaxminddb:0= )
 	ipsumdump? ( net-analyzer/ipsumdump[ipv6?] )
-	jemalloc? ( dev-libs/jemalloc:0 )
+	jemalloc? ( dev-libs/jemalloc:0= )
 	kerberos? ( virtual/krb5 )
 	python? ( ${PYTHON_DEPS}
 		dev-python/pybind11[${PYTHON_USEDEP}] )
@@ -33,10 +32,7 @@ RDEPEND=">=sys-libs/glibc-2.10
 DEPEND="${RDEPEND}"
 
 BDEPEND=">=dev-lang/swig-3.0
-	>=dev-util/cmake-2.8.12
-	>=sys-devel/bison-2.5
-	>=sys-devel/gcc-4.8
-	sys-devel/flex"
+	>=sys-devel/bison-2.5"
 
 REQUIRED_USE="zeekctl? ( python )
 	python? ( ${PYTHON_REQUIRED_USE} )"
@@ -73,7 +69,7 @@ src_prepare() {
 	sed -i 's:  if (LIBKRB5_FOUND):  if (LIBKRB5_FOUND AND ENABLE_KRB5):' \
 		-i CMakeLists.txt || die
 
-	cmake-utils_src_prepare
+	cmake_src_prepare
 }
 
 src_configure() {
@@ -106,17 +102,17 @@ src_configure() {
 		-DZEEK_SPOOL_DIR="/var/spool/${PN}"
 	)
 
-	cmake-utils_src_configure
+	cmake_src_configure
 }
 
 src_install() {
-	cmake-utils_src_install
+	cmake_src_install
 
 	python_optimize
 
 	keepdir /var/log/"${PN}" /var/spool/"${PN}"/tmp
 
-	# Doesn't exist
+	# Created at runtime by zeectl
 	rm -f "${ED}"/var/spool/zeek/zeekctl-config.sh || die
 	rm -f "${ED}"/usr/share/zeekctl/scripts/zeekctl-config.sh || die
 

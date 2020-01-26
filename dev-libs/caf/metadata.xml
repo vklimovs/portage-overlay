@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-<!-- maintainer-needed -->
+    <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <maintainer type="project">
+        <email>proxy-maint@gentoo.org</email>
+        <name>Proxy Maintainers</name>
+    </maintainer>
     <use>
         <flag name="debug">Raises log-level to DEBUG, enables runtime checks and address sanitizer</flag>
         <flag name="doc">Compiles and installs the documentation as PDF and HTML</flag>
