@@ -21,7 +21,7 @@ RDEPEND="examples? ( net-misc/curl[${MULTILIB_USEDEP}] )
 	openssl? ( dev-libs/openssl:0=[${MULTILIB_USEDEP},static-libs?] )
 	opencl? ( virtual/opencl[${MULTILIB_USEDEP}] )
 	python? ( ${PYTHON_DEPS}
-		dev-python/ipython
+		dev-python/ipython[${PYTHON_USEDEP}]
 		dev-python/pybind11[${PYTHON_USEDEP}] )"
 
 DEPEND="${RDEPEND}"
@@ -37,9 +37,6 @@ RESTRICT="!test? ( test )"
 S="${WORKDIR}/actor-framework-${PV}"
 
 src_prepare() {
-	append-cflags "-std=c++11 -Wextra -Wall -pedantic"
-	append-cxxflags "-std=c++11 -Wextra -Wall -pedantic"
-
 	rm -rf libcaf_python/third_party || die
 
 	if use python; then
