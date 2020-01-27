@@ -1,17 +1,21 @@
-EAPI=5
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
 
-inherit perl-module user webapp
+EAPI=7
+
+inherit perl-module webapp
 
 MY_P=${P/_/}
 DESCRIPTION="nfsen is a graphical web based front end for the nfdump netflow tools"
 HOMEPAGE="http://nfsen.sourceforge.net/"
-SRC_URI="http://sourceforge.net/projects/nfsen/files/stable/${MY_P}/${MY_P}.tar.gz"
-
+SRC_URI="https://sourceforge.net/projects/nfsen/files/stable/${MY_P}/${MY_P}.tar.gz"
 LICENSE="BSD"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64 ~x86"
 IUSE=""
 
-RDEPEND="dev-perl/MailTools
+RDEPEND="acct-group/nfsen
+	acct-user/nfsen
+	dev-perl/MailTools
 	dev-perl/Socket6
 	>=net-analyzer/nfdump-1.6.5[nfprofile]
 	>dev-lang/php-4.1[sockets]
@@ -19,13 +23,14 @@ RDEPEND="dev-perl/MailTools
 
 S=${WORKDIR}/${MY_P}
 
-pkg_setup() {
-	webapp_pkg_setup
-	enewgroup ${PN}
-	enewuser ${PN} -1 -1 -1 ${PN}
-}
+PATCHES=(
+	"${FILESDIR}"/nfsen-1.3.6p1-profileadmin.php.patch
+	"${FILESDIR}"/nfsen-1.3.6p1-rrd-version.patch
+	"${FILESDIR}"/nfsen-1.3.6p1-socket6-inet_pton.patch
+)
 
 src_prepare() {
+	eapply_user
 	perl_set_version
 	local PERL="/usr/bin/perl"
 	local LIBEXECDIR="${VENDOR_LIB}/${PN}"
@@ -61,16 +66,12 @@ src_prepare() {
 		-e "/^[ \t]*'peer1'/d" \
 		-e "/^[ \t]*'peer2'/d" \
 		-i etc/nfsen-dist.conf
-
-	epatch "${FILESDIR}"/nfsen-1.3.6p1-profileadmin.php.patch
-	epatch "${FILESDIR}"/nfsen-1.3.6p1-rrd-version.patch
-	epatch "${FILESDIR}"/nfsen-1.3.6p1-socket6-inet_pton.patch
 }
 
 src_install() {
 	webapp_src_preinst
 
-	dodir \
+	keepdir \
 		/etc/${PN} \
 		/var/lib/${PN}/plugins \
 		/var/lib/${PN}/profiles-data/live \
@@ -79,27 +80,27 @@ src_install() {
 		/var/lib/${PN}/var/fmt
 
 	local CURRENT_TIME=$(date +%s)
-	sed -e "s:%%CURRENT_TIME%%:${CURRENT_TIME}:" ${FILESDIR}/profile.dat > ${T}/profile.dat
-	insinto /var/lib/${PN}/profiles-stat/live
-	doins ${T}/profile.dat
+	sed -e "s:%%CURRENT_TIME%%:${CURRENT_TIME}:" "${FILESDIR}"/profile.dat > "${T}"/profile.dat
+	insinto /var/lib/"${PN}"/profiles-stat/live
+	doins "${T}"/profile.dat
 
-	insinto ${VENDOR_LIB}/${PN}
+	insinto "${VENDOR_LIB}"/"${PN}"
 	doins -r libexec/*
 
-	insinto /etc/${PN}
-	newins etc/nfsen-dist.conf ${PN}.conf
+	insinto /etc/"${PN}"
+	newins etc/nfsen-dist.conf "${PN}".conf
 
 	dobin bin/nfsen bin/nfsend
 
-	doinitd ${FILESDIR}/nfsen
+	doinitd "${FILESDIR}"/nfsen
 
-	doenvd ${FILESDIR}/50nfsen
+	doenvd "${FILESDIR}"/50nfsen
 
 	dodoc ChangeLog README README.plugins
 
-	cp -R html/* ${D}/${MY_HTDOCSDIR}
-	cp ${FILESDIR}/conf.php ${D}/${MY_HTDOCSDIR}
-	webapp_postinst_txt en ${FILESDIR}/postinstall-en.txt
+	cp -R html/* "${D}"/"${MY_HTDOCSDIR}"
+	cp "${FILESDIR}"/conf.php "${D}"/"${MY_HTDOCSDIR}"
+	webapp_postinst_txt en "${FILESDIR}"/postinstall-en.txt
 	webapp_src_install
 
 	fowners -R ${PN}:${PN} /var/lib/${PN}
