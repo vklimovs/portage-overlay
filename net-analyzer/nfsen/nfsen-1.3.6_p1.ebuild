@@ -30,7 +30,7 @@ PATCHES=(
 )
 
 src_prepare() {
-	eapply_user
+	default
 	perl_set_version
 	local PERL="/usr/bin/perl"
 	local LIBEXECDIR="${VENDOR_LIB}/${PN}"
