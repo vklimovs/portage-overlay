@@ -8,5 +8,6 @@ inherit acct-user
 DESCRIPTION="user for nfsen"
 ACCT_USER_ID=469
 ACCT_USER_GROUPS=( nfsen )
+ACCT_USER_HOME="/var/lib/nfsen"
 
 acct-user_add_deps
