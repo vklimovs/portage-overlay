@@ -132,8 +132,8 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 DEPEND=">=app-text/asciidoc-8.6.10
-	acct-group/nfsen
-	acct-user/nfsen
+	acct-group/influxdb
+	acct-user/influxdb
 	app-text/xmlto"
 
 src_compile() {
