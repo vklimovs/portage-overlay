@@ -1,0 +1,48 @@
+diff --git a/Makefile.in b/Makefile.in
+index b3a5be8..2a52bf2 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -9,7 +9,7 @@ CARGS = @CARGS@
+ SNMPTGSO = /usr/lib/snmp/dlmod/snmp_netflow.so
+ SNMPCONF = /etc/snmp/snmpd.conf
+ SNMPLINE = dlmod netflow $(SNMPTGSO)
+-CC = gcc
++$(CC) ?= gcc
+ 
+ # https://www.kernel.org/doc/Documentation/kbuild/modules.txt
+ # https://www.kernel.org/doc/Documentation/kbuild/makefiles.txt
+@@ -20,29 +20,29 @@ all: pkt_netflow.ko @SNMPTARGET@
+ 
+ pkt_netflow.ko: version.h pkt_netflow.c pkt_netflow.h compat_def.h compat.h Makefile
+ 	@echo Compiling for kernel $(KVERSION)
+-	make -C $(KDIR) M=$(CURDIR) modules CONFIG_DEBUG_INFO=y
++	$(MAKE) -C $(KDIR) M=$(CURDIR) modules CONFIG_DEBUG_INFO=y
+ 	@touch $@
+ compat_def.h: gen_compat_def
+ 	./gen_compat_def > $@
+ sparse: | version.h pkt_netflow.c pkt_netflow.h compat.h Makefile
+ 	@rm -f pkt_netflow.ko pkt_netflow.o
+ 	@echo Compiling for kernel $(KVERSION)
+-	make -C $(KDIR) M=$(CURDIR) modules C=1
++	$(MAKE) -C $(KDIR) M=$(CURDIR) modules C=1
+ 	@touch pkt_netflow.ko
+ coverity:
+ 	coverity-submit -v
+ 
+ minstall: | pkt_netflow.ko
+ 	@echo " *"
+-	make -C $(KDIR) M=$(CURDIR) modules_install INSTALL_MOD_PATH=$(DESTDIR)
++	$(MAKE) -C $(KDIR) M=$(CURDIR) modules_install INSTALL_MOD_PATH=$(DESTDIR)
+ 	$(DEPMOD)
+ mclean:
+-	make -C $(KDIR) M=$(CURDIR) clean
++	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
+ clean: mclean
+ 	-rm -f *.so *.o modules.order version.h compat_def.h
+ 
+ snmp_netflow.so: snmp_netflow.c
+-	$(CC) -fPIC -shared -o $@ $< -lnetsnmp
++	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -o $@ $< -lnetsnmp
+ 
+ sinstall: | snmp_netflow.so IPT-NETFLOW-MIB.my
+ 	@echo " *"
