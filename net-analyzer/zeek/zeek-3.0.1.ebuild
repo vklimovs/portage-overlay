@@ -25,7 +25,10 @@ RDEPEND="dev-libs/caf:0=
 	jemalloc? ( dev-libs/jemalloc:0= )
 	kerberos? ( virtual/krb5 )
 	python? ( ${PYTHON_DEPS}
-		dev-python/pybind11[${PYTHON_USEDEP}] )
+		$(python_gen_cond_dep '
+			dev-python/pybind11[${PYTHON_MULTI_USEDEP}]
+		')
+	)
 	sendmail? ( virtual/mta )
 	tcmalloc? ( dev-util/google-perftools )"
 
