@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
-inherit autotools eutils
+inherit autotools
 
 DESCRIPTION="A set of tools to collect and process netflow data"
 HOMEPAGE="https://github.com/phaag/nfdump"
@@ -11,7 +11,8 @@ SRC_URI="https://github.com/phaag/nfdump/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="BSD"
 SLOT="0/1.6.19"
 KEYWORDS="~amd64 ~x86"
-IUSE="debug jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow static-libs"
+IUSE="debug +doc jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow
+	static-libs"
 REQUIRED_USE="?? ( jnat nsel )"
 
 COMMON_DEPEND="
@@ -27,6 +28,7 @@ DEPEND="
 	${COMMON_DEPEND}
 	sys-devel/flex
 	virtual/yacc
+	doc? ( app-doc/doxygen[dot] )
 "
 RDEPEND="
 	${COMMON_DEPEND}
@@ -38,11 +40,15 @@ src_prepare() {
 	default
 
 	sed -i -e 's/AM_CFLAGS = -ggdb//' bin/Makefile.am || die
+
 	eautoreconf
+
+	if use doc; then
+		doxygen -u doc/Doxyfile.in || die
+	fi
 }
 
 src_configure() {
-	# --without-ftconf is not handled well #322201
 	econf \
 		$(use ftconv && echo "--enable-ftconv --with-ftpath=/usr") \
 		$(use nfprofile && echo --enable-nfprofile) \
@@ -58,6 +64,8 @@ src_configure() {
 
 src_install() {
 	default
+
+	use doc && dodoc -r doc/html
 
 	find "${ED}" -name '*.la' -delete || die
 }
