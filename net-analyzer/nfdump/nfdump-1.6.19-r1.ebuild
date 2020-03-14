@@ -11,7 +11,7 @@ SRC_URI="https://github.com/phaag/nfdump/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="BSD"
 SLOT="0/1.6.19"
 KEYWORDS="~amd64 ~x86"
-IUSE="debug +doc jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow
+IUSE="debug doc jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow
 	static-libs"
 REQUIRED_USE="?? ( jnat nsel )"
 
