@@ -24,9 +24,7 @@ RDEPEND="acct-group/nfsen
 S=${WORKDIR}/${MY_P}
 
 PATCHES=(
-	"${FILESDIR}"/nfsen-1.3.6p1-profileadmin.php.patch
-	"${FILESDIR}"/nfsen-1.3.6p1-rrd-version.patch
-	"${FILESDIR}"/nfsen-1.3.6p1-socket6-inet_pton.patch
+	"${FILESDIR}"/"${PN}"-"${PV}"-profileadmin.php.patch
 )
 
 src_prepare() {
