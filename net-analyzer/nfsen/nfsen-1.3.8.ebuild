@@ -6,7 +6,7 @@ EAPI=7
 inherit perl-module webapp
 
 MY_P=${P/_/}
-DESCRIPTION="nfsen is a graphical web based front end for the nfdump netflow tools"
+DESCRIPTION="Graphical netflow analyzer using nfdump tools"
 HOMEPAGE="http://nfsen.sourceforge.net/"
 SRC_URI="https://sourceforge.net/projects/nfsen/files/stable/${MY_P}/${MY_P}.tar.gz"
 LICENSE="BSD"

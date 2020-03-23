@@ -14,5 +14,6 @@
     </upstream>
     <longdescription lang="en">
         NfSen is a graphical web based front end for the nfdump netflow tools.
+        NfSen can display, navigate and process netflow data.
     </longdescription>
 </pkgmetadata>
