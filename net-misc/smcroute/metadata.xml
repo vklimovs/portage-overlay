@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+    <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <maintainer type="project">
+        <email>proxy-maint@gentoo.org</email>
+        <name>Proxy Maintainers</name>
+    </maintainer>
+    <use>
+        <flag name="mrdisc">Enable multicast router discovery, described in RFC4286.</flag>
+    </use>
+    <upstream>
+        <remote-id type="github">troglobit/smcroute</remote-id>
+    </upstream>
+    <longdescription lang="en">
+        SMCRoute is a UNIX/Linux tool to manage and monitor multicast routes.
+        It supports both IPv4 and IPv6 multicast routing.
+    </longdescription>
+</pkgmetadata>
