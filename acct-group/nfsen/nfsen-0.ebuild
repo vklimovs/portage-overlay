@@ -6,4 +6,4 @@ EAPI=7
 inherit acct-group
 
 DESCRIPTION="group for nfsen"
-ACCT_GROUP_ID=469
+ACCT_GROUP_ID=-1

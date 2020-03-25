@@ -6,7 +6,7 @@ EAPI=7
 inherit acct-user
 
 DESCRIPTION="user for influxdb"
-ACCT_USER_ID=468
+ACCT_USER_ID=-1
 ACCT_USER_GROUPS=( influxdb )
 ACCT_USER_HOME="/var/lib/influxdb"
 
