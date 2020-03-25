@@ -13,12 +13,19 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="caps mrdisc systemd"
 
-RDEPEND="caps? ( sys-libs/libcap )"
+RDEPEND="acct-group/smcroute
+	acct-user/smcroute
+	caps? ( sys-libs/libcap )"
 
 DEPEND="${RDEPEND}"
 
 CONFIG_CHECK="~IP_MULTICAST ~IP_MROUTE ~IP_PIMSM_V1
 	~IP_PIMSM_V2 ~IP_MROUTE_MULTIPLE_TABLES ~IPV6_MROUTE_MULTIPLE_TABLES"
+
+PATCHES=(
+	"${FILESDIR}"/"${PN}"-"${PV}"-runstatedir.patch
+	"${FILESDIR}"/"${PN}"-"${PV}"-argument-order.patch
+)
 
 pkg_setup() {
 	linux-info_pkg_setup
@@ -31,6 +38,7 @@ src_prepare() {
 
 src_configure() {
 	econf \
+		--localstatedir="${EPREFIX}"/var \
 		$(use_enable mrdisc) \
 		$(use_with systemd) \
 		$(use_with caps libcap)
@@ -38,6 +46,10 @@ src_configure() {
 
 src_install() {
 	default
+
+	#remove compatibility wrapper
+	rm -f "${ED}"/usr/sbin/smcroute
+
 	insinto /etc
 	newins "${S}"/smcroute.conf smcroute.conf.example
 	newinitd "${FILESDIR}/${PN}-init.d" smcrouted
