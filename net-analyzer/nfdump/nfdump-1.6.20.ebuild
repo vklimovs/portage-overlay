@@ -36,10 +36,6 @@ RDEPEND="
 "
 DOCS=( AUTHORS ChangeLog README.md )
 
-PATCHES=(
-	"${FILESDIR}"/"${PN}"-"${PV}"-fix-profiler-filter.patch
-)
-
 src_prepare() {
 	default
 
