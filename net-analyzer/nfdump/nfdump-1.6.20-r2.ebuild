@@ -65,6 +65,9 @@ src_configure() {
 src_install() {
 	default
 
+	newinitd "${FILESDIR}"/nfcapd.initd nfcapd
+	newconfd "${FILESDIR}"/nfcapd.confd nfcapd
+
 	use doc && dodoc -r doc/html
 
 	find "${ED}" -name '*.la' -delete || die
