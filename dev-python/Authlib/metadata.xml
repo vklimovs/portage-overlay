@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+    <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <maintainer type="project">
+        <email>proxy-maint@gentoo.org</email>
+        <name>Proxy Maintainers</name>
+    </maintainer>
+    <upstream>
+        <remote-id type="pypi">Authlib</remote-id>
+        <remote-id type="github">lepture/authlib</remote-id>
+    </upstream>
+    <longdescription lang="en">
+        Authlib implements all key standards in relation to OAuth and OpenID
+        Connect as well as their dependencies. The library has many existing
+        intergrations with key web frameworks such as Django and Flask.
+    </longdescription>
+</pkgmetadata>
