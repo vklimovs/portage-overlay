@@ -5,8 +5,8 @@ EAPI=7
 inherit linux-info linux-mod toolchain-funcs
 
 DESCRIPTION="Standalone kernel netflow module"
-HOMEPAGE="https://github.com/aabc/ipt-netflow"
-SRC_URI="https://github.com/aabc/ipt-netflow/archive/standalone.tar.gz -> ${P}.tar.gz"
+HOMEPAGE="https://github.com/aabc/pkt-netflow"
+SRC_URI="https://github.com/aabc/pkt-netflow/archive/master.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
