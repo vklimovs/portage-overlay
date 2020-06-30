@@ -6,7 +6,7 @@ inherit linux-info linux-mod toolchain-funcs
 
 DESCRIPTION="Standalone kernel netflow module"
 HOMEPAGE="https://github.com/aabc/pkt-netflow"
-SRC_URI="https://github.com/aabc/pkt-netflow/archive/master.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/aabc/pkt-netflow/archive/86208e286e9dc57e46939191a16163a89105f4b4.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
