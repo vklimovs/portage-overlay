@@ -24,7 +24,8 @@ RDEPEND="acct-group/nfsen
 S=${WORKDIR}/${MY_P}
 
 PATCHES=(
-	"${FILESDIR}"/"${PN}"-"${PV}"-profileadmin.php.patch
+	"${FILESDIR}"/"${P}"-profileadmin.php.patch
+	"${FILESDIR}"/"${P}"-rrd-version.patch
 )
 
 src_prepare() {
