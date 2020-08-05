@@ -9,7 +9,7 @@ HOMEPAGE="https://github.com/phaag/nfdump"
 SRC_URI="https://github.com/phaag/nfdump/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="BSD"
-SLOT="0/1.6.19"
+SLOT="0/1.6.21"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug doc jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow
 	static-libs"
@@ -32,7 +32,6 @@ DEPEND="
 "
 RDEPEND="
 	${COMMON_DEPEND}
-	dev-lang/perl
 "
 DOCS=( AUTHORS ChangeLog README.md )
 
@@ -65,10 +64,10 @@ src_configure() {
 src_install() {
 	default
 
+	find "${ED}" -name '*.la' -delete || die
+
 	newinitd "${FILESDIR}"/nfcapd.initd nfcapd
 	newconfd "${FILESDIR}"/nfcapd.confd nfcapd
 
 	use doc && dodoc -r doc/html
-
-	find "${ED}" -name '*.la' -delete || die
 }
