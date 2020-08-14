@@ -9,7 +9,7 @@ HOMEPAGE="https://github.com/phaag/nfdump"
 SRC_URI="https://github.com/phaag/nfdump/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="BSD"
-SLOT="0/1.6.21"
+SLOT="0/1.6.15"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug doc jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow
 	static-libs"
@@ -28,17 +28,19 @@ DEPEND="
 	${COMMON_DEPEND}
 	sys-devel/flex
 	virtual/yacc
-	doc? ( app-doc/doxygen[dot] )
+	doc? ( app-doc/doxygen media-gfx/graphviz )
 "
 RDEPEND="
 	${COMMON_DEPEND}
 "
+PATCHES=(
+	"${FILESDIR}"/${PN}-1.6.19-compiler.patch
+	"${FILESDIR}"/${PN}-1.6.19-libft.patch
+)
 DOCS=( AUTHORS ChangeLog README.md )
 
 src_prepare() {
 	default
-
-	sed -i -e 's/AM_CFLAGS = -ggdb//' bin/Makefile.am || die
 
 	eautoreconf
 
@@ -48,6 +50,7 @@ src_prepare() {
 }
 
 src_configure() {
+	# --without-ftconf is not handled well #322201
 	econf \
 		$(use ftconv && echo "--enable-ftconv --with-ftpath=/usr") \
 		$(use nfprofile && echo --enable-nfprofile) \
@@ -69,5 +72,7 @@ src_install() {
 	newinitd "${FILESDIR}"/nfcapd.initd nfcapd
 	newconfd "${FILESDIR}"/nfcapd.confd nfcapd
 
-	use doc && dodoc -r doc/html
+	if use doc; then
+		dodoc -r doc/html
+	fi
 }
