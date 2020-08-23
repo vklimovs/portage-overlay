@@ -36,7 +36,6 @@ RDEPEND="
 PATCHES=(
 	"${FILESDIR}"/${PN}-1.6.19-compiler.patch
 	"${FILESDIR}"/${PN}-1.6.19-libft.patch
-	"${FILESDIR}"/${PN}-1.6.21-remove-strict-rfc-7011-handling.patch
 )
 DOCS=( AUTHORS ChangeLog README.md )
 
