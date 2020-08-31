@@ -41,12 +41,12 @@ REQUIRED_USE="zeekctl? ( python )
 	python? ( ${PYTHON_REQUIRED_USE} )"
 
 PATCHES=(
+	"${FILESDIR}"/${PN}-3.0-add-site-policy-dir-config.patch
+	"${FILESDIR}"/${PN}-3.0-no-legacy-ps.patch
+	"${FILESDIR}"/${PN}-3.0-no-strip.patch
+	"${FILESDIR}"/${PN}-3.0-no-uninitialized-warning.patch
 	"${FILESDIR}"/${PN}-3.0-no-wrapper-scripts.patch
-	"${FILESDIR}"/${PN}-no-strip.patch
-	"${FILESDIR}"/${PN}-no-uninitialized-warning.patch
 	"${FILESDIR}"/${PN}-remove-unnecessary-remove.patch
-	"${FILESDIR}"/${PN}-add-site-policy-dir-config.patch
-	"${FILESDIR}"/${PN}-no-legacy-ps.patch
 )
 
 src_prepare() {
