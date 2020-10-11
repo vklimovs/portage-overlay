@@ -91,7 +91,7 @@ src_install() {
 
 	dobin bin/nfsen bin/nfsend
 
-	doinitd "${FILESDIR}"/nfsen
+	doinitd "${FILESDIR}"/"${PN}".initd
 
 	doenvd "${FILESDIR}"/50nfsen
 

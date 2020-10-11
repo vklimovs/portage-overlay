@@ -52,5 +52,5 @@ src_install() {
 
 	insinto /etc
 	newins "${S}"/smcroute.conf smcroute.conf.example
-	newinitd "${FILESDIR}/${PN}-init.d" smcrouted
+	newinitd "${FILESDIR}/${PN}.initd" smcrouted
 }
