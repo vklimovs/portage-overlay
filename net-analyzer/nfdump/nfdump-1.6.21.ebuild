@@ -32,6 +32,8 @@ DEPEND="
 "
 RDEPEND="
 	${COMMON_DEPEND}
+	acct-group/nfcapd
+	acct-user/nfcapd
 "
 PATCHES=(
 	"${FILESDIR}"/${PN}-1.6.19-compiler.patch
