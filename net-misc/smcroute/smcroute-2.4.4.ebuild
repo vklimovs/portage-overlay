@@ -7,7 +7,8 @@ inherit autotools linux-info systemd
 
 DESCRIPTION="Static multicast routing for UNIX"
 HOMEPAGE="https://troglobit.com/projects/smcroute"
-SRC_URI="https://github.com/troglobit/smcroute/archive/${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/troglobit/smcroute/archive/${PV}.tar.gz ->
+	${P}.tar.gz"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
@@ -19,8 +20,8 @@ RDEPEND="acct-group/smcroute
 
 DEPEND="${RDEPEND}"
 
-CONFIG_CHECK="~IP_MULTICAST ~IP_MROUTE ~IP_PIMSM_V1
-	~IP_PIMSM_V2 ~IP_MROUTE_MULTIPLE_TABLES ~IPV6_MROUTE_MULTIPLE_TABLES"
+CONFIG_CHECK="~IP_MULTICAST ~IP_MROUTE ~IP_PIMSM_V1 ~IP_PIMSM_V2
+	~IP_MROUTE_MULTIPLE_TABLES ~IPV6_MROUTE_MULTIPLE_TABLES"
 
 PATCHES=(
 	"${FILESDIR}"/"${PN}"-"${PV}"-runstatedir.patch
