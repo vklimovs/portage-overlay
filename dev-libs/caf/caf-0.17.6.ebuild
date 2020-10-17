@@ -9,7 +9,8 @@ inherit cmake-multilib python-single-r1
 
 DESCRIPTION="The C++ Actor Framework (CAF)"
 HOMEPAGE="https://actor-framework.org/"
-SRC_URI="https://github.com/actor-framework/actor-framework/archive/${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/actor-framework/actor-framework/archive/${PV}.tar.gz
+	-> ${P}.tar.gz"
 LICENSE="|| ( Boost-1.0 BSD )"
 SLOT="0/17.5"
 KEYWORDS="~amd64 ~x86"

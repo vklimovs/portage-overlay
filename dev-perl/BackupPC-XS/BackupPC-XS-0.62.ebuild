@@ -7,8 +7,7 @@ DIST_VERSION=0.62
 
 inherit perl-module
 
-DESCRIPTION="BackupPC::XS implements various BackupPC functions in a
-	perl-callable module."
+DESCRIPTION="BackupPC::XS is a perl-callable module for BackupPC"
 HOMEPAGE="https://github.com/backuppc/backuppc-xs/"
 LICENSE="GPL-3"
 SLOT="0"

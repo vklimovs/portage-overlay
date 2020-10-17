@@ -12,7 +12,7 @@ SRC_URI="https://old.zeek.org/downloads/${P}.tar.gz"
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="curl debug geoip2 ipsumdump ipv6 jemalloc kerberos +python sendmail \
+IUSE="curl debug geoip2 ipsumdump ipv6 jemalloc kerberos +python sendmail
 	static-libs tcmalloc +tools +zeekctl"
 
 RDEPEND="dev-libs/caf:0=
