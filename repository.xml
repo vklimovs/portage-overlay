@@ -9,7 +9,7 @@
       <email>vklimovs@gmail.com</email>
       <name><![CDATA[Vjaceslavs Klimovs]]></name>
     </owner>
-    <source type="git">git://github.com/vklimovs/portage-overlay.git</source>
+    <source type="git">git+ssh://git@github.com/vklimovs/portage-overlay.git</source>
     <source type="git">https://github.com/vklimovs/portage-overlay.git</source>
     <feed>https://github.com/vklimovs/portage-overlay/commits/master.atom</feed>
   </repo>
