@@ -28,7 +28,7 @@ DEPEND="
 	${COMMON_DEPEND}
 	sys-devel/flex
 	virtual/yacc
-	doc? ( app-doc/doxygen media-gfx/graphviz )
+	doc? ( app-doc/doxygen[dot] )
 "
 RDEPEND="
 	${COMMON_DEPEND}
