@@ -55,6 +55,7 @@ src_prepare() {
 	find . -type f -exec sed -i "s:__LOGDIR__:${LOGDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__RUNDIR__:/run/${PN}:g" {} \;
 	find . -type f -exec sed -i "s:__TOPDIR__:${TOPDIR}:g" {} \;
+	find . -type f -exec sed -i "s:__BACKUPPCUSER__:backuppc:g" {} \;
 
 	sed "s:my \$useFHS = 0;:my \$useFHS = 1;:g" -i lib/BackupPC/Lib.pm
 }
@@ -90,14 +91,10 @@ src_install() {
 	keepdir "${LOGDIR}"
 	fowners -R backuppc:backuppc "${LOGDIR}"
 
-	#if ! use systemd; then
-	#	newinitd systemd/src/init.d/gentoo-backuppc backuppc
-	#	newconfd systemd/src/init.d/gentoo-backuppc.conf backuppc
-	#fi
-	#
-	#if use systemd; then
-	#	systemd_dounit systemd/src/"${PN}".service
-	#fi
+	newinitd systemd/src/init.d/gentoo-backuppc backuppc
+	newconfd systemd/src/init.d/gentoo-backuppc.conf backuppc
+
+	systemd_dounit systemd/src/"${PN}".service
 
 	webapp_src_install
 }
