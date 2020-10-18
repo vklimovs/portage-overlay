@@ -48,13 +48,15 @@ src_prepare() {
 	default
 
 	find . -type f -exec sed -i "s:__CGIDIR__:${CGIDIR}:g" {} \;
-	find . -type f -exec sed -i "s:__CONFDIR__:/${CONFDIR}:g" {} \;
+	find . -type f -exec sed -i "s:__CONFDIR__:${CONFDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__IMAGEDIR__:${IMAGEDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__IMAGEDIRURL__:${PN}:g" {} \;
 	find . -type f -exec sed -i "s:__INSTALLDIR__:/usr:g" {} \;
 	find . -type f -exec sed -i "s:__LOGDIR__:${LOGDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__RUNDIR__:/run/${PN}:g" {} \;
 	find . -type f -exec sed -i "s:__TOPDIR__:${TOPDIR}:g" {} \;
+
+	sed "s:my \$useFHS = 0;:my \$useFHS = 1;:g" -i lib/BackupPC/Lib.pm
 }
 
 src_compile() {
