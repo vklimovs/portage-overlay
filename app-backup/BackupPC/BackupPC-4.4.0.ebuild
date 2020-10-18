@@ -31,6 +31,7 @@ RDEPEND="${DEPEND}
 	samba? ( net-fs/samba )
 	>=net-misc/rsync-bpc-3.1.2.2
 	net-misc/rsync
+	virtual/httpd-cgi
 	virtual/mta"
 
 src_compile() {
