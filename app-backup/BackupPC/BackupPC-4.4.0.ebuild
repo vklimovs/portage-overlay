@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -34,6 +34,29 @@ RDEPEND="${DEPEND}
 	virtual/httpd-cgi
 	virtual/mta"
 
+pkg_setup() {
+	webapp_pkg_setup
+
+	CONFDIR="/etc/${PN}"
+	LOGDIR="/var/log/${PN}"
+	TOPDIR="/var/lib/${PN}"
+	IMAGEDIR="${MY_HTDOCSDIR}"
+	CGIDIR="${MY_CGIBINDIR}"
+}
+
+src_prepare() {
+	default
+
+	find . -type f -exec sed -i "s:__CGIDIR__:${CGIDIR}:g" {} \;
+	find . -type f -exec sed -i "s:__CONFDIR__:/${CONFDIR}:g" {} \;
+	find . -type f -exec sed -i "s:__IMAGEDIR__:${IMAGEDIR}:g" {} \;
+	find . -type f -exec sed -i "s:__IMAGEDIRURL__:${PN}:g" {} \;
+	find . -type f -exec sed -i "s:__INSTALLDIR__:/usr:g" {} \;
+	find . -type f -exec sed -i "s:__LOGDIR__:${LOGDIR}:g" {} \;
+	find . -type f -exec sed -i "s:__RUNDIR__:/run/${PN}:g" {} \;
+	find . -type f -exec sed -i "s:__TOPDIR__:${TOPDIR}:g" {} \;
+}
+
 src_compile() {
 	pod2man doc/"${PN}".pod backuppc.8
 }
@@ -41,7 +64,7 @@ src_compile() {
 src_install() {
 	webapp_src_preinst
 
-	insinto /etc/"${PN}"
+	insinto "${CONFDIR}"
 	doins conf/config.pl conf/hosts
 
 	dobin bin/*
@@ -52,18 +75,18 @@ src_install() {
 	dodoc doc/"${PN}".html ChangeLog README.md
 	doman backuppc.8
 
-	exeinto "${MY_CGIBINDIR}"
+	exeinto "${CGIDIR}"
 	doexe cgi-bin/"${PN}"_Admin
 
-	insinto "${MY_HTDOCSDIR}"
+	insinto "${IMAGEDIR}"
 	doins images/*
 	doins conf/*.js conf/*.css
 
-	keepdir "/var/lib/${PN}"/{pool,pc,cpool}
-	fowners -R backuppc:backuppc "/var/lib/${PN}"
+	keepdir "${TOPDIR}"/{pool,pc,cpool}
+	fowners -R backuppc:backuppc "${TOPDIR}"
 
-	keepdir "/var/log/${PN}"
-	fowners -R backuppc:backuppc "/var/log/${PN}"
+	keepdir "${LOGDIR}"
+	fowners -R backuppc:backuppc "${LOGDIR}"
 
 	#if ! use systemd; then
 	#	newinitd systemd/src/init.d/gentoo-backuppc backuppc
