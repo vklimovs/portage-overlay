@@ -85,11 +85,8 @@ src_install() {
 	doins images/*
 	doins conf/*.js conf/*.css
 
-	keepdir "${TOPDIR}"/{pool,pc,cpool}
-	fowners -R backuppc:backuppc "${TOPDIR}"
-
 	keepdir "${LOGDIR}"
-	fowners -R backuppc:backuppc "${LOGDIR}"
+	keepdir "${TOPDIR}"/{pool,pc,cpool}
 
 	newinitd systemd/src/init.d/gentoo-backuppc backuppc
 	newconfd systemd/src/init.d/gentoo-backuppc.conf backuppc
@@ -97,4 +94,7 @@ src_install() {
 	systemd_dounit systemd/src/backuppc.service
 
 	webapp_src_install
+
+	fowners -R backuppc:backuppc "${LOGDIR}"
+	fowners -R backuppc:backuppc "${TOPDIR}"
 }
