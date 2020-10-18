@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+    <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <maintainer type="project">
+        <email>proxy-maint@gentoo.org</email>
+        <name>Proxy Maintainers</name>
+    </maintainer>
+    <use>
+        <flag name="rrdtool">Enable graphs of the pool usage</flag>
+    </use>
+    <upstream>
+        <remote-id type="github">backuppc.backuppc</remote-id>
+    </upstream>
+    <longdescription lang="en">
+        BackupPC is a high-performance, enterprise-grade system for
+        backing up Unix, Linux, WinXX, and MacOSX PCs, desktops and laptops
+        to a server's disk.
+    </longdescription>
+</pkgmetadata>
