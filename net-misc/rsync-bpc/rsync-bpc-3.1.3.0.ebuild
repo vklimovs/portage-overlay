@@ -7,7 +7,8 @@ inherit flag-o-matic
 
 DESCRIPTION="rsync version needed for BackupPC 4.x"
 HOMEPAGE="https://github.com/backuppc/rsync-bpc"
-SRC_URI="https://github.com/backuppc/rsync-bpc/releases/download/${PV}/rsync-bpc-${PV}.tar.gz"
+SRC_URI="https://github.com/backuppc/${PN}/archive/${PV}/${PV}.tar.gz
+	-> ${P}.tar.gz"
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~m68k ~mips ppc ppc64 ~riscv
