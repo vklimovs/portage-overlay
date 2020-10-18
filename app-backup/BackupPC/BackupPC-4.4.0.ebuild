@@ -94,7 +94,7 @@ src_install() {
 	newinitd systemd/src/init.d/gentoo-backuppc backuppc
 	newconfd systemd/src/init.d/gentoo-backuppc.conf backuppc
 
-	systemd_dounit systemd/src/"${PN}".service
+	systemd_dounit systemd/src/backuppc.service
 
 	webapp_src_install
 }
