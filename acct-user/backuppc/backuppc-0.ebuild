@@ -8,6 +8,6 @@ inherit acct-user
 DESCRIPTION="user for backuppc"
 ACCT_USER_ID=-1
 ACCT_USER_GROUPS=( backuppc )
-ACCT_USER_HOME="/var/lib/BackupPC"
+ACCT_USER_HOME="/var/lib/backuppc"
 
 acct-user_add_deps
