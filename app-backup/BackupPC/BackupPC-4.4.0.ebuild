@@ -55,6 +55,7 @@ pkg_setup() {
 	RUNDIR="/run/${PN}"
 	TOPDIR="/var/lib/${PN}"
 	INSTALLDIR="/usr"
+	IMAGEDIRURL="/${PN}"
 }
 
 src_prepare() {
@@ -63,7 +64,7 @@ src_prepare() {
 	find . -type f -exec sed -i "s:__CGIDIR__:${CGIDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__CONFDIR__:${CONFDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__IMAGEDIR__:${IMAGEDIR}:g" {} \;
-	find . -type f -exec sed -i "s:__IMAGEDIRURL__:${PN}:g" {} \;
+	find . -type f -exec sed -i "s:__IMAGEDIRURL__:${IMAGEDIRURL}:g" {} \;
 	find . -type f -exec sed -i "s:__INSTALLDIR__:${INSTALLDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__LOGDIR__:${LOGDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__RUNDIR__:${RUNDIR}:g" {} \;
@@ -71,7 +72,7 @@ src_prepare() {
 	find . -type f -exec sed -i "s:__BACKUPPCUSER__:backuppc:g" {} \;
 
 	sed "s:my \$useFHS = 0;:my \$useFHS = 1;:" -i lib/BackupPC/Lib.pm
-	sed "s:/share/doc/BackupPC/BackupPC.html:/share/doc/${PF}/:" -i \
+	sed "s:/share/doc/BackupPC/BackupPC.html:/share/doc/${PF}/${PN}.html:" -i \
 		lib/BackupPC/CGI/View.pm
 
 	set_config_option BackupPCUser backuppc
@@ -82,6 +83,7 @@ src_prepare() {
 	set_config_option RunDir "${RUNDIR}"
 	set_config_option InstallDir "${INSTALLDIR}"
 	set_config_option CgiDir "${CGIDIR}"
+	set_config_option CgiImageDirURL "${IMAGEDIRURL}"
 
 	set_config_option RsyncBackupPCPath /usr/bin/rsync_bpc
 	set_config_option TarClientPath /bin/tar
