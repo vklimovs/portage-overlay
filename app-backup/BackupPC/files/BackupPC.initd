@@ -1,0 +1,45 @@
+#!/sbin/openrc-run
+
+BACKUPPC_CONFIG="${BACKUPPC_CONFIG:-/etc/BackupPC/config.pl}"
+
+checkconfig() {
+	if [ ! -r "${BACKUPPC_CONFIG}" ]; then
+		eerror "BackupPC configuration file ${BACKUPPC_CONFIG} is not "
+		eerror "readable"
+		return 1
+	fi
+}
+
+get_config() {
+	checkconfig || return 1
+
+	sed -n -r -e "s:^(\\\$Conf\{$1\}\s+=\s)(.*)(;.*)$:\2:p" \
+		"${BACKUPPC_CONFIG}" | tr -d \'\"
+}
+
+start () {
+	checkconfig || return 1
+
+	user=$(get_config BackupPCUser)
+	group=$(id -gn "${user}")
+	rundir=$(get_config RunDir)
+
+	checkpath -d -m 700 -o "${user}" "${rundir}"
+
+	ebegin "Starting BackupPC"
+	start-stop-daemon --start --user "${user}" --group "${group}" \
+		--make-pidfile --pidfile "${rundir}"/BackupPC.pid --exec \
+		/usr/bin/BackupPC -- -d
+	eend $?
+}
+
+stop() {
+	checkconfig || return 1
+
+	rundir=$(get_config RunDir)
+
+	ebegin "Stopping BackupPC"
+	start-stop-daemon --stop --pidfile "${rundir}"/BackupPC.pid \
+		--name BackupPC
+	eend $?
+}

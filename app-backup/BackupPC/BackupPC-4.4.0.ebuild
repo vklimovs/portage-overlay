@@ -24,24 +24,39 @@ DEPEND=">=dev-perl/BackupPC-XS-0.62
 	dev-perl/Time-ParseDate"
 
 RDEPEND="${DEPEND}
-	acct-group/backuppc
-	acct-user/backuppc
+	>=net-misc/rsync-bpc-3.1.2.2
 	rrdtool? ( net-analyzer/rrdtool[graph] )
 	rss? ( dev-perl/XML-RSS )
 	samba? ( net-fs/samba )
-	>=net-misc/rsync-bpc-3.1.2.2
+	acct-group/backuppc
+	acct-user/backuppc
+	app-arch/par2cmdline
 	net-misc/rsync
 	virtual/httpd-cgi
 	virtual/mta"
 
+set_config_option() {
+	set -x
+	# Examples of things this needs to edit:
+	# $Conf{HardLinkMax} = 31999;
+	# $Conf{PerlModuleLoad} = undef;
+	# $Conf{ServerInitdPath}     = '';
+	sed -r -e "s:^(\\\$Conf\{$1\}\s+=\s)(.*)(;.*)$:\1'$2'\3:" \
+		-i conf/config.pl
+	set +x
+}
+
 pkg_setup() {
 	webapp_pkg_setup
 
+	# Avoid double slashes
+	CGIDIR=${MY_CGIBINDIR/\/\//\/}
 	CONFDIR="/etc/${PN}"
+	IMAGEDIR="${MY_HTDOCSDIR/\/\//\/}"
 	LOGDIR="/var/log/${PN}"
+	RUNDIR="/run/${PN}"
 	TOPDIR="/var/lib/${PN}"
-	IMAGEDIR="${MY_HTDOCSDIR}"
-	CGIDIR="${MY_CGIBINDIR}"
+	INSTALLDIR="/usr"
 }
 
 src_prepare() {
@@ -51,13 +66,45 @@ src_prepare() {
 	find . -type f -exec sed -i "s:__CONFDIR__:${CONFDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__IMAGEDIR__:${IMAGEDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__IMAGEDIRURL__:${PN}:g" {} \;
-	find . -type f -exec sed -i "s:__INSTALLDIR__:/usr:g" {} \;
+	find . -type f -exec sed -i "s:__INSTALLDIR__:${INSTALLDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__LOGDIR__:${LOGDIR}:g" {} \;
-	find . -type f -exec sed -i "s:__RUNDIR__:/run/${PN}:g" {} \;
+	find . -type f -exec sed -i "s:__RUNDIR__:${RUNDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__TOPDIR__:${TOPDIR}:g" {} \;
 	find . -type f -exec sed -i "s:__BACKUPPCUSER__:backuppc:g" {} \;
 
-	sed "s:my \$useFHS = 0;:my \$useFHS = 1;:g" -i lib/BackupPC/Lib.pm
+	sed "s:my \$useFHS = 0;:my \$useFHS = 1;:" -i lib/BackupPC/Lib.pm
+	sed "s:/share/doc/BackupPC/BackupPC.html:/share/doc/${PF}/:" -i \
+		lib/BackupPC/CGI/View.pm
+
+	set_config_option BackupPCUser backuppc
+
+	set_config_option TopDir "${TOPDIR}"
+	set_config_option ConfDir "${CONFDIR}"
+	set_config_option LogDir "${LOGDIR}"
+	set_config_option RunDir "${RUNDIR}"
+	set_config_option InstallDir "${INSTALLDIR}"
+	set_config_option CgiDir "${CGIDIR}"
+
+	set_config_option RsyncBackupPCPath /usr/bin/rsync_bpc
+	set_config_option TarClientPath /bin/tar
+	set_config_option RsyncClientPath /usr/bin/rsync
+	set_config_option PingPath /bin/ping
+	set_config_option Ping6Path /bin/ping6
+	set_config_option DfPath /bin/df
+	set_config_option SshPath /usr/bin/ssh
+	set_config_option SendmailPath /usr/sbin/sendmail
+	set_config_option SplitPath /usr/bin/split
+	set_config_option ParPath /usr/bin/par2
+	set_config_option CatPath /bin/cat
+	set_config_option GzipPath /bin/gzip
+	set_config_option Bzip2Path /bin/bzip2
+
+	if use samba; then
+		set_config_option SmbClientPath /usr/bin/smbclient
+		set_config_option NmbLookupPath /usr/bin/nmblookup
+	fi
+
+	use rrdtool && set_config_option RrdToolPath /usr/bin/rrdtool
 }
 
 src_compile() {
@@ -73,7 +120,7 @@ src_install() {
 	dobin bin/*
 
 	insinto /usr/lib/
-	doins -r lib/"${PN}"
+	doins -r lib/*
 
 	dodoc doc/"${PN}".html ChangeLog README.md
 	doman backuppc.8
@@ -85,16 +132,44 @@ src_install() {
 	doins images/*
 	doins conf/*.js conf/*.css
 
-	keepdir "${LOGDIR}"
-	keepdir "${TOPDIR}"/{pool,pc,cpool}
+	keepdir "${LOGDIR}" "${TOPDIR}"/{pool,pc,cpool}
 
-	newinitd systemd/src/init.d/gentoo-backuppc backuppc
-	newconfd systemd/src/init.d/gentoo-backuppc.conf backuppc
+	newinitd "${FILESDIR}"/"${PN}".initd "${PN}"
+	newconfd "${FILESDIR}"/"${PN}".confd "${PN}"
 
-	systemd_dounit systemd/src/backuppc.service
+	systemd_newunit systemd/src/backuppc.service "${PN}".service
 
 	webapp_src_install
 
-	fowners -R backuppc:backuppc "${LOGDIR}"
-	fowners -R backuppc:backuppc "${TOPDIR}"
+	fowners -R backuppc:backuppc "${CONFDIR}" "${LOGDIR}" "${TOPDIR}"
+}
+
+pkg_postinst() {
+	elog "BackupPC has been installed, but a few more things are required"
+	elog "to start using it"
+	elog
+	elog "- Read the documentation in /usr/share/doc/${PF}/BackupPC.html"
+	elog "  Please pay special attention to the security section."
+	elog
+	elog "- Check the config in ${CONFDIR}/config.pl and make sure to set"
+	elog "  CgiAdminUsers and/or CgiAdminUserGroup."
+	elog
+	elog "- BackupPC consists of a daemon and a CGI web GUI."
+	elog
+	elog "- You can launch BackupPC daemon by running:"
+	elog
+	elog "    # /etc/init.d/BackupPC start"
+	elog
+	elog "- To enable the web GUI, install web parts of BackupPC, e.g. "
+	elog
+	elog "    # webapp-config -h <host> -d BackupPC -I BackupPC ${PV}"
+	elog
+	elog "  and set up a web server of your choise to run BackupPC_Admin"
+	elog "  via CGI and serve static assets. BackupPC expects static"
+	elog "  assets on /BackupPC path."
+	elog
+	elog "- BackupPC expects REMOTE_USER CGI environment variable, make"
+	elog "  sure your web server sets it."
+
+	webapp_pkg_postinst
 }
