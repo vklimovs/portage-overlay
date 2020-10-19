@@ -133,8 +133,8 @@ src_install() {
 
 	keepdir "${LOGDIR}" "${TOPDIR}"/{pool,pc,cpool}
 
-	newinitd "${FILESDIR}"/"${PN}".initd "${PN}"
-	newconfd "${FILESDIR}"/"${PN}".confd "${PN}"
+	newinitd "${FILESDIR}"/backuppc.initd backuppc
+	newconfd "${FILESDIR}"/backuppc.confd backuppc
 
 	systemd_newunit systemd/src/backuppc.service "${PN}".service
 
@@ -165,8 +165,8 @@ pkg_postinst() {
 	elog "      via CGI."
 	elog "    - Set up a web server to serve static assets. BackupPC expects"
 	elog "      static assets on /BackupPC path."
-	elog "    - Set up a web server to set REMOTE_USER CGI environment"
-	elog "      variable, BackupPC needs it to work."
+	elog "    - Set up a web server to set REMOTE_USER and SCRIPT_NAME CGI"
+	elog "      environment variables, BackupPC needs both to work."
 
 	webapp_pkg_postinst
 }
