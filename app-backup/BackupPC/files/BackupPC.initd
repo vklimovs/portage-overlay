@@ -43,3 +43,13 @@ stop() {
 		--name BackupPC
 	eend $?
 }
+
+reload() {
+	checkconfig || return 1
+
+	rundir=$(get_config RunDir)
+
+	ebegin "Reloading BackupPC"
+	start-stop-daemon --signal HUP --pidfile "${rundir}"/BackupPC.pid
+	eend $?
+}
