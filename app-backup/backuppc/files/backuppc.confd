@@ -1,4 +1,4 @@
-# /etc/conf.d/BackupPC
+# /etc/conf.d/backuppc
 
 # BackupPC configuration file. Override for non standard location.
-#BACKUPPC_CONFIG="/etc/BackupPC/config.pl"
+#BACKUPPC_CONFIG="/etc/backuppc/config.pl"

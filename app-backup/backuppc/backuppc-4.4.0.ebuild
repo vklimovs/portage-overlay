@@ -7,9 +7,12 @@ WEBAPP_MANUAL_SLOT="yes"
 
 inherit systemd webapp
 
+MY_PN="BackupPC"
+MY_P="${MY_PN}-${PV}"
+
 DESCRIPTION="High-performance backups to a server's disk"
 HOMEPAGE="https://backuppc.github.io/backuppc/"
-SRC_URI="https://github.com/${PN}/${PN}/releases/download/${PV}/${P}.tar.gz"
+SRC_URI="https://github.com/${PN}/${PN}/releases/download/${PV}/${MY_P}.tar.gz"
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="amd64 x86"
@@ -35,6 +38,8 @@ RDEPEND="${DEPEND}
 	virtual/httpd-cgi
 	virtual/mta"
 
+S=${WORKDIR}/${MY_P}
+
 set_config_option() {
 	# Examples of things this needs to edit:
 	# $Conf{HardLinkMax} = 31999;
@@ -49,8 +54,9 @@ pkg_setup() {
 
 	# Avoid double slashes
 	CGIDIR=${MY_CGIBINDIR/\/\///}
-	CONFDIR="/etc/${PN}"
 	IMAGEDIR="${MY_HTDOCSDIR/\/\///}"
+
+	CONFDIR="/etc/${PN}"
 	LOGDIR="/var/log/${PN}"
 	RUNDIR="/run/${PN}"
 	TOPDIR="/var/lib/${PN}"
@@ -72,8 +78,8 @@ src_prepare() {
 	find . -type f -exec sed -i "s:__BACKUPPCUSER__:backuppc:g" {} \;
 
 	sed "s:my \$useFHS = 0;:my \$useFHS = 1;:" -i lib/BackupPC/Lib.pm
-	sed "s:/share/doc/BackupPC/BackupPC.html:/share/doc/${PF}/${PN}.html:" -i \
-		lib/BackupPC/CGI/View.pm
+	sed "s:/share/doc/BackupPC/BackupPC.html:/share/doc/${PF}/BackupPC.html:" \
+		-i lib/BackupPC/CGI/View.pm
 
 	set_config_option BackupPCUser backuppc
 
@@ -108,7 +114,7 @@ src_prepare() {
 }
 
 src_compile() {
-	pod2man doc/"${PN}".pod backuppc.8
+	pod2man doc/BackupPC.pod backuppc.8
 }
 
 src_install() {
@@ -122,11 +128,11 @@ src_install() {
 	insinto /usr/lib/
 	doins -r lib/*
 
-	dodoc doc/"${PN}".html ChangeLog README.md
+	dodoc doc/BackupPC.html ChangeLog README.md
 	doman backuppc.8
 
 	exeinto "${CGIDIR}"
-	doexe cgi-bin/"${PN}"_Admin
+	doexe cgi-bin/BackupPC_Admin
 
 	insinto "${IMAGEDIR}"
 	doins images/* conf/*.js conf/*.css
@@ -136,7 +142,7 @@ src_install() {
 	newinitd "${FILESDIR}"/backuppc.initd backuppc
 	newconfd "${FILESDIR}"/backuppc.confd backuppc
 
-	systemd_newunit systemd/src/backuppc.service "${PN}".service
+	systemd_dounit systemd/src/backuppc.service
 
 	webapp_src_install
 
@@ -157,7 +163,9 @@ pkg_postinst() {
 	elog
 	elog "- You can launch BackupPC daemon by running:"
 	elog
-	elog "    # /etc/init.d/BackupPC start"
+	elog "    # /etc/init.d/backuppc start"
+	elog
+	elog "- The init script uses settings from ${CONFDIR}/config.pl."
 	elog
 	elog "- To enable the web GUI:"
 	elog "    - Install web parts of BackupPC using webapp-config."

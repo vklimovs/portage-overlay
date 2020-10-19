@@ -1,6 +1,6 @@
 #!/sbin/openrc-run
 
-BACKUPPC_CONFIG="${BACKUPPC_CONFIG:-/etc/BackupPC/config.pl}"
+BACKUPPC_CONFIG="${BACKUPPC_CONFIG:-/etc/backuppc/config.pl}"
 
 checkconfig() {
 	if [ ! -r "${BACKUPPC_CONFIG}" ]; then
