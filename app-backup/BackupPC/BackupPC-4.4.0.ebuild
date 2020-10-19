@@ -36,14 +36,12 @@ RDEPEND="${DEPEND}
 	virtual/mta"
 
 set_config_option() {
-	set -x
 	# Examples of things this needs to edit:
 	# $Conf{HardLinkMax} = 31999;
 	# $Conf{PerlModuleLoad} = undef;
 	# $Conf{ServerInitdPath}     = '';
 	sed -r -e "s:^(\\\$Conf\{$1\}\s+=\s)(.*)(;.*)$:\1'$2'\3:" \
 		-i conf/config.pl
-	set +x
 }
 
 pkg_setup() {
@@ -148,7 +146,7 @@ pkg_postinst() {
 	elog "BackupPC has been installed, but a few more things are required"
 	elog "to start using it"
 	elog
-	elog "- Read the documentation in /usr/share/doc/${PF}/BackupPC.html"
+	elog "- Read the documentation in /usr/share/doc/${PF}/BackupPC.html."
 	elog "  Please pay special attention to the security section."
 	elog
 	elog "- Check the config in ${CONFDIR}/config.pl and make sure to set"
@@ -160,16 +158,14 @@ pkg_postinst() {
 	elog
 	elog "    # /etc/init.d/BackupPC start"
 	elog
-	elog "- To enable the web GUI, install web parts of BackupPC, e.g. "
-	elog
-	elog "    # webapp-config -h <host> -d BackupPC -I BackupPC ${PV}"
-	elog
-	elog "  and set up a web server of your choise to run BackupPC_Admin"
-	elog "  via CGI and serve static assets. BackupPC expects static"
-	elog "  assets on /BackupPC path."
-	elog
-	elog "- BackupPC expects REMOTE_USER CGI environment variable, make"
-	elog "  sure your web server sets it."
+	elog "- To enable the web GUI:"
+	elog "    - Install web parts of BackupPC using webapp-config."
+	elog "	  - Set up a web server of your choise to run BackupPC_Admin"
+	elog "      via CGI."
+	elog "    - Set up a web server to serve static assets. BackupPC expects"
+	elog "      static assets on /BackupPC path."
+	elog "    - Set up a web server to set REMOTE_USER CGI environment"
+	elog "      variable, BackupPC needs it to work."
 
 	webapp_pkg_postinst
 }
