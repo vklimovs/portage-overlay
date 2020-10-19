@@ -172,7 +172,7 @@ pkg_postinst() {
 	elog "	  - Set up a web server of your choise to run BackupPC_Admin"
 	elog "      via CGI."
 	elog "    - Set up a web server to serve static assets. BackupPC expects"
-	elog "      static assets on /BackupPC path."
+	elog "      static assets on ${IMAGEDIRURL} path."
 	elog "    - Set up a web server to set REMOTE_USER and SCRIPT_NAME CGI"
 	elog "      environment variables, BackupPC needs both to work."
 
