@@ -48,9 +48,9 @@ pkg_setup() {
 	webapp_pkg_setup
 
 	# Avoid double slashes
-	CGIDIR=${MY_CGIBINDIR/\/\//\/}
+	CGIDIR=${MY_CGIBINDIR/\/\///}
 	CONFDIR="/etc/${PN}"
-	IMAGEDIR="${MY_HTDOCSDIR/\/\//\/}"
+	IMAGEDIR="${MY_HTDOCSDIR/\/\///}"
 	LOGDIR="/var/log/${PN}"
 	RUNDIR="/run/${PN}"
 	TOPDIR="/var/lib/${PN}"
@@ -127,8 +127,7 @@ src_install() {
 	doexe cgi-bin/"${PN}"_Admin
 
 	insinto "${IMAGEDIR}"
-	doins images/*
-	doins conf/*.js conf/*.css
+	doins images/* conf/*.js conf/*.css
 
 	keepdir "${LOGDIR}" "${TOPDIR}"/{pool,pc,cpool}
 
