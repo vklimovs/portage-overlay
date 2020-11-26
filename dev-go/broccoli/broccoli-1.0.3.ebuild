@@ -37,7 +37,7 @@ go-module_set_globals
 SRC_URI="https://github.com/aletheia-icu/broccoli/archive/v${PV}.tar.gz -> ${P}.tar.gz
 	${EGO_SUM_SRC_URI}"
 
-LICENSE="MIT"
+LICENSE="BSD-2 MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
