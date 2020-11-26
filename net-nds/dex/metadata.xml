@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+        <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <maintainer type="project">
+        <email>proxy-maint@gentoo.org</email>
+        <name>Proxy Maintainers</name>
+    </maintainer>
+    <upstream>
+        <remote-id type="github">dexidp/dex</remote-id>
+    </upstream>
+    <longdescription lang="en">
+        Dex is an identity service that uses OpenID Connect to drive
+        authentication for other apps. Dex acts as a portal to other identity
+        providers through "connectors." This lets dex defer authentication to
+        LDAP servers, SAML providers, or established identity providers like
+        GitHub, Google, and Active Directory. Clients write their
+        authentication logic once to talk to dex, then dex handles the
+        protocols for a given backend.
+    </longdescription>
+</pkgmetadata>
