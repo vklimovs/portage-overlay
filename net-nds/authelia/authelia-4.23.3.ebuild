@@ -2,7 +2,10 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
-inherit go-module systemd
+
+WEBAPP_MANUAL_SLOT="yes"
+
+inherit go-module systemd webapp
 
 DESCRIPTION="The Single Sign-On Multi-Factor portal for web apps"
 HOMEPAGE="https://www.authelia.com/"
@@ -694,15 +697,20 @@ LICENSE="Apache-2.0 BSD BSD-2 MIT MPL-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="mysql postgres +sqlite"
+
 REQUIRED_USE="|| ( mysql postgres sqlite )"
 
-RDEPEND="mysql? ( virtual/mysql )
+COMMON_DEPEND="acct-group/authelia
+	acct-user/authelia"
+BDEPEND="${COMMON_DEPEND}
+	dev-go/broccoli"
+RDEPEND="${COMMON_DEPEND}
+	mysql? ( virtual/mysql )
 	postgres? ( dev-db/postgresql )
 	sqlite? ( dev-db/sqlite:3 )
-	acct-group/authelia
-	acct-user/authelia"
-
-BDEPEND="dev-go/broccoli"
+	|| ( net-proxy/haproxy www-servers/nginx )
+	dev-db/redis
+	virtual/mta"
 
 src_prepare() {
 	mv "${WORKDIR}"/public_html "${S}"
@@ -731,6 +739,8 @@ src_compile() {
 }
 
 src_install() {
+	webapp_src_preinst
+
 	insinto /etc/authelia
 	newins config.template.yml configuration.yml
 
@@ -743,5 +753,11 @@ src_install() {
 	dodoc BREAKING.md CONTRIBUTING.md README.md SECURITY.md
 
 	keepdir /var/log/authelia
+
+	insinto "${MY_HTDOCSDIR}"
+	doins -r public_html/*
+
+	webapp_src_install
+
 	fowners authelia:authelia /var/log/authelia
 }
