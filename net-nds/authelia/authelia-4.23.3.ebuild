@@ -687,7 +687,7 @@ EGO_SUM=(
 go-module_set_globals
 
 SRC_URI="https://github.com/authelia/authelia/archive/v${PV}.tar.gz -> ${P}.tar.gz
-	https://github.com/authelia/authelia/releases/download/v${PV}/authelia-public_html.tar.gz
+	https://github.com/authelia/authelia/releases/download/v${PV}/authelia-public_html.tar.gz -> ${P}-public_html.tar.gz
 	${EGO_SUM_SRC_URI}"
 
 LICENSE="Apache-2.0 BSD BSD-2 MIT MPL-2.0"
