@@ -1,0 +1,26 @@
+diff --git a/internal/storage/mysql_provider.go b/internal/storage/mysql_provider.go
+index 83aaffd7..7e3c392a 100644
+--- a/internal/storage/mysql_provider.go
++++ b/internal/storage/mysql_provider.go
+@@ -3,6 +3,7 @@ package storage
+ import (
+ 	"database/sql"
+ 	"fmt"
++	"strings"
+ 
+ 	_ "github.com/go-sql-driver/mysql" // Load the MySQL Driver used in the connection string.
+ 
+@@ -63,7 +64,12 @@ func NewMySQLProvider(configuration schema.MySQLStorageConfiguration) *MySQLProv
+ 		address += fmt.Sprintf(":%d", configuration.Port)
+ 	}
+ 
+-	connectionString += fmt.Sprintf("tcp(%s)", address)
++	protocol := "tcp"
++	if strings.HasPrefix(address, "/") {
++		protocol = "unix"
++	}
++
++	connectionString += fmt.Sprintf("%s(%s)", protocol, address)
+ 	if configuration.Database != "" {
+ 		connectionString += fmt.Sprintf("/%s", configuration.Database)
+ 	}

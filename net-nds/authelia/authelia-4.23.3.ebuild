@@ -712,6 +712,10 @@ RDEPEND="${COMMON_DEPEND}
 	dev-db/redis
 	virtual/mta"
 
+PATCHES=(
+	"${FILESDIR}"/"${PN}"-"${PV}"-enable-mysql-via-unix-socket.patch
+)
+
 src_prepare() {
 	mv "${WORKDIR}"/public_html "${S}"
 
