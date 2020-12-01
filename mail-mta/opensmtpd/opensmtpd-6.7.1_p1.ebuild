@@ -44,7 +44,7 @@ RDEPEND="${DEPEND}"
 S=${WORKDIR}/${P/_}
 
 PATCHES=(
-	"${FILESDIR}"/"${P}"-enable-ecdsa-with-openssl-2.patch
+	"${FILESDIR}"/"${P}"-enable-ecdsa-with-openssl.patch
 )
 
 src_prepare() {
