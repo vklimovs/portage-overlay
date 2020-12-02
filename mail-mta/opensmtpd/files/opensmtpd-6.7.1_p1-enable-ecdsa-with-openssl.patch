@@ -131,9 +131,22 @@ index c068c6d5..c4bfd437 100644
    build:
      runs-on: ubuntu-latest
 diff --git a/README.md b/README.md
-index c00663cd..ce5f1a3e 100644
+index c00663cd..bc35c16b 100644
 --- a/README.md
 +++ b/README.md
+@@ -1,10 +1,10 @@
+ # OpenSMTPD
+ 
+-[![Version](https://img.shields.io/badge/Version-6.6.3p1-brihtgreen.svg)](https://github.com/OpenSMTPD/OpenSMTPD/releases/tag/6.6.3p1)
++[![Version](https://img.shields.io/badge/Version-6.7.1p1-brihtgreen.svg)](https://github.com/OpenSMTPD/OpenSMTPD/releases/tag/6.7.1p1)
+ [![Coverity Scan analysis](https://scan.coverity.com/projects/278/badge.svg)](https://scan.coverity.com/projects/opensmtpd-opensmtpd)
+ [![Packaging status](https://repology.org/badge/tiny-repos/opensmtpd.svg)](https://repology.org/project/opensmtpd/versions)
+ [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://www.isc.org/licenses/)
+-[![Clang Analysis](https://opensmtpd.email/reports/clang/badge.svg)](https://opensmtpd.email/reports/clang/index.html)
++
+ 
+ 
+ OpenSMTPD is a FREE implementation of the server-side SMTP protocol as
 @@ -29,9 +29,8 @@ mailing list: http://www.opensmtpd.org/list.html
  
  and to join the IRC channel: #OpenSMTPD @ irc.freenode.net
@@ -179,6 +192,21 @@ index c00663cd..ce5f1a3e 100644
      useradd -c "SMTP Daemon" -d /var/empty -s /sbin/nologin _smtpd
      useradd -c "SMTPD Queue" -d /var/empty -s /sbin/nologin _smtpq
  
+diff --git a/configure.ac b/configure.ac
+index 28f1be1f..d46aeae7 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2046,6 +2046,10 @@ AM_CONDITIONAL([NEED_PROGNAME], [test "x$ac_cv_libc_defines___progname" != "xyes
+ ##
+ 
+ 
++AM_COND_IF([NEED_PROGNAME], [AC_DEFINE([NEED_PROGNAME], [1], [Define to 1 if NEED_PROGNAME])])
++AM_COND_IF([NEED_SETPROCTITLE], [AC_DEFINE([NEED_SETPROCTITLE], [1], [Define to 1 if NEED_SETPROCTITLE])])
++
++
+ AC_CONFIG_FILES([Makefile
+ 		openbsd-compat/Makefile
+ 		mk/Makefile
 diff --git a/contrib/libexec/encrypt/Makefile.am b/contrib/libexec/encrypt/Makefile.am
 index 6ad7b82d..2f96e60d 100644
 --- a/contrib/libexec/encrypt/Makefile.am
@@ -722,9 +750,18 @@ index 90bc59b4..008544ad 100644
  	    _asr_querystr(as->as_type), as->as_ctx);
  	r = as->as_run(as, ar);
 diff --git a/openbsd-compat/openbsd-compat.h b/openbsd-compat/openbsd-compat.h
-index 57748621..ec0ae516 100644
+index 57748621..dcb643f1 100644
 --- a/openbsd-compat/openbsd-compat.h
 +++ b/openbsd-compat/openbsd-compat.h
+@@ -96,7 +96,7 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+ char *strsep(char **stringp, const char *delim);
+ #endif
+ 
+-#ifndef HAVE_SETPROCTITLE
++#ifdef NEED_SETPROCTITLE
+ void setproctitle(const char *fmt, ...);
+ void compat_init_setproctitle(int argc, char *argv[]);
+ #endif
 @@ -334,6 +334,8 @@ const char *strerror(int);
  int usleep(unsigned int useconds);
  #endif
@@ -773,6 +810,29 @@ index 710f8df2..fd5c3f49 100644
  
  	return 0;
  }
+diff --git a/openbsd-compat/setproctitle.c b/openbsd-compat/setproctitle.c
+index eef70c14..71e1595e 100644
+--- a/openbsd-compat/setproctitle.c
++++ b/openbsd-compat/setproctitle.c
+@@ -68,8 +68,7 @@ static size_t argv_env_len = 0;
+ void
+ compat_init_setproctitle(int argc, char *argv[])
+ {
+-#if !defined(HAVE_SETPROCTITLE) && \
+-    defined(SPT_TYPE) && SPT_TYPE == SPT_REUSEARGV
++#if defined(SPT_TYPE) && SPT_TYPE == SPT_REUSEARGV
+ 	extern char **environ;
+ 	char *lastargv = NULL;
+ 	char **envp = environ;
+@@ -156,8 +155,6 @@ setproctitle(const char *fmt, ...)
+ 	pst.pst_command = ptitle;
+ 	pstat(PSTAT_SETCMD, pst, strlen(ptitle), 0, 0);
+ #elif SPT_TYPE == SPT_REUSEARGV
+-/*	debug("setproctitle: copy \"%s\" into len %d", 
+-	    buf, argv_env_len); */
+ 	len = strlcpy(argv_start, ptitle, argv_env_len);
+ 	for(; len < argv_env_len; len++)
+ 		argv_start[len] = SPT_PADCHAR;
 diff --git a/smtpd/Makefile b/usr.sbin/smtpd/Makefile
 similarity index 100%
 rename from smtpd/Makefile
@@ -790,10 +850,10 @@ similarity index 100%
 rename from smtpd/bounce.c
 rename to usr.sbin/smtpd/bounce.c
 diff --git a/smtpd/ca.c b/usr.sbin/smtpd/ca.c
-similarity index 83%
+similarity index 80%
 rename from smtpd/ca.c
 rename to usr.sbin/smtpd/ca.c
-index a27db87a..a107eb31 100644
+index a27db87a..a8862cdc 100644
 --- a/smtpd/ca.c
 +++ b/usr.sbin/smtpd/ca.c
 @@ -65,13 +65,11 @@ static int	 rsae_init(RSA *);
@@ -911,11 +971,33 @@ index a27db87a..a107eb31 100644
  }
  
  int
-@@ -638,6 +639,95 @@ ecdsae_do_verify(const unsigned char *dgst, int dgst_len,
+@@ -638,6 +639,114 @@ ecdsae_do_verify(const unsigned char *dgst, int dgst_len,
  	log_debug("debug: %s: %s", proc_name(smtpd_process), __func__);
  	return (ecdsa_default->ecdsa_do_verify(dgst, dgst_len, sig, eckey));
  }
 +#else
++int
++ecdsae_keygen(EC_KEY *eckey)
++{
++	int (*keygen)(EC_KEY *key);
++	EC_KEY_METHOD_get_keygen(ecdsa_default,
++		&keygen);
++	return keygen(eckey);
++}
++
++int
++ecdsae_compute_key(unsigned char **psec, size_t *pseclen,
++	const EC_POINT *pub_key, const EC_KEY *ecdh)
++{
++	int (*ckey)(unsigned char **psec,
++		size_t *pseclen,
++		const EC_POINT *pub_key,
++		const EC_KEY *ecdh);
++	EC_KEY_METHOD_get_compute_key(ecdsa_default,
++		&ckey);
++	return ckey(psec, pseclen, pub_key, ecdh);
++}
++
 +int
 +ecdsae_sign(int type, const unsigned char *dgst, int dlen, unsigned char *sig,
 +    unsigned int *siglen, const BIGNUM *kinv, const BIGNUM *r, EC_KEY *eckey)
@@ -932,9 +1014,6 @@ index a27db87a..a107eb31 100644
 +	    NULL,
 +	    NULL);
 +	return (sign(type, dgst, dlen, sig, siglen, kinv, r, eckey));
-+
-+
-+	return 0;
 +}
 +	
 +
@@ -1007,7 +1086,7 @@ index a27db87a..a107eb31 100644
  #endif
  
  static void
-@@ -765,13 +855,64 @@ ecdsa_engine_init(void)
+@@ -765,13 +874,66 @@ ecdsa_engine_init(void)
  	ssl_error(errstr);
  	fatalx("%s", errstr);
  }
@@ -1023,6 +1102,8 @@ index a27db87a..a107eb31 100644
 +		goto fail;
 +	}
 +
++	EC_KEY_METHOD_set_keygen(ecdsae_method, ecdsae_keygen);
++	EC_KEY_METHOD_set_compute_key(ecdsae_method, ecdsae_compute_key);
 +	EC_KEY_METHOD_set_sign(ecdsae_method, ecdsae_sign, ecdsae_sign_setup,
 +	    ecdsae_do_sign);
 +	EC_KEY_METHOD_set_verify(ecdsae_method, ecdsae_verify, ecdsae_do_verify);
@@ -1585,7 +1666,7 @@ diff --git a/smtpd/smtpctl.c b/usr.sbin/smtpd/smtpctl.c
 similarity index 99%
 rename from smtpd/smtpctl.c
 rename to usr.sbin/smtpd/smtpctl.c
-index 7dba4224..b255ed3d 100644
+index 7dba4224..1cc37994 100644
 --- a/smtpd/smtpctl.c
 +++ b/usr.sbin/smtpd/smtpctl.c
 @@ -966,7 +966,7 @@ do_encrypt(int argc, struct parameter *argv)
@@ -1597,6 +1678,17 @@ index 7dba4224..b255ed3d 100644
  	errx(1, "execl");
  }
  
+@@ -1066,8 +1066,8 @@ main(int argc, char **argv)
+ 	int		 privileged;
+ 	char		*argv_mailq[] = { "show", "queue", NULL };
+ 
+-#ifndef HAVE___PROGNAME
+-	__progname = ssh_get_progname(argv[0]);
++#ifdef NEED_PROGNAME
++	__progname = get_progname(argv[0]);
+ #endif
+ 
+ 	/* check that smtpctl was installed setgid */
 diff --git a/smtpd/smtpctl/Makefile b/usr.sbin/smtpd/smtpctl/Makefile
 similarity index 100%
 rename from smtpd/smtpctl/Makefile
@@ -1621,7 +1713,7 @@ diff --git a/smtpd/smtpd.c b/usr.sbin/smtpd/smtpd.c
 similarity index 99%
 rename from smtpd/smtpd.c
 rename to usr.sbin/smtpd/smtpd.c
-index f18b1446..ad0ebdea 100644
+index f18b1446..9307fc3b 100644
 --- a/smtpd/smtpd.c
 +++ b/usr.sbin/smtpd/smtpd.c
 @@ -1,4 +1,4 @@
@@ -1638,6 +1730,38 @@ index f18b1446..ad0ebdea 100644
  #include <openssl/ssl.h>
  #include <openssl/evp.h>
  
+@@ -519,11 +520,11 @@ main(int argc, char *argv[])
+ 	char		*rexec = NULL;
+ 	struct smtpd	*conf;
+ 
+-#ifndef HAVE___PROGNAME
+-	__progname = ssh_get_progname(argv[0]);
++#ifdef NEED_PROGNAME
++	__progname = get_progname(argv[0]);
+ #endif
++	__progname = xstrdup(__progname);
+ 
+-#ifndef HAVE_SETPROCTITLE
+ 	/* Save argv. Duplicate so setproctitle emulation doesn't clobber it */
+ 	saved_argc = argc;
+ 	saved_argv = xcalloc(argc + 1, sizeof(*saved_argv));
+@@ -531,14 +532,15 @@ main(int argc, char *argv[])
+ 		saved_argv[i] = xstrdup(argv[i]);
+ 	saved_argv[i] = NULL;
+ 
++#ifdef NEED_SETPROCTITLE
+ 	/* Prepare for later setproctitle emulation */
+ 	compat_init_setproctitle(argc, argv);
+ 	argv = saved_argv;
++#endif
+ 
+ 	/* this is to work around GNU getopt + portable setproctitle() fuckery */
+ 	save_argc = saved_argc;
+ 	save_argv = saved_argv;
+-#endif
+ 
+ 	if ((conf = config_default()) == NULL)
+ 		err(1, NULL);
 diff --git a/smtpd/smtpd.conf b/usr.sbin/smtpd/smtpd.conf
 similarity index 100%
 rename from smtpd/smtpd.conf
