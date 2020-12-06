@@ -752,3 +752,26 @@ src_install() {
 
 	fowners authelia:authelia /var/log/authelia
 }
+
+pkg_postinst() {
+	elog "Authelia consist of a backend server and some static assets. You"
+	elog "need to configure and setup both to start using Authelia:"
+	elog
+	elog "- For the backend server, configure authentication backend, access"
+	elog "  control, session and other persistent storage in"
+	elog "  /etc/authelia/configuration.yml."
+	elog
+	elog "- You can launch Authelia server by running:"
+	elog
+	elog "    # /etc/init.d/authelia start"
+	elog
+	elog "- For static assets:"
+	elog "    - Install web parts of Authelia using webapp-config."
+	elog "    - Set up a web server to serve static assets at the path"
+	elog "      Authelia expects."
+	elog "    - Set up a web server to forward X-Forwarded-For,"
+	elog "      X-Forwarded-Proto, X-Forwarded-Host to the portal plus"
+	elog "      X-Forwarded-URI to the /verify endpoint."
+
+	webapp_pkg_postinst
+}
