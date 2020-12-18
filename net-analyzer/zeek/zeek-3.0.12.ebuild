@@ -26,7 +26,7 @@ RDEPEND="dev-libs/caf:0=
 	kerberos? ( virtual/krb5 )
 	python? ( ${PYTHON_DEPS}
 		$(python_gen_cond_dep '
-			=dev-python/pybind11-2.5.0[${PYTHON_MULTI_USEDEP}]
+			~dev-python/pybind11-2.5.0[${PYTHON_MULTI_USEDEP}]
 		')
 	)
 	sendmail? ( virtual/mta )
