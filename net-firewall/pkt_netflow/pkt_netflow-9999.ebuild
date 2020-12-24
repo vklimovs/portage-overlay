@@ -23,6 +23,7 @@ DEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/${P}-flags.patch"
+	"${FILESDIR}/${P}-warn-on-failed-connection.patch"
 )
 
 src_unpack () {
