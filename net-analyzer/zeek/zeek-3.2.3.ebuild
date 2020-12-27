@@ -26,7 +26,7 @@ RDEPEND="dev-libs/caf:0=
 	kerberos? ( virtual/krb5 )
 	python? ( ${PYTHON_DEPS}
 		$(python_gen_cond_dep '
-			~dev-python/pybind11-2.5.0[${PYTHON_MULTI_USEDEP}]
+			>=dev-python/pybind11-2.6.1[${PYTHON_MULTI_USEDEP}]
 		')
 	)
 	sendmail? ( virtual/mta )
@@ -42,9 +42,10 @@ REQUIRED_USE="zeekctl? ( python )
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-3.2-add-site-policy-dir-config.patch
-	"${FILESDIR}"/${PN}-3.2-no-strip.patch
-	"${FILESDIR}"/${PN}-3.2-no-uninitialized-warning.patch
-	"${FILESDIR}"/${PN}-3.2-no-wrapper-scripts.patch
+	"${FILESDIR}"/${PN}-3.2-do-not-install-wrapper-scripts.patch
+	"${FILESDIR}"/${PN}-3.2-do-not-strip-broker-binary.patch
+	"${FILESDIR}"/${PN}-3.2-fix-pybind11-compatibility-issues.patch
+	"${FILESDIR}"/${PN}-3.2-fix-uninitialized-warning.patch
 	"${FILESDIR}"/${PN}-remove-unnecessary-remove.patch
 )
 
