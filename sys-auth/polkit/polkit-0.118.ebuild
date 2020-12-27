@@ -56,9 +56,9 @@ PDEPEND="
 DOCS=( docs/TODO HACKING NEWS README )
 
 PATCHES=(
-	# bug 660880
-	"${FILESDIR}"/${PN}-${PV}-elogind.patch
 	"${FILESDIR}"/${PN}-${PV}-duktape.patch
+	"${FILESDIR}"/${PN}-${PV}-elogind.patch
+	"${FILESDIR}"/${PN}-${PV}-make-netgroup-support-optional.patch
 )
 
 QA_MULTILIB_PATHS="
