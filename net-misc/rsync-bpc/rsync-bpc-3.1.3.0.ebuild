@@ -12,9 +12,8 @@ SRC_URI="https://github.com/backuppc/${PN}/archive/${PV}/${PV}.tar.gz
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~m68k ~mips ppc ppc64 ~riscv
-	s390 sparc x86 ~ppc-aix ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos
-	~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris
-	~x64-solaris ~x86-solaris"
+	s390 sparc x86 ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos
+	~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 IUSE="acl examples iconv ipv6 static system-zlib xattr"
 
 LIB_DEPEND="acl? ( virtual/acl[static-libs(+)] )
