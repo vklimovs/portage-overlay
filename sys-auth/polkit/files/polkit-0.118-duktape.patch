@@ -92,7 +92,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..ae984535ed88003ab1b0965e3e109a848479c047
 --- /dev/null
 +++ b/src/polkitbackend/polkitbackendduktapeauthority.c
-@@ -0,0 +1,1402 @@
+@@ -0,0 +1,1404 @@
 +/*
 + * Copyright (C) 2008-2012 Red Hat, Inc.
 + * Copyright (C) 2015 Tangent Space <jstpierre@mecheye.net>
