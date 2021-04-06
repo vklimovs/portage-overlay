@@ -1,0 +1,128 @@
+diff --git a/auxil/zeekctl/CMakeLists.txt b/auxil/zeekctl/CMakeLists.txt
+index a2029f5..6e07954 100644
+--- a/auxil/zeekctl/CMakeLists.txt
++++ b/auxil/zeekctl/CMakeLists.txt
+@@ -266,9 +266,6 @@ InstallPackageConfigFile(
+     ${ETC}
+     node.cfg)
+
+-# Install legacy BroControl wrappers and links.
+-InstallSymlink("${CMAKE_INSTALL_PREFIX}/bin/zeek-wrapper" "${CMAKE_INSTALL_PREFIX}/bin/broctl")
+-
+ if ( NOT BINARY_PACKAGING_MODE )
+   # Need to remove pre-existing broctl dir from previous installs.
+   set(_broctl_lib_dst ${LIBDIR}/broctl)
+@@ -283,9 +280,6 @@ if ( NOT BINARY_PACKAGING_MODE )
+   ")
+ endif ()
+
+-InstallSymlink("${PY_MOD_INSTALL_DIR}/zeekctl" "${LIBDIR}/broctl")
+-install(DIRECTORY BroControl DESTINATION ${PY_MOD_INSTALL_DIR}/zeekctl)
+-
+ ########################################################################
+ ## Packaging Setup
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 53591ca34..f5f514079 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -130,7 +130,6 @@ include(BinPAC)
+ set(BINPAC_AUXSRC
+     ${CMAKE_SOURCE_DIR}/src/binpac.pac
+     ${CMAKE_SOURCE_DIR}/src/zeek.pac
+-    ${CMAKE_SOURCE_DIR}/src/bro.pac
+     ${CMAKE_SOURCE_DIR}/src/binpac_zeek.h
+ )
+
+diff --git a/src/bro.pac b/src/bro.pac
+deleted file mode 100644
+index 7bfe202d7..000000000
+--- a/src/bro.pac
++++ /dev/null
+@@ -1,11 +0,0 @@
+-%extern{
+-#warning "bro.pac is deprecated and will be removed in v4.1. Use zeek.pac instead."
+-#include "zeek/binpac_bro.h"
+-%}
+-
+-extern type BroAnalyzer;
+-extern type BroVal;
+-extern type BroPortVal;
+-extern type BroStringVal;
+-
+-function network_time(): double;
+
+diff --git a/auxil/broker/bindings/python/broker/bro.py b/auxil/broker/bindings/python/broker/bro.py
+deleted file mode 100644
+index 84c6ad0..0000000
+--- a/auxil/broker/bindings/python/broker/bro.py
++++ /dev/null
+@@ -1,26 +0,0 @@
+-from __future__ import print_function
+-
+-from . import zeek
+-
+-import traceback
+-import sys
+-
+-class Event(zeek.Event):
+-
+-    warnings_emitted = set()
+-
+-    def __new__(cls, *args, **kwargs):
+-        stack_info = traceback.extract_stack()[0]
+-        usage_file = stack_info[0]
+-        usage_line = stack_info[1]
+-        usage_text = stack_info[3]
+-
+-        if (usage_file, usage_line) not in Event.warnings_emitted:
+-            print('File "{}", line {}: deprecated bro.event usage,'
+-                  ' use zeek.Event instead:\n    {}'.format(
+-                      usage_file, usage_line, usage_text),
+-                  file=sys.stderr)
+-
+-            Event.warnings_emitted.add((usage_file, usage_line))
+-
+-        return super(Event, cls).__new__(cls, *args, **kwargs)
+
+diff --git a/auxil/broker/include/broker/bro.hh b/auxil/broker/include/broker/bro.hh
+deleted file mode 100644
+index 83e5620..0000000
+--- a/auxil/broker/include/broker/bro.hh
++++ /dev/null
+@@ -1,35 +0,0 @@
+-#pragma once
+-
+-#pragma message("Warning: bro.hh header is deprecated, use zeek.hh instead")
+-
+-#include "broker/zeek.hh"
+-
+-namespace broker {
+-namespace bro {
+-
+-using Message
+-      [[deprecated("use version from zeek.hh and zeek namespace instead")]]
+-      = broker::zeek::Message;
+-
+-using Event
+-      [[deprecated("use version from zeek.hh and zeek namespace instead")]]
+-      = broker::zeek::Event;
+-
+-using Batch
+-      [[deprecated("use version from zeek.hh and zeek namespace instead")]]
+-      = broker::zeek::Batch;
+-
+-using LogCreate
+-      [[deprecated("use version from zeek.hh and zeek namespace instead")]]
+-      = broker::zeek::LogCreate;
+-
+-using LogWrite
+-      [[deprecated("use version from zeek.hh and zeek namespace instead")]]
+-      = broker::zeek::LogWrite;
+-
+-using IdentifierUpdate
+-      [[deprecated("use version from zeek.hh and zeek namespace instead")]]
+-      = broker::zeek::IdentifierUpdate;
+-
+-} // namespace broker
+-} // namespace bro
