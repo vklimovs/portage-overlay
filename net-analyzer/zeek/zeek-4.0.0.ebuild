@@ -47,6 +47,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-4.0-do-not-check-for-optional-dependencies.patch
 	"${FILESDIR}"/${PN}-4.0-do-not-install-compat-assets.patch
 	"${FILESDIR}"/${PN}-4.0-do-not-install-wrapper-scripts.patch
+	"${FILESDIR}"/${PN}-remove-unnecessary-remove.patch
 )
 
 src_prepare() {
