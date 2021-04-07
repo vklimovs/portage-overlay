@@ -126,3 +126,16 @@ index 83e5620..0000000
 -
 -} // namespace broker
 -} // namespace bro
+
+diff --git a/auxil/broker/bindings/python/broker/__init__.py b/auxil/broker/bindings/python/broker/__init__.py
+index 95d6128..63f1834 100644
+--- a/auxil/broker/bindings/python/broker/__init__.py
++++ b/auxil/broker/bindings/python/broker/__init__.py
+@@ -427,7 +427,6 @@ class Message:
+         assert False and "method not overridden"
+
+ from . import zeek
+-from . import bro
+
+ class Data(_broker.Data):
+     def __init__(self, x = None):
