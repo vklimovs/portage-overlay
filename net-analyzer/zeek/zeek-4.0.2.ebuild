@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -44,9 +44,9 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-3.2-add-site-policy-dir-config.patch
 	"${FILESDIR}"/${PN}-3.2-do-not-strip-broker-binary.patch
 	"${FILESDIR}"/${PN}-3.2-fix-uninitialized-warning.patch
-	"${FILESDIR}"/${PN}-4.0.2-do-not-check-for-optional-dependencies.patch
 	"${FILESDIR}"/${PN}-4.0-do-not-install-compat-assets.patch
 	"${FILESDIR}"/${PN}-4.0-do-not-install-wrapper-scripts.patch
+	"${FILESDIR}"/${PN}-4.0.2-do-not-check-for-optional-dependencies.patch
 	"${FILESDIR}"/${PN}-remove-unnecessary-remove.patch
 )
 
