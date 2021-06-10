@@ -1,0 +1,51 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e993b9c87..73aba04b2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -390,20 +390,24 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/auxil/rapidjson/include/rapidjson
+ # Optional Dependencies
+ 
+ set(USE_GEOIP false)
+-find_package(LibMMDB)
+-if (LIBMMDB_FOUND)
++if ( ENABLE_MMDB )
++  find_package(LibMMDB)
++  if (LIBMMDB_FOUND)
+     set(USE_GEOIP true)
+     include_directories(BEFORE ${LibMMDB_INCLUDE_DIR})
+     list(APPEND OPTLIBS ${LibMMDB_LIBRARY})
++  endif ()
+ endif ()
+ 
+ set(USE_KRB5 false)
+-if ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
+-  find_package(LibKrb5)
+-  if (LIBKRB5_FOUND)
+-     set(USE_KRB5 true)
+-     include_directories(BEFORE ${LibKrb5_INCLUDE_DIR})
+-     list(APPEND OPTLIBS ${LibKrb5_LIBRARY})
++if (ENABLE_KRB5 )
++  if ( ${CMAKE_SYSTEM_NAME} MATCHES Linux )
++    find_package(LibKrb5)
++    if (LIBKRB5_FOUND)
++       set(USE_KRB5 true)
++       include_directories(BEFORE ${LibKrb5_INCLUDE_DIR})
++       list(APPEND OPTLIBS ${LibKrb5_LIBRARY})
++    endif ()
+   endif ()
+ endif ()
+ 
+@@ -438,13 +442,6 @@ endif ()
+ # if one specifies --with-openssl (which may be common).
+ include_directories(BEFORE ${OPENSSL_INCLUDE_DIR})
+ 
+-# Determine if libfts is external to libc, i.e. musl
+-find_package(FTS)
+-if ( FTS_FOUND )
+-    list(APPEND OPTLIBS ${FTS_LIBRARY})
+-    include_directories(BEFORE ${FTS_INCLUDE_DIR})
+-endif ()
+-
+ # Any headers that are possibly bundled in the Zeek source-tree and that are supposed
+ # to have priority over any pre-existing/system-wide headers need to appear early in
+ # compiler search path.
