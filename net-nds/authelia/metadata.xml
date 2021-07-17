@@ -5,10 +5,6 @@
         <email>vklimovs@gmail.com</email>
         <name>Vjaceslavs Klimovs</name>
     </maintainer>
-    <maintainer type="project">
-        <email>proxy-maint@gentoo.org</email>
-        <name>Proxy Maintainers</name>
-    </maintainer>
     <upstream>
         <remote-id type="github">authelia/authelia</remote-id>
     </upstream>
