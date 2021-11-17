@@ -44,10 +44,10 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-3.2-add-site-policy-dir-config.patch
 	"${FILESDIR}"/${PN}-3.2-do-not-strip-broker-binary.patch
 	"${FILESDIR}"/${PN}-3.2-fix-uninitialized-warning.patch
-	"${FILESDIR}"/${PN}-4.0-do-not-install-compat-assets.patch
 	"${FILESDIR}"/${PN}-4.0-do-not-install-wrapper-scripts.patch
 	"${FILESDIR}"/${PN}-4.0.2-do-not-check-for-optional-dependencies.patch
-	"${FILESDIR}"/${PN}-4.0.4-remove-unnecessary-remove.patch
+	"${FILESDIR}"/${PN}-4.1.1-do-not-install-compat-assets.patch
+	"${FILESDIR}"/${PN}-4.1.1-remove-unnecessary-remove.patch
 )
 
 src_prepare() {
