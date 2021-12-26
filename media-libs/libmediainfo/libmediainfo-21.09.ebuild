@@ -31,7 +31,9 @@ BDEPEND="
 	doc? ( app-doc/doxygen )
 "
 
-PATCHES=( "${FILESDIR}"/${P}-pkgconfig.patch )
+PATCHES=( "${FILESDIR}"/${P}-pkgconfig.patch
+		  "${FILESDIR}"/${P}-compile-in-tfsxml-unconditionally.diff
+)
 
 S="${WORKDIR}"/${MY_PN}Lib/Project/GNU/Library
 
