@@ -24,6 +24,7 @@ DEPEND="${RDEPEND}
 PATCHES=(
 	"${FILESDIR}/${P}-flags.patch"
 	"${FILESDIR}/${P}-warn-on-failed-connection.patch"
+	"${FILESDIR}/${P}-fix-linux-headers-5.14.patch"
 )
 
 src_unpack () {
@@ -70,7 +71,7 @@ src_configure() {
 }
 
 src_compile() {
-	emake ARCH="$(tc-arch-kernel)" CC="$(tc-getCC)" all
+	emake ARCH="$(tc-arch-kernel)" CC="$(tc-getCC)" LD="$(tc-getLD)" OBJDUMP="$(tc-getOBJDUMP)" all
 }
 
 src_install() {

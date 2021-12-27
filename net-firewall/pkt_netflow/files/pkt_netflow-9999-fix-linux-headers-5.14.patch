@@ -1,0 +1,22 @@
+diff --git a/pkt_netflow.c b/pkt_netflow.c
+index 2057d4d..5033aee 100644
+--- a/pkt_netflow.c
++++ b/pkt_netflow.c
+@@ -1834,7 +1834,7 @@ static struct ctl_path netflow_sysctl_path[] = {
+ #endif /* CONFIG_SYSCTL */
+ 
+ /* socket code */
+-static void sk_error_report(struct sock *sk)
++static void netflow_sk_error_report(struct sock *sk)
+ {
+ 	struct pkt_netflow_sock *usock;
+ 
+@@ -1865,7 +1865,7 @@ static struct socket *usock_open_sock(struct pkt_netflow_sock *usock)
+ 	}
+ 	sock->sk->sk_allocation = GFP_ATOMIC;
+ 	sock->sk->sk_prot->unhash(sock->sk); /* hidden from input */
+-	sock->sk->sk_error_report = &sk_error_report; /* clear ECONNREFUSED */
++	sock->sk->sk_error_report = &netflow_sk_error_report; /* clear ECONNREFUSED */
+ 	sock->sk->sk_user_data = usock;
+ 	sock->sk->sk_reuse = SK_CAN_REUSE;
+ 
