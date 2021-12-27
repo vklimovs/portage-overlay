@@ -1,9 +1,0 @@
-#!/sbin/openrc-run
-
-command=/usr/bin/authelia
-command_args="${authelia_opts:---config /etc/authelia/configuration.yml}"
-command_background=yes
-command_user=authelia:authelia
-error_log="${error_log:-/var/log/authelia/authelia_error.log}"
-make_pidfile=yes
-pidfile=/run/authelia.pid
