@@ -4,7 +4,7 @@
 EAPI=7
 
 PYTHON_COMPAT=( python3_{6,7,8,9} )
-inherit cmake python-single-r1
+inherit cmake multilib python-single-r1
 
 DESCRIPTION="The Zeek Network Security Monitor"
 HOMEPAGE="https://www.zeek.org"
@@ -105,7 +105,9 @@ src_configure() {
 
 src_install() {
 	cmake_src_install
-	python_optimize "${D}/usr/lib/entropy/client"
+
+	use python && python_optimize \
+		"${D}"/usr/"$(get_libdir)"/zeek/python/zeekctl/{ZeekControl,plugins}
 
 	keepdir /var/log/"${PN}" /var/spool/"${PN}"/{tmp,brokerstore}
 
