@@ -25,9 +25,7 @@ RDEPEND=">=dev-libs/caf-0.18.2:0=
 	jemalloc? ( dev-libs/jemalloc:0= )
 	kerberos? ( virtual/krb5 )
 	python? ( ${PYTHON_DEPS}
-		$(python_gen_cond_dep '
-			>=dev-python/pybind11-2.6.1[${PYTHON_MULTI_USEDEP}]
-		')
+		$(python_gen_cond_dep '>=dev-python/pybind11-2.6.1[${PYTHON_USEDEP}]')
 	)
 	sendmail? ( virtual/mta )
 	tcmalloc? ( dev-util/google-perftools )"
@@ -107,6 +105,7 @@ src_configure() {
 
 src_install() {
 	cmake_src_install
+	python_optimize "${D}/usr/lib/entropy/client"
 
 	keepdir /var/log/"${PN}" /var/spool/"${PN}"/{tmp,brokerstore}
 
