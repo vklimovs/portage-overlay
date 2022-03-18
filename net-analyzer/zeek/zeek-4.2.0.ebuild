@@ -107,7 +107,10 @@ src_install() {
 	cmake_src_install
 
 	use python && python_optimize \
-		"${D}"/usr/"$(get_libdir)"/zeek/python/zeekctl/{ZeekControl,plugins}
+		"${D}"/usr/"$(get_libdir)"/zeek/python/ \
+		"${D}"/usr/"$(get_libdir)"/zeek/python/broker \
+		"${D}"/usr/"$(get_libdir)"/zeek/python/zeekctl/ZeekControl \
+		"${D}"/usr/"$(get_libdir)"/zeek/python/zeekctl/plugins
 
 	keepdir /var/log/"${PN}" /var/spool/"${PN}"/{tmp,brokerstore}
 
