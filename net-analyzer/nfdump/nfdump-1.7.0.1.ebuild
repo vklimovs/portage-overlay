@@ -27,8 +27,8 @@ COMMON_DEPEND="app-arch/bzip2
 
 DEPEND="${COMMON_DEPEND}"
 
-BDEPEND="sys-devel/flex
-	virtual/yacc
+BDEPEND="app-alternatives/yacc
+	sys-devel/flex
 	doc? ( app-doc/doxygen[dot] )
 "
 
