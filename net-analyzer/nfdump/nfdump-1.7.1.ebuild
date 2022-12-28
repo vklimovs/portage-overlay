@@ -39,6 +39,7 @@ RDEPEND="${COMMON_DEPEND}
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-1.6.19-libft.patch
+	"${FILESDIR}"/${PN}-1.7.1-allow-repeater-argument.patch
 )
 
 DOCS=( AUTHORS ChangeLog README.md )
