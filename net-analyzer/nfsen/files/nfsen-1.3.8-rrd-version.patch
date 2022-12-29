@@ -7,7 +7,7 @@ index b332f71..27aef5e 100644
  		$RRDoffset = 77;
  	}
 -	if ( $rrd_version >= 1.2 && $rrd_version < 1.6 ) {
-+	if ( $rrd_version >= 1.2 && $rrd_version < 1.8 ) {
++	if ( $rrd_version >= 1.2 && $rrd_version < 1.9 ) {
  		$RRDoffset = 67;
  	}
  
