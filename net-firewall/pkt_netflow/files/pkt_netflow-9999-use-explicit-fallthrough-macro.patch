@@ -1,0 +1,66 @@
+diff --git a/compat.h b/compat.h
+index 4c6d9c3..bec66c7 100644
+--- a/compat.h
++++ b/compat.h
+@@ -679,4 +679,24 @@ unsigned long long strtoul(const char *cp, char **endp, unsigned int base)
+ 	return result;
+ }
+ 
++/* Copy from 294f69e662d1 ("compiler_attributes.h: Add 'fallthrough' pseudo
++ * keyword for switch/case use") */
++#ifndef fallthrough
++# if __has_attribute(__fallthrough__)
++#  define fallthrough			__attribute__((__fallthrough__))
++# else
++#  define fallthrough			do {} while (0)  /* fallthrough */
++# endif
++#endif
++
++/* Copy from 294f69e662d1 ("compiler_attributes.h: Add 'fallthrough' pseudo
++ * keyword for switch/case use") */
++#ifndef fallthrough
++# if __has_attribute(__fallthrough__)
++#  define fallthrough			__attribute__((__fallthrough__))
++# else
++#  define fallthrough			do {} while (0)  /* fallthrough */
++# endif
++#endif
++
+ #endif /* COMPAT_NETFLOW_H */
+diff --git a/murmur3.h b/murmur3.h
+index 4e3377b..50d8b11 100644
+--- a/murmur3.h
++++ b/murmur3.h
+@@ -32,8 +32,8 @@ static inline uint32_t murmur3(const void *key, const uint32_t len, const uint32
+ 	}
+ 	tail = (const uint8_t*)blocks;
+ 	switch (len & 3) {
+-		case 3: k1 ^= tail[2] << 16; /* FALLTHROUGH */
+-		case 2: k1 ^= tail[1] << 8;  /* FALLTHROUGH */
++		case 3: k1 ^= tail[2] << 16; fallthrough;
++		case 2: k1 ^= tail[1] << 8;  fallthrough;
+ 		case 1: k1 ^= tail[0];
+ 			h1 ^= rotl32(k1 * c1, 15) * c2;
+ 	}
+diff --git a/pkt_netflow.c b/pkt_netflow.c
+index 2057d4d..1e23a07 100644
+--- a/pkt_netflow.c
++++ b/pkt_netflow.c
+@@ -2112,7 +2112,7 @@ static int parse_sampler(char *ptr)
+ 		printk(KERN_ERR "pkt_netflow: sampler parse error (%s '%s').\n",
+ 		    "unknown mode", ptr);
+ 		ret = -EINVAL;
+-		/* FALLTHROUGH */
++		fallthrough;
+ 	case '\0': /* empty */
+ 	case 'n':  /* none */
+ 	case 'o':  /* off */
+@@ -3505,7 +3505,7 @@ static inline void add_tpl_field(__u8 *ptr, const int type, const struct pkt_net
+ 			      put_unaligned_be16(nf->options, ptr); break;
+ 	case SRC_MASK:	               *ptr = nf->s_mask; break;
+ 	case DST_MASK:	               *ptr = nf->d_mask; break;
+-	case icmpTypeCodeIPv4:	/*FALLTHROUGH*/
++	case icmpTypeCodeIPv4:	fallthrough;
+ 	case icmpTypeCodeIPv6:	put_unaligned(nf->tuple.d_port, (__be16 *)ptr); break;
+ 	case MUL_IGMP_TYPE:            *ptr = nf->tuple.d_port; break;
+ 	case flowEndReason: 	       *ptr = nf->flowEndReason; break;

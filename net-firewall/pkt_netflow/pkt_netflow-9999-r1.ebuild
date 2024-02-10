@@ -25,22 +25,15 @@ PATCHES=(
 	"${FILESDIR}/${P}-flags.patch"
 	"${FILESDIR}/${P}-warn-on-failed-connection.patch"
 	"${FILESDIR}/${P}-fix-linux-headers-5.14.patch"
-	"${FILESDIR}/${P}-fix-register-sysctl-6.4.0.patch"
+	"${FILESDIR}/${P}-fix-6.4-register_sysctl_paths-removal.patch"
+	"${FILESDIR}/${P}-use-explicit-fallthrough-macro.patch"
 )
+
+CONFIG_CHECK="~IPV6 ~PROC_FS ~SYSCTL ~VLAN_8021Q"
 
 src_unpack () {
 	default
 	mv "${WORKDIR}"/*netflow* "${S}" || die
-}
-
-pkg_setup() {
-	linux-info_pkg_setup
-
-	local CONFIG_CHECK="~IPV6 ~PROC_FS ~SYSCTL ~VLAN_8021Q"
-
-	local modlist=( pkt_netflow )
-
-	linux-mod-r1_pkg_setup
 }
 
 src_prepare() {
@@ -71,11 +64,12 @@ src_configure() {
 }
 
 src_compile() {
-	emake ARCH="$(tc-arch-kernel)" CC="$(tc-getCC)" LD="$(tc-getLD)" OBJDUMP="$(tc-getOBJDUMP)" all install
+	local modlist=( pkt_netflow )
+	linux-mod-r1_src_compile
 }
 
 src_install() {
 	use snmp && emake DESTDIR="${D}" SNMPTGSO="/usr/$(get_libdir)/snmp/dlmod/snmp_netflow.so" sinstall
-	modules_post_process
+	linux-mod-r1_src_install
 	dodoc README*
 }
