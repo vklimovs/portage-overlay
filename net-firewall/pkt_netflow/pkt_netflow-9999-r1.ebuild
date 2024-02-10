@@ -75,7 +75,7 @@ src_compile() {
 }
 
 src_install() {
-	linux-mod_src_install
+	linux-mod-r1_src_install
 	use snmp && emake DESTDIR="${D}" SNMPTGSO="/usr/$(get_libdir)/snmp/dlmod/snmp_netflow.so" sinstall
 	dodoc README*
 }
