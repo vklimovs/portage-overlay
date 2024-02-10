@@ -38,8 +38,7 @@ pkg_setup() {
 
 	local CONFIG_CHECK="~IPV6 ~PROC_FS ~SYSCTL ~VLAN_8021Q"
 
-	BUILD_TARGETS="all"
-	MODULE_NAMES="pkt_netflow(extra/pkt_netflow:)"
+	local modlist=( pkt_netflow )
 
 	linux-mod-r1_pkg_setup
 }
