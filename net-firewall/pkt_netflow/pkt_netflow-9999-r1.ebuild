@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
-inherit linux-info linux-mod toolchain-funcs
+inherit linux-mod-r1 toolchain-funcs
 
 DESCRIPTION="Standalone kernel netflow module"
 HOMEPAGE="https://github.com/aabc/pkt-netflow"
@@ -25,6 +25,7 @@ PATCHES=(
 	"${FILESDIR}/${P}-flags.patch"
 	"${FILESDIR}/${P}-warn-on-failed-connection.patch"
 	"${FILESDIR}/${P}-fix-linux-headers-5.14.patch"
+	"${FILESDIR}/${P}-fix-register-sysctl-6.4.0.patch"
 )
 
 src_unpack () {
@@ -40,7 +41,7 @@ pkg_setup() {
 	BUILD_TARGETS="all"
 	MODULE_NAMES="pkt_netflow(extra/pkt_netflow:)"
 
-	linux-mod_pkg_setup
+	linux-mod-r1_pkg_setup
 }
 
 src_prepare() {

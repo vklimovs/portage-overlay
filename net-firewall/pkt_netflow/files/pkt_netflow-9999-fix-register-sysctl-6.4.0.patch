@@ -1,0 +1,13 @@
+diff --git a/ipt_NETFLOW.c b/ipt_NETFLOW.c
+index 6344ddf..2c1cda8 100644
+--- a/ipt_NETFLOW.c
++++ b/ipt_NETFLOW.c
+@@ -5666,7 +5666,7 @@ static int __init ipt_netflow_init(void)
+ #endif
+                              );
+ #else /* 2.6.25 */
+-   netflow_sysctl_header = register_sysctl_paths(netflow_sysctl_path, netflow_sysctl_table);
++   netflow_sysctl_header = register_sysctl("net/netflow", netflow_sysctl_table);
+ #endif
+    if (!netflow_sysctl_header) {
+        printk(KERN_ERR "netflow: can't register to sysctl\n");
