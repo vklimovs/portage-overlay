@@ -1,7 +1,7 @@
-diff --git a/ipt_NETFLOW.c b/ipt_NETFLOW.c
+diff --git a/pkt_netflow.c b/pkt_netflow.c
 index 6344ddf..2c1cda8 100644
---- a/ipt_NETFLOW.c
-+++ b/ipt_NETFLOW.c
+--- a/pkt_netflow.c
++++ b/pkt_netflow.c
 @@ -5666,7 +5666,7 @@ static int __init ipt_netflow_init(void)
  #endif
                               );
