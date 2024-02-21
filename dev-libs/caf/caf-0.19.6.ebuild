@@ -1,13 +1,12 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-CMAKE_ECLASS=cmake
-inherit cmake-multilib
+inherit cmake-multilib multibuild
 
 DESCRIPTION="The C++ Actor Framework (CAF)"
-HOMEPAGE="https://actor-framework.org/"
+HOMEPAGE="https://www.actor-framework.org/"
 SRC_URI="https://github.com/actor-framework/actor-framework/archive/${PV}.tar.gz
 	-> ${P}.tar.gz"
 LICENSE="BSD"
@@ -15,16 +14,18 @@ SLOT="0/18.2"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug doc examples +openssl static-libs test tools"
 
-RDEPEND="examples? ( net-misc/curl dev-libs/protobuf:=
-					 dev-qt/qtcore:5 )
+RDEPEND="
+	examples? (
+		net-misc/curl dev-libs/protobuf:=
+		dev-qt/qtcore:5 )
 	openssl? ( dev-libs/openssl:0=[${MULTILIB_USEDEP},static-libs?] )"
 
 DEPEND="${RDEPEND}"
 
-BDEPEND="doc? ( app-doc/doxygen[dot]
+BDEPEND="doc? ( app-text/doxygen[dot]
 	app-shells/bash:0
 	dev-python/sphinx
-	dev-python/sphinx_rtd_theme )"
+	dev-python/sphinx-rtd-theme )"
 
 RESTRICT="!test? ( test )"
 
@@ -40,7 +41,6 @@ multilib_src_configure() {
 		-DCAF_ENABLE_ACTOR_PROFILER="$(usex debug)"
 		-DCAF_ENABLE_OPENSSL_MODULE="$(usex openssl)"
 		-DCAF_ENABLE_RUNTIME_CHECKS="$(usex debug)"
-		-DCAF_ENABLE_UTILITY_TARGETS="$(usex debug)"
 		-DCAF_LOG_LEVEL="$(usex debug DEBUG QUIET)"
 		-DLIBRARY_OUTPUT_PATH="$(get_libdir)"
 	)
@@ -50,7 +50,6 @@ multilib_src_configure() {
 			-DCAF_ENABLE_CURL_EXAMPLES="$(usex examples)"
 			-DCAF_ENABLE_EXAMPLES="$(usex examples)"
 			-DCAF_ENABLE_PROTOBUF_EXAMPLES="$(usex examples)"
-			-DCAF_ENABLE_QT5_EXAMPLES="$(usex examples)"
 			-DCAF_ENABLE_TESTING="$(usex test)"
 			-DCAF_ENABLE_TOOLS="$(usex tools)"
 		)
@@ -59,7 +58,6 @@ multilib_src_configure() {
 			-DCAF_ENABLE_CURL_EXAMPLES=no
 			-DCAF_ENABLE_EXAMPLES=no
 			-DCAF_ENABLE_PROTOBUF_EXAMPLES=no
-			-DCAF_ENABLE_QT5_EXAMPLES=no
 			-DCAF_ENABLE_TESTING=no
 			-DCAF_ENABLE_TOOLS=no
 		)
