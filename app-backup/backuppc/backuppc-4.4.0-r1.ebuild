@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -13,10 +13,13 @@ MY_P="${MY_PN}-${PV}"
 DESCRIPTION="High-performance backups to a server's disk"
 HOMEPAGE="https://backuppc.github.io/backuppc/"
 SRC_URI="https://github.com/${PN}/${PN}/releases/download/${PV}/${MY_P}.tar.gz"
+
+S=${WORKDIR}/${MY_P}
+
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="amd64 x86"
-IUSE="rss samba rrdtool systemd"
+IUSE="rrdtool rss samba systemd"
 
 DEPEND=">=dev-perl/BackupPC-XS-0.62
 	dev-lang/perl
@@ -37,8 +40,6 @@ RDEPEND="${DEPEND}
 	net-misc/rsync
 	virtual/httpd-cgi
 	virtual/mta"
-
-S=${WORKDIR}/${MY_P}
 
 set_config_option() {
 	# Examples of things this needs to edit:
