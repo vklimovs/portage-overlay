@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -6,7 +6,7 @@ EAPI=8
 inherit git-r3 toolchain-funcs
 
 DESCRIPTION="nsjail is a process isolation tool for Linux."
-HOMEPAGE="https://nsjail.com/"
+HOMEPAGE="https://nsjail.dev/"
 EGIT_REPO_URI="https://github.com/google/${PN}"
 
 LICENSE="Apache-2.0"
