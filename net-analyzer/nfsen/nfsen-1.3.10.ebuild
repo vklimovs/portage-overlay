@@ -1,32 +1,27 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
+WEBAPP_MANUAL_SLOT="yes"
+
 inherit perl-module webapp
 
-MY_P=${P/_/}
 DESCRIPTION="Graphical netflow analyzer using nfdump tools"
-HOMEPAGE="http://nfsen.sourceforge.net/"
-SRC_URI="https://sourceforge.net/projects/nfsen/files/stable/${MY_P}/${MY_P}.tar.gz"
+HOMEPAGE="https://github.com/phaag/nfsen"
+SRC_URI="https://github.com/phaag/${PN}/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+
 LICENSE="BSD"
+SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE=""
 
 RDEPEND="acct-group/nfsen
 	acct-user/nfsen
 	dev-perl/MailTools
 	dev-perl/Socket6
 	>=net-analyzer/nfdump-1.6.5[nfprofile]
-	>dev-lang/php-4.1[sockets]
+	>=dev-lang/php-4.1-r0[sockets]
 	net-analyzer/rrdtool[graph,perl]"
-
-S=${WORKDIR}/${MY_P}
-
-PATCHES=(
-	"${FILESDIR}"/"${P}"-profileadmin.php.patch
-	"${FILESDIR}"/"${P}"-rrd-version.patch
-)
 
 src_prepare() {
 	default
@@ -37,7 +32,7 @@ src_prepare() {
 	local BASEDIR="/var/lib/${PN}"
 	local BINDIR="/usr/bin"
 	local HTMLDIR="/var/www/localhost/${PN}"
-	local DOCDIR="/usr/share/doc/${MY_P}"
+	local DOCDIR="/usr/share/doc/${P}"
 	local PIDDIR="/run/${PN}"
 	local PREFIX="/usr/bin"
 	local COMMSOCKET="\$PIDDIR/${PN}.sock"
@@ -78,7 +73,7 @@ src_install() {
 		/var/lib/${PN}/var/filters \
 		/var/lib/${PN}/var/fmt
 
-	local CURRENT_TIME=$(date +%s)
+	local CURRENT_TIME; CURRENT_TIME=$(date +%s) || die
 	sed -e "s:%%CURRENT_TIME%%:${CURRENT_TIME}:" "${FILESDIR}"/profile.dat > "${T}"/profile.dat
 	insinto /var/lib/"${PN}"/profiles-stat/live
 	doins "${T}"/profile.dat
