@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -11,12 +11,12 @@ SRC_URI="https://github.com/phaag/nfdump/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="BSD"
 SLOT="0/${PV}"
 KEYWORDS="amd64 x86"
-IUSE="debug doc jnat ftconv nfpcapd nfprofile nftrack nsel readpcap sflow"
+IUSE="debug doc ftconv jnat nfpcapd nfprofile nftrack nsel readpcap sflow"
 
 REQUIRED_USE="?? ( jnat nsel )"
 
 COMMON_DEPEND="app-arch/bzip2
-	sys-libs/zlib
+	virtual/zlib
 	elibc_musl? ( sys-libs/fts-standalone )
 	ftconv? ( net-analyzer/flow-tools )
 	nfpcapd? ( net-libs/libpcap )
@@ -29,7 +29,7 @@ DEPEND="${COMMON_DEPEND}"
 
 BDEPEND="app-alternatives/yacc
 	sys-devel/flex
-	doc? ( app-doc/doxygen[dot] )
+	doc? ( app-text/doxygen[dot] )
 "
 
 RDEPEND="${COMMON_DEPEND}
@@ -39,7 +39,6 @@ RDEPEND="${COMMON_DEPEND}
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-1.6.19-libft.patch
-	"${FILESDIR}"/${PN}-1.7.1-allow-repeater-argument.patch
 )
 
 DOCS=( AUTHORS ChangeLog README.md )
