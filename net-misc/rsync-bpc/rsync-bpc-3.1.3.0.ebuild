@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -12,16 +12,20 @@ SRC_URI="https://github.com/backuppc/${PN}/archive/${PV}/${PV}.tar.gz
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="amd64 x86"
-IUSE="acl examples iconv ipv6 static system-zlib xattr"
+IUSE="acl examples iconv +ipv6 static system-zlib xattr"
 
 LIB_DEPEND="acl? ( virtual/acl[static-libs(+)] )
-	system-zlib? ( sys-libs/zlib[static-libs(+)] )
+	system-zlib? ( virtual/zlib[static-libs(+)] )
 	xattr? ( kernel_linux? ( sys-apps/attr[static-libs(+)] ) )
 	>=dev-libs/popt-1.5[static-libs(+)]"
 RDEPEND="!static? ( ${LIB_DEPEND//\[static-libs(+)]} )
 	iconv? ( virtual/libiconv )"
 DEPEND="${RDEPEND}
 	static? ( ${LIB_DEPEND} )"
+
+PATCHES=(
+	"${FILESDIR}"/${P}-gcc15.patch
+)
 
 src_configure() {
 	use static && append-ldflags -static

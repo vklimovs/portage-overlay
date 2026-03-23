@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-        <maintainer type="person">
+    <maintainer type="person">
         <email>vklimovs@gmail.com</email>
         <name>Vjaceslavs Klimovs</name>
     </maintainer>
@@ -9,10 +9,13 @@
         <remote-id type="github">backuppc/rsync-bpc</remote-id>
     </upstream>
     <use>
-        <flag name="system-zlib">
-            Use system zlib instead of bundled one. This is incompatible with
-            older rsync releases!
-        </flag>
+        <flag name="acl">Preserve and restore POSIX ACLs</flag>
+        <flag name="examples">Install contrib helper scripts</flag>
+        <flag name="iconv">Support filename charset conversion via iconv</flag>
+        <flag name="ipv6">Enable IPv6 support</flag>
+        <flag name="static">Build a statically linked binary</flag>
+        <flag name="system-zlib">Use system zlib instead of bundled one; incompatible with rsync older than 3.1.1</flag>
+        <flag name="xattr">Preserve and restore extended attributes</flag>
     </use>
     <longdescription lang="en">
         Rsync-bpc is a customized version of rsync that is used as part of
