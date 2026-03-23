@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
     <maintainer type="person">
         <email>vklimovs@gmail.com</email>
         <name>Vjaceslavs Klimovs</name>
     </maintainer>
     <use>
+        <flag name="btest">Install btest testing framework and test suites</flag>
+        <flag name="curl">Enable curl support for HTTP transfers in scripts</flag>
+        <flag name="debug">Enable debug build with extra runtime assertions</flag>
         <flag name="geoip2">Enable support for Maxmind's GeoIP library</flag>
-        <flag name="ipsumdump">Enables ipsumdump support for trace-summary</flag>
+        <flag name="ipsumdump">Enable ipsumdump support for trace-summary</flag>
+        <flag name="ipv6">Enable IPv6 protocol analysis support</flag>
+        <flag name="jemalloc">Use jemalloc allocator for improved memory performance</flag>
+        <flag name="kerberos">Enable Kerberos protocol analysis</flag>
+        <flag name="nodejs">Enable Node.js support</flag>
         <flag name="python">Enable Python bindings for broker</flag>
-        <flag name="sendmail">Enables Zeek and ZeekControl to send mail</flag>
+        <flag name="sendmail">Enable Zeek and ZeekControl to send mail</flag>
+        <flag name="static-libs">Build static libraries</flag>
         <flag name="tcmalloc">Enable Google's performance analysis tools</flag>
-        <flag name="tools">Auxiliary tools for Bro: adtrace, zeek-cut, rst</flag>
-        <flag name="zeekctl">Enable ZeekControl, a tool for operating Zeek installations</flag>
+        <flag name="spicy">Enable the bundled Spicy protocol analyzer framework</flag>
+        <flag name="tools">Install auxiliary tools: adtrace, zeek-cut, rst, zeek-archiver</flag>
+        <flag name="zeek-client">Install zeek-client CLI management tool</flag>
+        <flag name="zeekctl">Enable ZeekControl for operating Zeek installations</flag>
+        <flag name="zkg">Install the Zeek package manager</flag>
+        <flag name="zeromq">Enable ZeroMQ cluster backend</flag>
     </use>
     <upstream>
         <remote-id type="github">zeek/zeek</remote-id>

@@ -1,13 +1,13 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{8..13} )
+PYTHON_COMPAT=( python3_{11..14} )
 inherit cmake python-single-r1
 
 DESCRIPTION="The Zeek Network Security Monitor"
-HOMEPAGE="https://www.zeek.org"
+HOMEPAGE="https://zeek.org/"
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
@@ -21,15 +21,16 @@ fi
 
 LICENSE="BSD"
 SLOT="0"
-IUSE="curl debug geoip2 ipsumdump ipv6 jemalloc kerberos +python sendmail
-	static-libs tcmalloc +btest +tools +zeekctl caf nodejs"
+# nodejs/javascript is auto-detected upstream so defaults off here.
+IUSE="+btest curl debug geoip2 ipsumdump ipv6 jemalloc kerberos
+	nodejs +python sendmail +spicy static-libs tcmalloc +tools +zeek-client
+	+zeekctl +zkg +zeromq"
 
 RDEPEND="
-	caf? ( >=dev-libs/caf-0.18.2:0= )
 	debug? ( dev-debug/gdb )
 	dev-libs/openssl:0=
 	net-libs/libpcap
-	sys-libs/zlib:0=
+	virtual/zlib:0=
 	curl? ( net-misc/curl )
 	geoip2? ( dev-libs/libmaxminddb:0= )
 	ipsumdump? ( net-analyzer/ipsumdump[ipv6?] )
@@ -43,7 +44,15 @@ RDEPEND="
 	tcmalloc? ( dev-util/google-perftools )
 	tools? (
 		dev-python/semantic-version
-		dev-python/GitPython )"
+		dev-python/gitpython
+	)
+	zeek-client? ( ${PYTHON_DEPS}
+		$(python_gen_cond_dep '
+			>=dev-python/websocket-client-1.8.0[${PYTHON_USEDEP}]
+			>=dev-python/argcomplete-3.4.0[${PYTHON_USEDEP}]
+		')
+	)
+	zeromq? ( net-libs/zeromq )"
 
 DEPEND="${RDEPEND}"
 
@@ -51,11 +60,14 @@ BDEPEND=">=dev-lang/swig-3.0
 	>=sys-devel/bison-2.5"
 
 REQUIRED_USE="zeekctl? ( python )
+	zeek-client? ( python )
 	python? ( ${PYTHON_REQUIRED_USE} )"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-3.2-do-not-strip-broker-binary.patch
-	"${FILESDIR}"/${PN}-6.1.0-gentoo-qa-fixes.patch
+	"${FILESDIR}"/${PN}-8.0.6-do-not-strip-broker-binary.patch
+	"${FILESDIR}"/${PN}-8.0.6-do-not-remove-broker-headers-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.6-do-not-create-run-dirs-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.6-do-not-remove-stale-scripts-at-install-time.patch
 )
 
 if [[ ! ${PV} == 9999 ]]; then
@@ -63,32 +75,17 @@ if [[ ! ${PV} == 9999 ]]; then
 fi
 
 src_prepare() {
-	if use caf; then
-		rm -rf auxil/broker/caf || die
-		rm -rf auxil/broker/caf-incubator || die
-	fi
-
-	if use python; then
-		sed -i 's:.*/3rdparty/pybind11/.*:if(DISABLE_PYTHON_BINDINGS):' \
-			auxil/broker/CMakeLists.txt || die
-		sed -i 's:.*/3rdparty/pybind11/.*::' \
-			auxil/broker/bindings/python/CMakeLists.txt || die
-	fi
-
 	if ! use static-libs; then
 		sed -i 's:add_library(paraglob STATIC:add_library(paraglob SHARED:' \
-			auxil/paraglob/src/CMakeLists.txt
-		sed -i 's:DESTINATION lib:DESTINATION ${INSTALL_LIB_DIR}:' \
 			auxil/paraglob/src/CMakeLists.txt
 	fi
 
 	if ! use kerberos; then
-		eapply "${FILESDIR}/${PN}-6.1.0-disable-kerberos.patch"
+		eapply "${FILESDIR}/${PN}-8.0.6-disable-kerberos-when-not-wanted.patch"
 	fi
 
 	if [[ ${PV} == 9999 ]]; then
-		suffix="$(git rev-parse --short HEAD)-gentoo"
-		sed -i "s/$/_$(git rev-parse --short HEAD)-gentoo/" VERSION	|| die "version sed failed"
+		sed -i "s/$/_$(git rev-parse --short HEAD)-gentoo/" VERSION || die "version sed failed"
 	fi
 
 	cmake_src_prepare
@@ -104,15 +101,19 @@ src_configure() {
 		-DBUILD_STATIC_BINPAC=$(usex static-libs)
 		-DINSTALL_ZEEKCTL=$(usex zeekctl)
 		-DINSTALL_AUX_TOOLS=$(usex tools)
-		-DINSTALL_ZEEK_ARCHIVER=$(usex tools)
+		-DINSTALL_ZKG=$(usex zkg)
+		-DINSTALL_ZEEK_CLIENT=$(usex zeek-client)
 		-DDISABLE_PYTHON_BINDINGS=$(usex python no yes)
-		-DPYTHON_EXECUTABLE="${PYTHON}"
+		-DDISABLE_JAVASCRIPT=$(usex nodejs no yes)
+		-DDISABLE_AF_PACKET=no
+		-DDISABLE_SPICY=$(usex spicy no yes)
+		-DENABLE_CLUSTER_BACKEND_ZEROMQ=$(usex zeromq)
+		-DPython_EXECUTABLE="${PYTHON}"
 		-DZEEK_ETC_INSTALL_DIR="/etc/${PN}"
 		-DZEEK_STATE_DIR="/var/lib"
 		-DPY_MOD_INSTALL_DIR="$(python_get_sitedir)"
 		-DBINARY_PACKAGING_MODE=true
 		-DBUILD_SHARED_LIBS=ON
-		-DINSTALL_ZKG=ON
 	)
 
 	use debug && use tcmalloc && mycmakeargs+=( -DENABLE_PERFTOOLS_DEBUG=yes )
@@ -120,7 +121,6 @@ src_configure() {
 		-DZEEK_LOG_DIR="/var/log/${PN}"
 		-DZEEK_SPOOL_DIR="/var/spool/${PN}"
 	)
-	use caf &&  mycmakeargs+=( -DCAF_ROOT="${EPREFIX}/usr/include/caf" )
 
 	if ! use btest; then
 		mycmakeargs+=(
@@ -133,10 +133,6 @@ src_configure() {
 	fi
 
 	cmake_src_configure
-
-	# TODO: cmake target_compile_options appends priv_cflags without removing semicolon
-	# submodule impacted https://github.com/simonfxr/fiber
-	sed -iE 's:FLAGS\ =\(.*\);:FLAGS =\1 :' "${BUILD_DIR}/build.ninja" || die
 }
 
 src_install() {
@@ -150,13 +146,13 @@ src_install() {
 
 	keepdir \
 		/var/log/"${PN}" \
-		/var/spool/"${PN}"/{tmp,brokerstore} \
+		/var/spool/"${PN}"/{tmp,brokerstore,extract_files} \
 		/var/lib/zkg
 
 	# Make sure local config does not get overwritten on reinstalls
 	mv "${ED}"/usr/share/zeek/site "${ED}"/etc/zeek/ || die
 
-	# set config paths
+	# Set config paths
 	sed -i "s:^SitePolicyScripts.*$:SitePolicyScripts = /etc/zeek/site/local.zeek:" "${ED}"/etc/zeek/zeekctl.cfg || die
 	sed -i "s:^state_dir.*$:state_dir = /var/lib/zkg:" "${ED}"/etc/zeek/zkg/config || die
 }

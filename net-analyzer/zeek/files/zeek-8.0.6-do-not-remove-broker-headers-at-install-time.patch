@@ -1,0 +1,13 @@
+--- a/auxil/broker/CMakeLists.txt
++++ b/auxil/broker/CMakeLists.txt
+@@ -274,8 +274,8 @@
+ endif ()
+ 
+ # Make sure there are no old header versions on disk.
+-install(CODE "MESSAGE(STATUS \"Removing: ${CMAKE_INSTALL_PREFIX}/include/broker\")"
+-        CODE "file(REMOVE_RECURSE \"${CMAKE_INSTALL_PREFIX}/include/broker\")")
++#install(CODE "MESSAGE(STATUS \"Removing: ${CMAKE_INSTALL_PREFIX}/include/broker\")"
++#        CODE "file(REMOVE_RECURSE \"${CMAKE_INSTALL_PREFIX}/include/broker\")")
+ 
+ # Install all headers except the files from broker/internal.
+ install(

@@ -1,0 +1,25 @@
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -627,14 +627,14 @@
+ 
+ # Remove some stale files and scripts that previous Zeek versions put in place,
+ # yet make confuse us now. This makes upgrading easier.
+-install(
+-    CODE "
+-   file(REMOVE_RECURSE
+-       ${ZEEK_SCRIPT_INSTALL_PATH}/base/frameworks/logging/writers/dataseries.bro
+-       ${ZEEK_SCRIPT_INSTALL_PATH}/base/frameworks/logging/writers/elasticsearch.bro
+-       ${ZEEK_SCRIPT_INSTALL_PATH}/policy/tuning/logs-to-elasticsearch.bro
+-   )
+-")
++#install(
++#    CODE "
++#   file(REMOVE_RECURSE
++#       ${ZEEK_SCRIPT_INSTALL_PATH}/base/frameworks/logging/writers/dataseries.bro
++#       ${ZEEK_SCRIPT_INSTALL_PATH}/base/frameworks/logging/writers/elasticsearch.bro
++#       ${ZEEK_SCRIPT_INSTALL_PATH}/policy/tuning/logs-to-elasticsearch.bro
++#   )
++#")
+ 
+ # Make sure to escape a bunch of special characters in the path before trying to
+ # use it as a regular expression below.
