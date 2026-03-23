@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="codeberg">routerkit/ifstate</remote-id>
+	</upstream>
+	<longdescription lang="en">
+		A Python tool to configure (linux) host interfaces in a
+		declarative manner. It is a frontend for the kernel netlink protocol
+		using pyroute2 and aims to be as powerful as the
+		iproute2/bridge/ethtool/tc/wireguard commands.
+	</longdescription>
+</pkgmetadata>

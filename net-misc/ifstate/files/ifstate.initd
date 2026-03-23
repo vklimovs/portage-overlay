@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+
+description="Configures network interfaces"
+
+depend() {
+	need sysfs localmount
+	after bootmisc modules
+	provide net
+}
+
+start() {
+	ebegin "Starting ifstate"
+	ifstatecli --quiet apply
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping ifstate"
+	eend 0
+}
