@@ -197,8 +197,8 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-db-gentoo.patch"
-	"${FILESDIR}/${PN}-3.2.0-fix-rust-in-configure.patch"
+	"${FILESDIR}/${PN}-3.2.0-fix-db-version-detection-hardened.patch"
+	"${FILESDIR}/${PN}-3.2.0-fix-configure-rust-variable-collision.patch"
 )
 
 EPYTEST_PLUGINS=()

@@ -1,0 +1,23 @@
+CARGO and RUSTC are standard variables that may be pre-set by the
+build environment (e.g., Portage's cargo eclass) to point to specific
+tool paths.  Use HAS_CARGO/HAS_RUSTC as boolean checks so that these
+presence checks do not collide with the caller-supplied paths.
+
+Based on the equivalent fix applied to 3.0.x by Matt Jolly <kangie@gentoo.org>.
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -120,10 +120,10 @@
+     [rust_vendor_sources=""])
+ AC_SUBST([rust_vendor_sources])
+ if test "$enable_rust_offline" = yes; then
+-    AC_CHECK_PROG(CARGO, [cargo], [yes], [no])
+-    AC_CHECK_PROG(RUSTC, [rustc], [yes], [no])
++    AC_CHECK_PROG(HAS_CARGO, [cargo], [yes], [no])
++    AC_CHECK_PROG(HAS_RUSTC, [rustc], [yes], [no])
+
+-    AS_IF([test "$CARGO" != "yes" -o "$RUSTC" != "yes"], [
++    AS_IF([test "$HAS_CARGO" != "yes" -o "$HAS_RUSTC" != "yes"], [
+       AC_MSG_FAILURE("Rust based plugins cannot be built cargo=$CARGO rustc=$RUSTC")
+     ])
+ fi

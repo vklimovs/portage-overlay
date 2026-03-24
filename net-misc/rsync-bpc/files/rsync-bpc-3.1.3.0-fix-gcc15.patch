@@ -1,0 +1,54 @@
+Fix GCC 15 build failures; cherry-picked from upstream commits:
+- 6466b0b (hlink.c: fix function pointer cast in qsort)
+- 1ad3f70 (lib/pool_alloc.c: fix bomb function pointer declaration)
+- 7ea8fe71 (configure.ac: fix gettimeofday tz-argument detection)
+
+--- a/hlink.c
++++ b/hlink.c
+@@ -121,7 +121,7 @@ static void match_gnums(int32 *ndx_list, int ndx_count)
+ 	int32 gnum, gnum_next;
+
+ 	qsort(ndx_list, ndx_count, sizeof ndx_list[0],
+-	     (int (*)()) hlink_compare_gnum);
++	     (int (*)(const void*, const void*)) hlink_compare_gnum);
+
+         if ( inc_recurse && prior_hlinks && hlink_nlinks ) {
+             for (from = 0; from < ndx_count; from++) {
+--- a/lib/pool_alloc.c
++++ b/lib/pool_alloc.c
+@@ -9,7 +9,7 @@
+ 	size_t			size;		/* extent size		*/
+ 	size_t			quantum;	/* allocation quantum	*/
+ 	struct pool_extent	*extents;	/* top extent is "live" */
+-	void			(*bomb)();	/* function to call if
++	void			(*bomb)(const char *);	/* function to call if
+ 						 * malloc fails		*/
+ 	int			flags;
+
+--- a/lib/compat.c
++++ b/lib/compat.c
+@@ -148,11 +148,7 @@
+ /* some systems don't take the 2nd argument */
+ int sys_gettimeofday(struct timeval *tv)
+ {
+-#ifdef HAVE_GETTIMEOFDAY_TZ
+ 	return gettimeofday(tv, NULL);
+-#else
+-	return gettimeofday(tv);
+-#endif
+ }
+
+ #define HUMANIFY(mult) \
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -852,7 +852,8 @@
+
+ AC_CACHE_CHECK([if gettimeofday takes tz argument],rsync_cv_HAVE_GETTIMEOFDAY_TZ,[
+ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/time.h>
+-#include <unistd.h>]], [[struct timeval tv; exit(gettimeofday(&tv, NULL));]])],[rsync_cv_HAVE_GETTIMEOFDAY_TZ=yes],[rsync_cv_HAVE_GETTIMEOFDAY_TZ=no])])
++#include <unistd.h>
++#include <stdlib.h>]], [[struct timeval tv; exit(gettimeofday(&tv, NULL));]])],[rsync_cv_HAVE_GETTIMEOFDAY_TZ=yes],[rsync_cv_HAVE_GETTIMEOFDAY_TZ=no])])
+ if test x"$rsync_cv_HAVE_GETTIMEOFDAY_TZ" != x"no"; then
+     AC_DEFINE(HAVE_GETTIMEOFDAY_TZ, 1, [Define to 1 if gettimeofday() takes a time-zone arg])
+ fi

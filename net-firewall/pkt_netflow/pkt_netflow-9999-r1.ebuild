@@ -22,7 +22,7 @@ DEPEND="${RDEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/${P}-flags.patch"
+	"${FILESDIR}/${P}-respect-user-flags.patch"
 	"${FILESDIR}/${P}-warn-on-failed-connection.patch"
 	"${FILESDIR}/${P}-fix-linux-headers-5.14.patch"
 	"${FILESDIR}/${P}-fix-6.4-register_sysctl_paths-removal.patch"

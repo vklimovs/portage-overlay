@@ -20,7 +20,7 @@ DEPEND="
 
 RDEPEND="${DEPEND}"
 
-PATCHES=( "${FILESDIR}/makefile.patch" )
+PATCHES=( "${FILESDIR}/${PN}-9999-respect-user-flags.patch" )
 
 src_prepare() {
 	default

@@ -24,7 +24,7 @@ DEPEND="${RDEPEND}
 	static? ( ${LIB_DEPEND} )"
 
 PATCHES=(
-	"${FILESDIR}"/${P}-gcc15.patch
+	"${FILESDIR}"/${P}-fix-gcc15.patch
 )
 
 src_configure() {
