@@ -1,4 +1,7 @@
 #!/sbin/openrc-run
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+# shellcheck shell=sh
 
 CONFFILE="/etc/nfsen/nfsen.conf"
 
@@ -11,7 +14,7 @@ checkconfig() {
 
 get_config() {
 	checkconfig || return 1
-	sed -n -e 's:^[ \t]*'$1'[ \t]*=[ \t ]*\"\([^#]\+\).*\";:\1:p' $CONFFILE
+	sed -n -e 's:^[ \t]*'"${1}"'[ \t]*=[ \t ]*\"\([^#]\+\).*\";:\1:p' "${CONFFILE}"
 }
 
 depend() {
@@ -20,9 +23,9 @@ depend() {
 
 start_pre() {
 	checkconfig || return 1
-	local PIDDIR=$(get_config '$PIDDIR')
-	local USER=$(get_config '$USER')
-	checkpath -d -m 700 -o $USER $PIDDIR
+	PIDDIR="$(get_config "\$PIDDIR")"
+	USER="$(get_config "\$USER")"
+	checkpath -d -m 700 -o "${USER}" "${PIDDIR}"
 }
 
 start() {
@@ -41,6 +44,6 @@ stop() {
 
 stop_post() {
 	checkconfig || return 1
-	local PIDDIR=$(get_config '$PIDDIR')
-	rm -r $PIDDIR
+	PIDDIR="$(get_config "\$PIDDIR")"
+	rm -r "${PIDDIR}"
 }
