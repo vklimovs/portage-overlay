@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<longdescription lang="en">
+		phpLDAPadmin (PLA) is a web-based LDAP data management tool for
+		system administrators. It is a complete rewrite (v2) of the classic
+		phpLDAPadmin, built on Laravel 12 and PHP 8.4. It supports
+		OpenLDAP, 389 Directory Server, OpenDJ, Apache DS, and OpenBSD
+		ldapd, and is compliant with LDAP RFCs.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">leenooks/phpLDAPadmin</remote-id>
+	</upstream>
+</pkgmetadata>

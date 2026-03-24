@@ -1,0 +1,38 @@
+#!/sbin/openrc-run
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+# shellcheck shell=sh
+
+PIDFILE="/run/ldap-agent.pid"
+CONFIGFILE="/etc/dirsrv/config/ldap-agent.conf"
+
+# instance support in progress
+
+depend() {
+	need net
+	use logger snmpd
+}
+
+start() {
+	ebegin "Starting 389 Directory Server ldap-snmp agent"
+	start-stop-daemon --start --quiet -b \
+		--pidfile "${PIDFILE}" --exec /usr/sbin/ldap-agent -- "${CONFIGFILE}"
+	rc="${?}"
+	eend "${rc}"
+	if [ "${rc}" != "0" ]; then
+		set -- /etc/dirsrv/slapd-*
+		if [ -e "${1}" ]; then
+			ewarn "Please make sure that ${CONFIGFILE} contains at least"
+			ewarn "one of the following entries:"
+			for entry in "$@"; do
+				ewarn "server $(basename "${entry}")"
+			done
+		fi
+	fi
+}
+
+stop() {
+	ebegin "Stopping 389 Directory Server ldap-snmp agent"
+	start-stop-daemon --stop --quiet --pidfile "${PIDFILE}"
+	eend "${?}"
+}
