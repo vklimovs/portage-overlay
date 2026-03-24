@@ -1,48 +1,12 @@
-# vklimovs' personal portage overlay
+# vklimovs' Portage overlay
 
-## Adding overlay
+Personal Gentoo overlay focused on network monitoring and security tooling,
+directory services, and backup infrastructure. Contains packages not in the
+main tree or carrying local patches.
 
-* To add overlay run:
+## Adding the overlay
 
+```sh
+eselect repository add vklimovs git https://github.com/vklimovs/portage-overlay.git
+emaint sync -r vklimovs
 ```
-layman -o https://raw.githubusercontent.com/vklimovs/portage-overlay/master/repository.xml -f -a vklimovs
-```
-
-* To avoid layman warnings about missing remote overlay add repository.xml to list overlays, like so:
-
-```
-#            file:///var/lib/layman/my-list.xml
-
-overlays  : http://www.gentoo.org/proj/en/overlays/repositories.xml
-            https://raw.githubusercontent.com/vklimovs/portage-overlay/master/repository.xml
-
-#-----------------------------------------------------------
-```
-
-## Things of note
-
-Following nfsen bugs are fixed by patches provided in the ebuild:
-
-* PHP undefined variable:
-
-```
-Undefined variable: chan_id in /var/www/localhost/htdocs/nfsen/profileadmin.php on line 593
-Undefined variable: chan_id in /var/www/localhost/htdocs/nfsen/profileadmin.php on line 594
-```
-
-* Socket6 module changes and use of whois:
-
-```
-Subroutine Lookup::pack_sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/Lookup.pm line 43
-Subroutine Lookup::unpack_sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/Lookup.pm line 43
-Subroutine Lookup::sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/Lookup.pm line 43
-Subroutine AbuseWhois::pack_sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/AbuseWhois.pm line 42
-Subroutine AbuseWhois::unpack_sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/AbuseWhois.pm line 42
-Subroutine AbuseWhois::sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/AbuseWhois.pm line 42
-Subroutine AbuseWhois::pack_sockaddr_in6 redefined at /usr/share/nfsen/libexec/AbuseWhois.pm line 44
-Subroutine AbuseWhois::unpack_sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/AbuseWhois.pm line 44
-Subroutine AbuseWhois::sockaddr_in6 redefined at /usr/lib64/perl5/vendor_perl/5.22.2/nfsen/AbuseWhois.pm line 44
-```
-
-
-
