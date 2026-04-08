@@ -9,6 +9,7 @@ PYTHON_COMPAT=( python3_{11..14} )
 inherit distutils-r1 pypi
 
 DESCRIPTION="Typing stubs for requests"
+PATCHES=( "${FILESDIR}/${P}-pyproject-package-data.patch" )
 HOMEPAGE="
 	https://pypi.org/project/types-requests/
 	https://github.com/python/typeshed/tree/master/stubs/requests
