@@ -4,104 +4,116 @@
 EAPI=8
 
 CRATES="
-	addr2line@0.24.2
-	adler2@2.0.1
 	allocator-api2@0.2.21
+	anyhow@1.0.102
 	atty@0.2.14
 	autocfg@1.5.0
-	backtrace@0.3.75
 	base64@0.13.1
 	bitflags@1.3.2
-	bitflags@2.9.1
+	bitflags@2.11.0
+	bumpalo@3.20.2
 	byteorder@1.5.0
 	cbindgen@0.26.0
-	cc@1.2.27
-	cfg-if@1.0.1
+	cc@1.2.56
+	cfg-if@1.0.4
 	clap@3.2.25
 	clap_lex@0.2.4
-	concread@0.5.6
+	concread@0.5.10
 	crossbeam-epoch@0.9.18
 	crossbeam-queue@0.3.12
 	crossbeam-utils@0.8.21
 	equivalent@1.0.2
-	errno@0.3.12
+	errno@0.3.14
 	fastrand@2.3.0
 	fernet@0.1.4
+	find-msvc-tools@0.1.9
 	foldhash@0.1.5
+	foldhash@0.2.0
 	foreign-types@0.3.2
 	foreign-types-shared@0.1.1
-	getrandom@0.2.16
-	getrandom@0.3.3
-	gimli@0.31.1
+	getrandom@0.2.17
+	getrandom@0.3.4
+	getrandom@0.4.1
 	hashbrown@0.12.3
-	hashbrown@0.15.4
+	hashbrown@0.15.5
+	hashbrown@0.16.1
 	heck@0.4.1
+	heck@0.5.0
 	hermit-abi@0.1.19
+	id-arena@2.3.0
 	indexmap@1.9.3
-	itoa@1.0.15
-	jobserver@0.1.33
-	libc@0.2.174
-	linux-raw-sys@0.9.4
-	log@0.4.27
-	lru@0.13.0
-	memchr@2.7.5
-	miniz_oxide@0.8.9
-	object@0.36.7
+	indexmap@2.13.0
+	itoa@1.0.17
+	jobserver@0.1.34
+	js-sys@0.3.95
+	leb128fmt@0.1.0
+	libc@0.2.182
+	linux-raw-sys@0.11.0
+	log@0.4.29
+	lru@0.16.3
+	memchr@2.8.0
 	once_cell@1.21.3
-	openssl@0.10.73
+	openssl@0.10.78
 	openssl-macros@0.1.1
-	openssl-sys@0.9.109
+	openssl-sys@0.9.114
 	os_str_bytes@6.6.1
-	paste@0.1.18
-	paste-impl@0.1.18
+	paste@1.0.15
 	pin-project-lite@0.2.16
 	pkg-config@0.3.32
-	proc-macro-hack@0.5.20+deprecated
-	proc-macro2@1.0.95
-	quote@1.0.40
+	prettyplease@0.2.37
+	proc-macro2@1.0.106
+	quote@1.0.44
 	r-efi@5.3.0
-	rustc-demangle@0.1.25
-	rustix@1.0.7
-	ryu@1.0.20
-	serde@1.0.219
-	serde_derive@1.0.219
-	serde_json@1.0.140
+	rustix@1.1.3
+	rustversion@1.0.22
+	semver@1.0.27
+	serde@1.0.228
+	serde_core@1.0.228
+	serde_derive@1.0.228
+	serde_json@1.0.149
 	shlex@1.3.0
 	smallvec@1.15.1
 	sptr@0.3.2
 	strsim@0.10.0
 	syn@1.0.109
-	syn@2.0.103
-	tempfile@3.20.0
+	syn@2.0.117
+	tempfile@3.25.0
 	termcolor@1.4.1
 	textwrap@0.16.2
-	tokio@1.45.1
+	tokio@1.49.0
 	toml@0.5.11
-	tracing@0.1.41
-	tracing-attributes@0.1.30
-	tracing-core@0.1.34
-	unicode-ident@1.0.18
-	uuid@0.8.2
+	tracing@0.1.44
+	tracing-attributes@0.1.31
+	tracing-core@0.1.36
+	unicode-ident@1.0.24
+	unicode-xid@0.2.6
+	uuid@1.23.1
 	vcpkg@0.2.15
 	wasi@0.11.1+wasi-snapshot-preview1
-	wasi@0.14.2+wasi-0.2.4
+	wasip2@1.0.2+wasi-0.2.9
+	wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06
+	wasm-bindgen@0.2.118
+	wasm-bindgen-macro@0.2.118
+	wasm-bindgen-macro-support@0.2.118
+	wasm-bindgen-shared@0.2.118
+	wasm-encoder@0.244.0
+	wasm-metadata@0.244.0
+	wasmparser@0.244.0
 	winapi@0.3.9
 	winapi-i686-pc-windows-gnu@0.4.0
-	winapi-util@0.1.9
+	winapi-util@0.1.11
 	winapi-x86_64-pc-windows-gnu@0.4.0
-	windows-sys@0.59.0
-	windows-targets@0.52.6
-	windows_aarch64_gnullvm@0.52.6
-	windows_aarch64_msvc@0.52.6
-	windows_i686_gnu@0.52.6
-	windows_i686_gnullvm@0.52.6
-	windows_i686_msvc@0.52.6
-	windows_x86_64_gnu@0.52.6
-	windows_x86_64_gnullvm@0.52.6
-	windows_x86_64_msvc@0.52.6
-	wit-bindgen-rt@0.39.0
-	zeroize@1.8.1
-	zeroize_derive@1.4.2
+	windows-link@0.2.1
+	windows-sys@0.61.2
+	wit-bindgen@0.51.0
+	wit-bindgen-core@0.51.0
+	wit-bindgen-rust@0.51.0
+	wit-bindgen-rust-macro@0.51.0
+	wit-component@0.244.0
+	wit-parser@0.244.0
+	zeroize@1.8.2
+	zeroize_derive@1.4.3
+	zmij@1.0.21
 "
 
 PYTHON_COMPAT=( python3_{11..14} )
@@ -135,19 +147,19 @@ RESTRICT="test"
 # Do not add any AGPL-3 BDB here!
 # See bug 525110, comment 15.
 DEPEND="
-	>=app-crypt/mit-krb5-1.7-r100[openldap]
+	>=app-crypt/mit-krb5-1.7-r100:=[openldap]
 	dev-db/lmdb:=
 	>=dev-libs/cyrus-sasl-2.1.19:2[kerberos]
 	>=dev-libs/icu-60.2:=
 	dev-libs/json-c:=
 	dev-libs/libpcre2:=
-	dev-libs/nspr
-	>=dev-libs/nss-3.22[utils]
+	dev-libs/nspr:=
+	>=dev-libs/nss-3.22:=[utils]
 	dev-libs/openssl:0=
 	>=net-analyzer/net-snmp-5.1.2:=
 	net-nds/openldap:=[sasl]
-	sys-fs/e2fsprogs
-	sys-libs/cracklib
+	sys-fs/e2fsprogs:=
+	sys-libs/cracklib:=
 	sys-libs/db:5.3
 	virtual/libcrypt:=
 	virtual/zlib:=
@@ -197,8 +209,8 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-3.2.0-fix-db-version-detection-hardened.patch"
-	"${FILESDIR}/${PN}-3.2.0-fix-configure-rust-variable-collision.patch"
+	"${FILESDIR}/${PN}-3.2.1-fix-db-version-detection-hardened.patch"
+	"${FILESDIR}/${PN}-3.2.1-fix-configure-rust-variable-collision.patch"
 )
 
 EPYTEST_PLUGINS=()
@@ -214,7 +226,7 @@ src_prepare() {
 	rm src/librslapd/Cargo.lock || die
 
 	# https://github.com/389ds/389-ds-base/issues/4292
-	if use !systemd; then
+	if ! use systemd; then
 		sed -i \
 			-e 's|WITH_SYSTEMD = 1|WITH_SYSTEMD = 0|' \
 			Makefile.am || die
