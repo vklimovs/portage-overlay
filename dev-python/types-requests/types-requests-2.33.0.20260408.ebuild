@@ -18,5 +18,31 @@ HOMEPAGE="
 LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="test"
+RESTRICT="!test? ( test )"
 
 RDEPEND=">=dev-python/urllib3-2[${PYTHON_USEDEP}]"
+
+BDEPEND="test? (
+	dev-python/mypy[${PYTHON_USEDEP}]
+	dev-python/requests[${PYTHON_USEDEP}]
+)"
+
+python_test() {
+	# Mirrors typeshed's stubs/requests/@tests/stubtest_allowlist.txt;
+	# PyPI's sdist strips @tests/, so the allowlist is inlined here.
+	local allowlist="${T}/stubtest_allowlist.txt"
+	cat > "${allowlist}" <<-EOF || die
+		# Loop variables that leak into the global scope
+		requests.packages.mod
+		requests.packages.package
+		requests.packages.target
+
+		# Should allow setting any attribute:
+		requests.structures.LookupDict.__setattr__
+	EOF
+
+	MYPYPATH="${S}" "${EPYTHON}" -m mypy.stubtest \
+		--allowlist "${allowlist}" requests \
+		|| die "stubtest failed for ${EPYTHON}"
+}
