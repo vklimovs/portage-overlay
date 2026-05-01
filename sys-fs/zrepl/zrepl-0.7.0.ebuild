@@ -49,6 +49,10 @@ src_compile() {
 	fi
 }
 
+src_test() {
+	ego test -mod=vendor ./...
+}
+
 src_install() {
 	dobin "${PN}"
 	einstalldocs
