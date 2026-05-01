@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">composer/composer</remote-id>
+	</upstream>
+	<use>
+		<flag name="doc">Install the doc/ tree (markdown manuals) from the source repo</flag>
+	</use>
+	<longdescription lang="en">
+		Composer is a tool for dependency management in PHP. It allows you to
+		declare the libraries your project depends on and it will manage
+		(install/update) them for you. Unlike PEAR, it manages dependencies on
+		a per-project basis, installing them in a directory inside your
+		project. By default it does not install anything globally.
+	</longdescription>
+</pkgmetadata>
