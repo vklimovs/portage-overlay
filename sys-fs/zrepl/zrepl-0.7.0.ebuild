@@ -16,8 +16,7 @@ HOMEPAGE="https://zrepl.github.io https://github.com/zrepl/zrepl"
 #   tar -caf ${P}-vendor.tar.xz ${P}/vendor
 SRC_URI="
 	https://github.com/zrepl/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz
-	https://github.com/zrepl/${PN}/archive/v${PV}-vendor.tar.gz
-		-> ${P}-vendor.tar.xz
+	https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz
 "
 
 # zrepl itself
