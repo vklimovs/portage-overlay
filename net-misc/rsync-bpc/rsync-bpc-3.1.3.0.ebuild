@@ -42,6 +42,18 @@ src_configure() {
 	econf "${myeconfargs[@]}"
 }
 
+src_test() {
+	emake wildtest
+	local opts
+	for opts in "" "-x1" "-x1 -e1" "-x1 -e1se" "-x2" "-x2 -ese" \
+			"-x3" "-x3 -e1" "-x4" "-x4 -e2e" "-x5" "-x5 -es"; do
+		local out
+		out=$(./wildtest ${opts} wildtest.txt) || die "wildtest ${opts} failed"
+		[[ ${out} == "No wildmatch errors found." ]] \
+			|| die "wildtest ${opts}: ${out}"
+	done
+}
+
 src_install() {
 	emake DESTDIR="${D}" install
 

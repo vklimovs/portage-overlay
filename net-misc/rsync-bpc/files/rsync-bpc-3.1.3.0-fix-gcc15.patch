@@ -3,6 +3,9 @@ Fix GCC 15 build failures; cherry-picked from upstream commits:
 - 1ad3f70 (lib/pool_alloc.c: fix bomb function pointer declaration)
 - 7ea8fe71 (configure.ac: fix gettimeofday tz-argument detection)
 
+Plus: wildtest.c uses `typedef char bool;` which collides with the C23
+`bool` keyword GCC 15 enables by default. Replace with <stdbool.h>.
+
 --- a/hlink.c
 +++ b/hlink.c
 @@ -121,7 +121,7 @@ static void match_gnums(int32 *ndx_list, int ndx_count)
@@ -40,6 +43,17 @@ Fix GCC 15 build failures; cherry-picked from upstream commits:
 
  #define HUMANIFY(mult) \
 
+--- a/wildtest.c
++++ b/wildtest.c
+@@ -32,7 +32,7 @@
+
+ int wildmatch_errors = 0;
+
+-typedef char bool;
++#include <stdbool.h>
+
+ int output_iterations = 0;
+ int explode_mod = 0;
 --- a/configure.ac
 +++ b/configure.ac
 @@ -852,7 +852,8 @@
