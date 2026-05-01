@@ -29,19 +29,19 @@ IUSE="+btest curl debug geoip2 ipsumdump ipv6 jemalloc kerberos
 RDEPEND="
 	debug? ( dev-debug/gdb )
 	dev-libs/openssl:0=
-	net-libs/libpcap
+	net-libs/libpcap:=
 	virtual/zlib:0=
-	curl? ( net-misc/curl )
+	curl? ( net-misc/curl:= )
 	geoip2? ( dev-libs/libmaxminddb:0= )
-	ipsumdump? ( net-analyzer/ipsumdump[ipv6?] )
+	ipsumdump? ( net-analyzer/ipsumdump:=[ipv6?] )
 	jemalloc? ( dev-libs/jemalloc:0= )
-	kerberos? ( virtual/krb5 )
-	nodejs? ( net-libs/nodejs )
+	kerberos? ( virtual/krb5:= )
+	nodejs? ( net-libs/nodejs:= )
 	python? ( ${PYTHON_DEPS}
 		$(python_gen_cond_dep '>=dev-python/pybind11-2.6.1[${PYTHON_USEDEP}]')
 	)
 	sendmail? ( virtual/mta )
-	tcmalloc? ( dev-util/google-perftools )
+	tcmalloc? ( dev-util/google-perftools:= )
 	tools? (
 		dev-python/semantic-version
 		dev-python/gitpython
@@ -52,22 +52,23 @@ RDEPEND="
 			>=dev-python/argcomplete-3.4.0[${PYTHON_USEDEP}]
 		')
 	)
-	zeromq? ( net-libs/zeromq )"
+	zeromq? ( net-libs/zeromq:= )"
 
 DEPEND="${RDEPEND}"
 
 BDEPEND=">=dev-lang/swig-3.0
-	>=sys-devel/bison-2.5"
+	>=sys-devel/bison-2.5
+	python? ( ${PYTHON_DEPS} )"
 
 REQUIRED_USE="zeekctl? ( python )
 	zeek-client? ( python )
 	python? ( ${PYTHON_REQUIRED_USE} )"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-8.0.6-do-not-strip-broker-binary.patch
-	"${FILESDIR}"/${PN}-8.0.6-do-not-remove-broker-headers-at-install-time.patch
-	"${FILESDIR}"/${PN}-8.0.6-do-not-create-run-dirs-at-install-time.patch
-	"${FILESDIR}"/${PN}-8.0.6-do-not-remove-stale-scripts-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.7-do-not-strip-broker-binary.patch
+	"${FILESDIR}"/${PN}-8.0.7-do-not-remove-broker-headers-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.7-do-not-create-run-dirs-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.7-do-not-remove-stale-scripts-at-install-time.patch
 )
 
 if [[ ! ${PV} == 9999 ]]; then
@@ -81,7 +82,7 @@ src_prepare() {
 	fi
 
 	if ! use kerberos; then
-		eapply "${FILESDIR}/${PN}-8.0.6-disable-kerberos-when-not-wanted.patch"
+		eapply "${FILESDIR}/${PN}-8.0.7-disable-kerberos-when-not-wanted.patch"
 	fi
 
 	if [[ ${PV} == 9999 ]]; then
