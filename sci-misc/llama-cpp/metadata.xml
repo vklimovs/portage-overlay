@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">ggml-org/llama.cpp</remote-id>
+	</upstream>
+	<use>
+		<flag name="blis">Build a BLIS BLAS backend</flag>
+		<flag name="flexiblas">Build a FlexiBLAS BLAS backend</flag>
+		<flag name="openblas">Build an OpenBLAS BLAS backend</flag>
+		<flag name="opencl">Build an OpenCL backend (Adreno and Intel GPUs only)</flag>
+		<flag name="openssl">Use OpenSSL to support HTTPS in the server</flag>
+		<flag name="rocm">Build a HIP (ROCm) backend for AMD GPUs</flag>
+		<flag name="wmma">Use rocWMMA to accelerate Flash Attention on supported AMD GPUs</flag>
+	</use>
+</pkgmetadata>
