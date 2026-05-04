@@ -31,10 +31,6 @@ RDEPEND="
 
 DOCS=( README.md CHANGELOG.md )
 
-PATCHES=(
-	"${FILESDIR}/${P}-brvlan-self.patch"
-)
-
 python_install_all() {
 	distutils-r1_python_install_all
 	newinitd "${FILESDIR}/${PN}.initd" "${PN}"
