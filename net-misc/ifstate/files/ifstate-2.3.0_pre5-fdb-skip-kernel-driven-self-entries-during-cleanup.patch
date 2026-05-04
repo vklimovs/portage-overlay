@@ -1,0 +1,50 @@
+From 79ff953077f29287bfbcf0c69378da07738ca6bd Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Mon, 4 May 2026 15:27:29 -0700
+Subject: [PATCH] fdb: skip kernel-driven self entries during cleanup
+
+The fdb dump surfaces a netdev's dev->uc/dev->mc lists as NTF_SELF
+with state normalised to NUD_PERMANENT. These are populated by upper
+devices (bridge MAC propagated to ports, vlan-subdev MACs, macvlan,
+etc.) and multicast joins, and are reinstated by the kernel on every
+uc-list sync, so deleting them only causes flapping without effect.
+They are also indistinguishable in dumps from user-added
+'bridge fdb add ... self permanent', so we cannot safely scope an
+orphan-deletion pass to either side.
+
+Skip them in the cleanup loop. Device-specific FDBs that store
+user-managed self entries (vxlan tunnel endpoints) tag those with
+NUD_NOARP, which keeps them subject to cleanup.
+
+Fixes the case on a vlan-aware bridge where the bridge MAC
+'self permanent' entry on a port was being repeatedly scheduled for
+deletion despite belonging to br0 / br0.<vid>.
+---
+ libifstate/fdb/__init__.py | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/libifstate/fdb/__init__.py b/libifstate/fdb/__init__.py
+index d900397..e801f3f 100644
+--- a/libifstate/fdb/__init__.py
++++ b/libifstate/fdb/__init__.py
+@@ -133,6 +133,17 @@ class FDB():
+                 continue
+ 
+             for entry in entries:
++                # Skip kernel-driven self entries. The fdb dump surfaces a
++                # netdev's dev->uc/dev->mc lists (populated from upper-device
++                # MACs and multicast joins) as NTF_SELF with state forced to
++                # NUD_PERMANENT, indistinguishable from a user's `bridge fdb
++                # add ... self permanent`. Device-specific FDBs like vxlan's
++                # tunnel table tag user entries with NUD_NOARP, so cleanup
++                # still applies there.
++                if (entry.get('flags', 0) & NTF_SELF and
++                        not (entry.get('state', 0) & NUD_NOARP)):
++                    continue
++
+                 # check if fdb entry is already present
+                 if lladdr not in self.fdb or entry not in self.fdb[lladdr]:
+                     logger.log_del('fdb', '- {}'.format(lladdr))
+-- 
+2.53.0
+

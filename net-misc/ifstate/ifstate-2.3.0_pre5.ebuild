@@ -34,6 +34,7 @@ DOCS=( README.md CHANGELOG.md )
 
 PATCHES=(
 	"${FILESDIR}/${P}-brvlan-self.patch"
+	"${FILESDIR}/${P}-fdb-skip-kernel-driven-self-entries-during-cleanup.patch"
 )
 
 python_install_all() {
