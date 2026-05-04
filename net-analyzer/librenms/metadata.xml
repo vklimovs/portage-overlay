@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<longdescription lang="en">
+		LibreNMS is a fully featured network monitoring system that provides
+		a wealth of features and device support. It supports autodiscovery,
+		alerting, distributed polling, and a rich API. It uses SNMP to
+		monitor routers, switches, servers, and other network devices.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">librenms/librenms</remote-id>
+	</upstream>
+	<use>
+		<flag name="amqp">Enable support for AMQP alert transport</flag>
+		<flag name="ipmi">Enable IPMI monitoring support</flag>
+		<flag name="ldap">Enable LDAP authentication support</flag>
+		<flag name="radius">Enable RADIUS authentication support</flag>
+		<flag name="redis">Install the Redis server for use as cache and queue backend</flag>
+	</use>
+</pkgmetadata>
