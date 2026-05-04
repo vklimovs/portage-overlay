@@ -1,0 +1,139 @@
+From 3e664e3d8365064f71330ca0dc10420db2941b56 Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sun, 3 May 2026 12:01:52 -0700
+Subject: [PATCH] brvlan: support self-mode entries on bridge devices
+
+---
+ libifstate/brvlan/__init__.py     | 44 ++++++++++++++++++++++++-------
+ schema/2/ifstate.conf.schema.json |  4 +++
+ 2 files changed, 38 insertions(+), 10 deletions(-)
+
+diff --git a/libifstate/brvlan/__init__.py b/libifstate/brvlan/__init__.py
+index 362ac97..098d0c3 100644
+--- a/libifstate/brvlan/__init__.py
++++ b/libifstate/brvlan/__init__.py
+@@ -3,7 +3,6 @@ from libifstate.exception import netlinkerror_classes
+ 
+ BRIDGE_VLAN_INFO_PVID = 0x2
+ BRIDGE_VLAN_INFO_UNTAGGED = 0x4
+-BRIDGE_VLAN_INFO_BRENTRY = 0x20
+ 
+ class BRVlan():
+     def __init__(self, netns, iface, brvlan):
+@@ -11,6 +10,16 @@ class BRVlan():
+         self.iface = iface
+         self.brvlan = brvlan
+ 
++        # All entries on a single ifindex are either bridge-self entries or
++        # bridge-port entries — the kernel doesn't expose the distinction in
++        # dumps, so we treat the brvlan array as uniformly one or the other.
++        self_modes = {bool(e.get('self', False)) for e in brvlan}
++        if len(self_modes) > 1:
++            raise ValueError(
++                "brvlan entries on iface '{}' must all share the same 'self' value".format(iface))
++        self._is_self = self_modes.pop() if self_modes else False
++        self._mode_kw = {'vlan_flags': 'self'} if self._is_self else {}
++
+     def _desired_vlans(self):
+         result = []
+         for entry in self.brvlan:
+@@ -31,8 +40,6 @@ class BRVlan():
+                 continue
+             for vlan_info in af_spec.get_attrs('IFLA_BRIDGE_VLAN_INFO'):
+                 flags = vlan_info['flags']
+-                if flags & BRIDGE_VLAN_INFO_BRENTRY:
+-                    continue
+                 result.append({
+                     'vid': vlan_info['vid'],
+                     'pvid': bool(flags & BRIDGE_VLAN_INFO_PVID),
+@@ -57,6 +64,8 @@ class BRVlan():
+             parts.append('pvid')
+         if entry['untagged']:
+             parts.append('untagged')
++        if self._is_self:
++            parts.append('self')
+         return ' '.join(parts)
+ 
+     def apply(self, do_apply, idx, excpts):
+@@ -70,9 +79,11 @@ class BRVlan():
+             logger.log_del('brvlan', '- {}'.format(
+                 self._fmt_vlan(current_by_vid[vid])))
+             if do_apply:
+-                logger.debug("bridge vlan del: vid={}".format(vid))
++                logger.debug("bridge vlan del: vid={} self={}".format(vid, self._is_self))
+                 try:
+-                    self.netns.ipr.vlan_filter('del', index=idx, vlan_info={'vid': vid})
++                    self.netns.ipr.vlan_filter(
++                        'del', index=idx, vlan_info={'vid': vid},
++                        **self._mode_kw)
+                 except Exception as err:
+                     if not isinstance(err, netlinkerror_classes):
+                         raise
+@@ -87,10 +98,13 @@ class BRVlan():
+                 if do_apply:
+                     flags = (BRIDGE_VLAN_INFO_PVID if entry['pvid'] else 0) | \
+                             (BRIDGE_VLAN_INFO_UNTAGGED if entry['untagged'] else 0)
+-                    logger.debug("bridge vlan add: vid={} flags={}".format(vid, flags))
++                    logger.debug("bridge vlan add: vid={} flags={} self={}".format(
++                        vid, flags, self._is_self))
+                     try:
+-                        self.netns.ipr.vlan_filter('add', index=idx,
+-                                                   vlan_info={'vid': vid, 'flags': flags})
++                        self.netns.ipr.vlan_filter(
++                            'add', index=idx,
++                            vlan_info={'vid': vid, 'flags': flags},
++                            **self._mode_kw)
+                     except Exception as err:
+                         if not isinstance(err, netlinkerror_classes):
+                             raise
+@@ -99,6 +113,16 @@ class BRVlan():
+                 logger.log_ok('brvlan', '= {}'.format(self._fmt_vlan(entry)))
+ 
+     def show(ipr, showall, idx, config):
++        # Determine whether this iface is a bridge: its own entries are
++        # self-mode, port entries are not. The kernel's dump doesn't include
++        # this bit, so we infer it from the link kind for roundtrip safety.
++        is_bridge = False
++        link_msg = next(iter(ipr.get_links(idx)), None)
++        if link_msg is not None:
++            linkinfo = link_msg.get_attr('IFLA_LINKINFO')
++            if linkinfo is not None and linkinfo.get_attr('IFLA_INFO_KIND') == 'bridge':
++                is_bridge = True
++
+         result = []
+         for vlan_msg in ipr.get_vlans():
+             if vlan_msg['index'] != idx:
+@@ -108,13 +132,13 @@ class BRVlan():
+                 continue
+             for vlan_info in af_spec.get_attrs('IFLA_BRIDGE_VLAN_INFO'):
+                 flags = vlan_info['flags']
+-                if flags & BRIDGE_VLAN_INFO_BRENTRY:
+-                    continue
+                 entry = {'vid': vlan_info['vid']}
+                 if flags & BRIDGE_VLAN_INFO_PVID:
+                     entry['pvid'] = True
+                 if flags & BRIDGE_VLAN_INFO_UNTAGGED:
+                     entry['untagged'] = True
++                if is_bridge:
++                    entry['self'] = True
+                 result.append(entry)
+         if result:
+             config['brvlan'] = result
+diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
+index 4f3a8c5..5325722 100644
+--- a/schema/2/ifstate.conf.schema.json
++++ b/schema/2/ifstate.conf.schema.json
+@@ -2179,6 +2179,10 @@
+                                     "untagged": {
+                                         "description": "egress traffic for this VLAN is sent untagged",
+                                         "type": "boolean"
++                                    },
++                                    "self": {
++                                        "description": "VLAN entry on the bridge device itself instead of a bridge port (equivalent to `bridge vlan add ... self`)",
++                                        "type": "boolean"
+                                     }
+                                 }
+                             }
+-- 
+2.53.0
+
