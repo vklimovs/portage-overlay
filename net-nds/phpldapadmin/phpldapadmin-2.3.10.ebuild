@@ -20,8 +20,7 @@ MY_PN="phpLDAPadmin"
 DESCRIPTION="A web-based tool for managing LDAP servers"
 HOMEPAGE="https://phpldapadmin.org https://github.com/leenooks/phpLDAPadmin"
 SRC_URI="https://github.com/leenooks/${MY_PN}/archive/${PV}.tar.gz -> ${P}.tar.gz
-	https://github.com/leenooks/${MY_PN}/archive/${PV}-vendor.tar.gz
-		-> ${P}-vendor.tar.xz"
+	https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
 
 S="${WORKDIR}/${MY_PN}-${PV}"
 
