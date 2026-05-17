@@ -3,15 +3,15 @@
 
 EAPI=8
 
-inherit git-r3 toolchain-funcs
+inherit toolchain-funcs
 
 DESCRIPTION="nsjail is a process isolation tool for Linux."
 HOMEPAGE="https://nsjail.dev/"
-EGIT_REPO_URI="https://github.com/google/${PN}"
+SRC_URI="https://github.com/google/${PN}/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64"
 
 DEPEND="
 	dev-libs/protobuf
@@ -20,7 +20,7 @@ DEPEND="
 
 RDEPEND="${DEPEND}"
 
-PATCHES=( "${FILESDIR}/${PN}-9999-respect-user-flags.patch" )
+PATCHES=( "${FILESDIR}/${P}-respect-user-flags.patch" )
 
 src_prepare() {
 	default

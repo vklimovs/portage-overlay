@@ -1,0 +1,23 @@
+--- a/Makefile	2026-05-17 09:03:28.544076988 -0700
++++ b/Makefile	2026-05-17 09:03:42.969595225 -0700
+@@ -22,17 +22,12 @@
+ 
+ NL3_EXISTS := $(shell pkg-config --exists libnl-route-3.0 && echo yes)
+ 
+-COMMON_FLAGS += -O2 -c \
+-	-D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 \
+-	-fPIE \
+-	-Wformat -Wformat-security -Wno-format-nonliteral \
+-	-Wall -Wextra -Werror \
+-	-Ikafel/include
++COMMON_FLAGS += -c -D_GNU_SOURCE -Ikafel/include
+ 
+ CXXFLAGS += $(USER_DEFINES) $(COMMON_FLAGS) $(PROTOBUF_CFLAGS) \
+-	-std=c++20 -fno-exceptions -Wno-unused -Wno-unused-parameter
++	-std=c++20 -fno-exceptions
+ 
+-LDFLAGS += -pie -Wl,-z,noexecstack -lpthread $(PROTOBUF_LIBS)
++LDFLAGS += -lpthread $(PROTOBUF_LIBS)
+ 
+ ifeq ($(NL3_EXISTS), yes)
+ 	CXXFLAGS += $(shell pkg-config --cflags libnl-route-3.0)
