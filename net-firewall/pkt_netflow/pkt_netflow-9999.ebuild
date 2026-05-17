@@ -2,15 +2,16 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
-inherit linux-mod-r1 toolchain-funcs
+
+inherit git-r3 linux-mod-r1 toolchain-funcs
 
 DESCRIPTION="Standalone kernel netflow module"
 HOMEPAGE="https://github.com/aabc/pkt-netflow"
-SRC_URI="https://github.com/aabc/pkt-netflow/archive/86208e286e9dc57e46939191a16163a89105f4b4.tar.gz -> ${P}.tar.gz"
+EGIT_REPO_URI="https://github.com/aabc/pkt-netflow"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS=""
 
 IUSE="snmp"
 
@@ -31,15 +32,9 @@ PATCHES=(
 
 CONFIG_CHECK="~IPV6 ~PROC_FS ~SYSCTL ~VLAN_8021Q"
 
-src_unpack () {
-	default
-	mv "${WORKDIR}"/*netflow* "${S}" || die
-}
-
 src_prepare() {
 	default
 
-	# Checking for directory is enough
 	sed -i \
 		-e 's:-s /etc/snmp/snmpd.conf:-d /etc/snmp:' \
 		configure || die
