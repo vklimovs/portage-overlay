@@ -8,7 +8,7 @@ MY_PN="phpLDAPadmin"
 # To generate the vendor tarball:
 #   tar -xf phpldapadmin-${PV}.tar.gz
 #   cd phpLDAPadmin-${PV}
-#   composer install --no-dev --optimize-autoloader
+#   composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
 #   npm install && npm run production
 #   cd ..
 #   tar -cJf phpldapadmin-${PV}-vendor.tar.xz \
