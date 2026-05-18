@@ -11,7 +11,7 @@ HOMEPAGE="https://www.librenms.org/ https://github.com/librenms/librenms"
 # To regenerate the vendor tarball:
 #   tar -xf ${P}.tar.gz
 #   cd ${P}
-#   composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+#   composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
 #   cd ..
 #   XZ_OPT='-T0 -9e' tar -cJf ${P}-vendor.tar.xz ${P}/vendor
 # Then upload as a release asset to vklimovs/portage-overlay.
