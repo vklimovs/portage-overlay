@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<upstream>
+		<bugs-to>https://github.com/mitogen-hq/mitogen/issues</bugs-to>
+		<remote-id type="pypi">mitogen</remote-id>
+		<remote-id type="github">mitogen-hq/mitogen</remote-id>
+		<changelog>https://mitogen.networkgenomics.com/changelog.html</changelog>
+	</upstream>
+	<use>
+		<flag name="ansible">Install symlinks for Ansible strategy plugins</flag>
+	</use>
+</pkgmetadata>
