@@ -130,6 +130,4 @@ src_configure() {
 src_install() {
 	cmake_src_install
 	dobin "${BUILD_DIR}/bin/rpc-server"
-
-	rm "${ED}/usr/bin/convert_hf_to_gguf.py" || die
 }
