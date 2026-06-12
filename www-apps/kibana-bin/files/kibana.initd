@@ -1,0 +1,29 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+KIBANA_USER="${KIBANA_USER:-kibana}"
+KIBANA_CONFIG="${KIBANA_CONFIG:-/etc/kibana/kibana.yml}"
+KIBANA_DATA_DIR="${KIBANA_DATA_DIR:-/var/lib/kibana}"
+KIBANA_LOG_DIR="${KIBANA_LOG_DIR:-/var/log/kibana}"
+
+name=kibana
+description="Kibana analytics and search dashboard"
+command="/opt/kibana/bin/kibana"
+pidfile="/run/${RC_SVCNAME}.pid"
+command_args="--config ${KIBANA_CONFIG} --path.data=${KIBANA_DATA_DIR}"
+command_background="true"
+command_user="${KIBANA_USER}"
+error_log="${KIBANA_LOG_DIR}/kibana.err"
+output_log="${KIBANA_LOG_DIR}/kibana.log"
+retry="60"
+
+depend() {
+	use net dns
+	after clock
+}
+
+start_pre() {
+	checkpath -d -o "${KIBANA_USER}" -m750 "${KIBANA_DATA_DIR}"
+	checkpath -d -o "${KIBANA_USER}" -m750 "${KIBANA_LOG_DIR}"
+}

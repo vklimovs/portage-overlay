@@ -1,0 +1,7 @@
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+#KIBANA_USER="kibana"
+#KIBANA_CONFIG="/etc/kibana/kibana.yml"
+#KIBANA_DATA_DIR="/var/lib/kibana"
+#KIBANA_LOG_DIR="/var/log/kibana"

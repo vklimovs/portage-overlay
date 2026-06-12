@@ -1,0 +1,9 @@
+/var/log/kibana/kibana.log /var/log/kibana/kibana.err {
+	rotate 15
+	daily
+	missingok
+	notifempty
+	copytruncate
+	compress
+	delaycompress
+}
