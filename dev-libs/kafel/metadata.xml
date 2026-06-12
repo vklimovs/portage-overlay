@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+    <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <upstream>
+        <remote-id type="github">google/kafel</remote-id>
+    </upstream>
+    <longdescription lang="en">
+        Kafel is a syscall filtering policy language and a compiler for it,
+        used to generate Berkeley Packet Filter (BPF) programs for the Linux
+        kernel's seccomp-bpf facility.
+    </longdescription>
+</pkgmetadata>

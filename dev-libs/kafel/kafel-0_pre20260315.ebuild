@@ -1,0 +1,53 @@
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+EAPI=8
+
+KAFEL_COMMIT="76d0f41bf3eb5c4008713d64b9767b461a9129a3"
+
+inherit toolchain-funcs
+
+DESCRIPTION="Seccomp-bpf policy language and compiler library"
+HOMEPAGE="https://github.com/google/kafel"
+SRC_URI="https://github.com/google/${PN}/archive/${KAFEL_COMMIT}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/${PN}-${KAFEL_COMMIT}"
+
+LICENSE="Apache-2.0"
+SLOT="0/1"
+KEYWORDS="~amd64"
+IUSE="static-libs"
+
+BDEPEND="
+	app-alternatives/lex
+	app-alternatives/yacc
+"
+
+PATCHES=( "${FILESDIR}/${P}-respect-user-flags.patch" )
+
+src_compile() {
+	tc-export CC AR LD OBJCOPY OBJDUMP
+	emake
+}
+
+src_install() {
+	newlib.so libkafel.so libkafel.so.1
+	dosym libkafel.so.1 "/usr/$(get_libdir)/libkafel.so"
+	use static-libs && dolib.a libkafel.a
+
+	doheader include/kafel.h
+
+	cat > "${T}"/kafel.pc <<-EOF || die
+		prefix=/usr
+		libdir=\${prefix}/$(get_libdir)
+		includedir=\${prefix}/include
+
+		Name: kafel
+		Description: ${DESCRIPTION}
+		Version: ${PV}
+		Libs: -L\${libdir} -lkafel
+		Cflags: -I\${includedir}
+	EOF
+
+	insinto "/usr/$(get_libdir)/pkgconfig"
+	doins "${T}"/kafel.pc
+}

@@ -1,0 +1,34 @@
+--- a/build/Makefile.mk
++++ b/build/Makefile.mk
+@@ -18,15 +18,13 @@
+ #
+
+ PROJECT_ROOT?=
+-CFLAGS+=-std=gnu11 -I${PROJECT_ROOT}include -Wall -Wextra -Werror
++CFLAGS+=-std=gnu11 -I${PROJECT_ROOT}include -Wall -Wextra
+
+ GENERATED_OBJECTS:=$(GENERATED_SRCS:.c=.o)
+ OBJECTS:=$(SRCS:.c=.o)
+
+ ifdef DEBUG
+   CFLAGS += -g -ggdb -gdwarf-4
+-else
+-  CFLAGS += -O2
+ endif
+
+ .PHONY: all clean depend format $(SUBDIRS)
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -54,10 +54,10 @@
+ ${GENERATED_OBJECTS}: CFLAGS+=-Wno-error
+
+ ${DYNAMIC_TARGET}: ${OBJECTS}
+-	$(CC) $(CFLAGS) -Wl,-soname,$@.${VERSION} -shared $^ -o $@
++	$(CC) $(CFLAGS) $(LDFLAGS) -Wl,-soname,$(notdir $@).${VERSION} -shared $^ -o $@
+
+ ${STATIC_TARGET}: ${OBJECTS}
+-	$(LD) $(LDFLAGS) -r ${OBJECTS} -o libkafel_r.o
++	$(LD) -r ${OBJECTS} -o libkafel_r.o
+ 	# Fix x86 PIC symbols
+ 	$(OBJDUMP) -t libkafel_r.o | grep '.hidden' | grep -v 'get_pc_thunk' | sed -e 's/^.*\.hidden //' > libkafel.localize_symbols
+ 	$(OBJCOPY) -w --localize-symbols=libkafel.localize_symbols libkafel_r.o libkafel.o
