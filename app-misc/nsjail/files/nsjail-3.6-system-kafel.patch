@@ -1,0 +1,84 @@
+--- a/Makefile
++++ b/Makefile
+@@ -10,8 +10,8 @@
+ CXX ?= g++
+ 
+ # pkg-config for protobuf can be expensive/slow
+-# Skip pkg-config for: clean, indent, kafel_init, and kafel-only builds
+-ifneq ($(filter-out clean indent kafel_init kafel/libkafel.a,$(MAKECMDGOALS)),)
++# Skip pkg-config for: clean and indent
++ifneq ($(filter-out clean indent,$(MAKECMDGOALS)),)
+ PROTOBUF_CFLAGS := $(shell pkg-config --cflags protobuf)
+ PROTOBUF_LIBS   := $(shell pkg-config --libs protobuf)
+ else ifeq ($(MAKECMDGOALS),)
+@@ -22,7 +22,7 @@
+ 
+ NL3_EXISTS := $(shell pkg-config --exists libnl-route-3.0 && echo yes)
+ 
+-COMMON_FLAGS += -c -D_GNU_SOURCE -Ikafel/include
++COMMON_FLAGS += -c -D_GNU_SOURCE $(shell pkg-config --cflags kafel)
+ 
+ CXXFLAGS += $(USER_DEFINES) $(COMMON_FLAGS) $(PROTOBUF_CFLAGS) \
+ 	-std=c++20 -fno-exceptions
+@@ -39,7 +39,7 @@
+ endif
+ 
+ BIN = nsjail
+-LIBS = kafel/libkafel.a
++LIBS = $(shell pkg-config --libs kafel)
+ 
+ # If PASTA_BIN_PATH is not provided in env, dynamically search for it if EMBED_PASTA is requested
+ # or fallback to it naturally.
+@@ -67,16 +67,16 @@
+ 
+ # 4. TARGETS
+ 
+-.PHONY: all clean depend indent kafel_init
++.PHONY: all clean depend indent
+ 
+ all: $(BIN)
+ 
+ # Main Binary Linkage
+-$(BIN): $(LIBS) $(OBJS)
++$(BIN): $(OBJS)
+ ifneq ($(NL3_EXISTS), yes)
+ 	$(warning "You probably miss libnl3(-dev)/libnl-route-3(-dev) libraries")
+ endif
+-	$(CXX) -o $(BIN) $(OBJS) $(LIBS) $(LDFLAGS)
++	$(CXX) -o $(BIN) $(OBJS) $(LDFLAGS) $(LIBS)
+ 
+ # Standard Object Compilation
+ # The | $(SRCS_PB_H) ensures headers exist before we try to compile .cc files
+@@ -91,23 +91,9 @@
+ # The .h file is a side-effect of the .cc rule
+ $(SRCS_PB_H): $(SRCS_PB_CXX)
+ 
+-# Kafel Submodule Handling
+-kafel_init:
+-ifeq ("$(wildcard kafel/Makefile)","")
+-	git submodule update --init
+-endif
+-
+-kafel/include/kafel.h: kafel_init
+-
+-kafel/libkafel.a: kafel_init
+-	+LDFLAGS="" CFLAGS=-fPIE $(MAKE) -C kafel
+-
+ # Utilities
+ clean:
+ 	$(RM) core Makefile.bak $(OBJS) $(SRCS_PB_CXX) $(SRCS_PB_H) $(SRCS_PB_O) $(BIN)
+-ifneq ("$(wildcard kafel/Makefile)","")
+-	+$(MAKE) -C kafel clean
+-endif
+ 
+ depend: all
+ 	makedepend -Y -Ykafel/include -- -- $(SRCS_CXX) $(SRCS_PB_CXX)
+@@ -205,7 +191,7 @@
+ nsjail.o: nsjail.h config.pb.h cgroup2.h cmdline.h logs.h macros.h net.h
+ nsjail.o: sandbox.h subproc.h util.h
+ pid.o: pid.h nsjail.h config.pb.h logs.h subproc.h
+-sandbox.o: sandbox.h nsjail.h config.pb.h kafel/include/kafel.h logs.h util.h
++sandbox.o: sandbox.h nsjail.h config.pb.h logs.h util.h
+ subproc.o: subproc.h nsjail.h config.pb.h cgroup.h cgroup2.h contain.h logs.h
+ subproc.o: macros.h net.h sandbox.h user.h util.h
+ uts.o: uts.h nsjail.h config.pb.h logs.h

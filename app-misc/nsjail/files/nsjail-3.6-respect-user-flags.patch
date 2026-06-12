@@ -1,5 +1,5 @@
---- a/Makefile	2026-05-17 09:03:28.544076988 -0700
-+++ b/Makefile	2026-05-17 09:03:42.969595225 -0700
+--- a/Makefile
++++ b/Makefile
 @@ -22,17 +22,12 @@
  
  NL3_EXISTS := $(shell pkg-config --exists libnl-route-3.0 && echo yes)
@@ -21,3 +21,12 @@
  
  ifeq ($(NL3_EXISTS), yes)
  	CXXFLAGS += $(shell pkg-config --cflags libnl-route-3.0)
+@@ -86,7 +81,7 @@
+ # Standard Object Compilation
+ # The | $(SRCS_PB_H) ensures headers exist before we try to compile .cc files
+ %.o: %.cc | $(SRCS_PB_H)
+-	$(CXX) $(CXXFLAGS) $< -o $@
++	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+ 
+ # Protobuf Generation
+ # We only define the recipe for the .cc file to prevent race conditions.

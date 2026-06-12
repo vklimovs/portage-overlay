@@ -5,7 +5,7 @@ EAPI=8
 
 inherit toolchain-funcs
 
-DESCRIPTION="nsjail is a process isolation tool for Linux."
+DESCRIPTION="Process isolation tool using Linux namespaces, rlimits and seccomp-bpf"
 HOMEPAGE="https://nsjail.dev/"
 SRC_URI="https://github.com/google/${PN}/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
 
@@ -14,20 +14,29 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 DEPEND="
-	dev-libs/protobuf
+	dev-libs/kafel:=
+	dev-libs/protobuf:=
 	dev-libs/libnl:3
 "
 
 RDEPEND="${DEPEND}"
 
-PATCHES=( "${FILESDIR}/${P}-respect-user-flags.patch" )
+BDEPEND="
+	dev-libs/protobuf
+	virtual/pkgconfig
+"
 
-src_prepare() {
-	default
-	tc-export CC CXX
+PATCHES=(
+	"${FILESDIR}/${P}-respect-user-flags.patch"
+	"${FILESDIR}/${P}-system-kafel.patch"
+)
+
+src_compile() {
+	emake CC="$(tc-getCC)" CXX="$(tc-getCXX)"
 }
 
 src_install() {
 	dobin nsjail
 	dodoc README.md
+	dodoc -r configs
 }
