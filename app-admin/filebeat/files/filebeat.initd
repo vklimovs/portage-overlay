@@ -1,0 +1,16 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+name=filebeat
+description="Lightweight log shipper for Logstash and Elasticsearch"
+command="/usr/bin/filebeat"
+command_args="run --path.config=/etc/filebeat --path.home=/var/lib/filebeat"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+retry="60"
+
+depend() {
+	use net dns
+	after clock
+}
