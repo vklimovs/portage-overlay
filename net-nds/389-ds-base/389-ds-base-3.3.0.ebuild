@@ -53,9 +53,9 @@ CRATES="
 	lru@0.16.3
 	memchr@2.8.0
 	once_cell@1.21.3
-	openssl@0.10.78
+	openssl@0.10.79
 	openssl-macros@0.1.1
-	openssl-sys@0.9.114
+	openssl-sys@0.9.115
 	os_str_bytes@6.6.1
 	paste@1.0.15
 	pin-project-lite@0.2.16
@@ -209,8 +209,8 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-3.2.1-fix-db-version-detection-hardened.patch"
-	"${FILESDIR}/${PN}-3.2.1-fix-configure-rust-variable-collision.patch"
+	"${FILESDIR}/${PN}-3.3.0-fix-db-version-detection-hardened.patch"
+	"${FILESDIR}/${PN}-3.3.0-fix-configure-rust-variable-collision.patch"
 )
 
 EPYTEST_PLUGINS=()
