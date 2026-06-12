@@ -15,7 +15,7 @@ HOMEPAGE="https://getcomposer.org https://github.com/composer/composer"
 SRC_URI="https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
 
 EGIT_REPO_URI="https://github.com/${PN}/${PN}"
-EGIT_COMMIT="82a2fbd1372a98d7915cfb092acf05207d9b4113"
+EGIT_COMMIT="4120703b9bda8795075047b40361d7ec4d2abe49"
 
 LICENSE="MIT"
 SLOT="0"
