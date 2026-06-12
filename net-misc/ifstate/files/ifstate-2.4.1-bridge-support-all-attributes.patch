@@ -1,11 +1,3 @@
-commit c97f1e322e22a621277681dfcc6d73cdb19046b4
-Author: Vjaceslavs Klimovs <vklimovs@gmail.com>
-Date:   Mon May 11 14:50:39 2026 -0700
-
-    bridge: full IFLA_BR_* support, filter defaults from show
-
-diff --git a/libifstate/__init__.py b/libifstate/__init__.py
-index 797ef7b..585fa75 100644
 --- a/libifstate/__init__.py
 +++ b/libifstate/__init__.py
 @@ -1,5 +1,6 @@
@@ -15,15 +7,15 @@ index 797ef7b..585fa75 100644
  from libifstate.link.vlan import VlanFlags
  from libifstate.address import Addresses, AddressIgnore
  from libifstate.fdb import FDB
-@@ -57,6 +58,7 @@ import logging
+@@ -57,6 +58,7 @@
  
- __version__ = "2.3.0"
+ __version__ = "2.4.1"
  
 +
  class IfState():
      def __init__(self):
          logger.debug('IfState {}'.format(__version__))
-@@ -817,16 +819,31 @@ class IfState():
+@@ -828,16 +830,31 @@
                                          vlan_flags[flag.name] = enabled
                                  if vlan_flags:
                                      ifs_link['link']['vlan_flags'] = vlan_flags
@@ -59,8 +51,6 @@ index 797ef7b..585fa75 100644
                  else:
                      ifs_link['link']['kind'] = 'physical'
                      addr = ipr_link.get_attr('IFLA_ADDRESS')
-diff --git a/libifstate/link/__init__.py b/libifstate/link/__init__.py
-index 174dd44..d75b82b 100644
 --- a/libifstate/link/__init__.py
 +++ b/libifstate/link/__init__.py
 @@ -1,4 +1,5 @@
@@ -69,9 +59,6 @@ index 174dd44..d75b82b 100644
  import libifstate.link.dsa
  import libifstate.link.physical
  import libifstate.link.tun
-diff --git a/libifstate/link/bridge.py b/libifstate/link/bridge.py
-new file mode 100644
-index 0000000..6fbb3f4
 --- /dev/null
 +++ b/libifstate/link/bridge.py
 @@ -0,0 +1,258 @@
@@ -333,11 +320,9 @@ index 0000000..6fbb3f4
 +                    return user_val
 +            return kernel_val
 +        return super().get_if_attr(key)
-diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
-index 5325722..244a1c3 100644
 --- a/schema/2/ifstate.conf.schema.json
 +++ b/schema/2/ifstate.conf.schema.json
-@@ -3032,12 +3032,55 @@
+@@ -3389,12 +3389,55 @@
                                          "ifalias": {
                                              "$ref": "#/$defs/iface-link_ifalias"
                                          },
@@ -393,7 +378,7 @@ index 5325722..244a1c3 100644
                                          "br_vlan_protocol": {
                                              "enum": [
                                                  33024,
-@@ -3069,6 +3112,143 @@
+@@ -3426,6 +3469,143 @@
                                              "maximum": 4094,
                                              "default": 1,
                                              "description": "bridge default PVID"
