@@ -1,0 +1,42 @@
+From 7a511b8555bf1431bce45cebe1e9a5a9c3369c70 Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sat, 13 Jun 2026 21:45:55 -0700
+Subject: [PATCH] link: do not assign default MAC to NOARP interfaces
+
+---
+ libifstate/link/base.py      | 6 ++++++
+ libifstate/netns/__init__.py | 1 +
+ 2 files changed, 7 insertions(+)
+
+diff --git a/libifstate/link/base.py b/libifstate/link/base.py
+index 1b525b6..44299ab 100644
+--- a/libifstate/link/base.py
++++ b/libifstate/link/base.py
+@@ -552,6 +552,12 @@ class Link(ABC):
+                 master_item = self.ifstate.link_registry.get_link(index=master, netns=self.netns.netns)
+                 set_address = master_item.attributes['kind'] != 'bond'
+ 
++            # NOARP interfaces (e.g. layer-3 TUN) have no L2 address; the kernel
++            # rejects setting one, so a default MAC would make every apply report
++            # a spurious link change (never converging).
++            if item is not None and item.attributes.get('flags', 0) & IFF_NOARP:
++                set_address = False
++
+             if set_address:
+                 if self.settings['kind'] == 'physical':
+                     if item is not None and 'perm_address' in item.attributes:
+diff --git a/libifstate/netns/__init__.py b/libifstate/netns/__init__.py
+index b805b8b..eee5106 100644
+--- a/libifstate/netns/__init__.py
++++ b/libifstate/netns/__init__.py
+@@ -329,6 +329,7 @@ class LinkRegistryItem():
+             'index': link['index'],
+             'ifname': link.get_attr('IFLA_IFNAME'),
+             'address': link.get_attr('IFLA_ADDRESS'),
++            'flags': link['flags'],
+         }
+         self.registry = registry
+         self.netns = netns
+-- 
+2.53.0
+

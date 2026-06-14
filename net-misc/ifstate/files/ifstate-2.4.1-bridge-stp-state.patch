@@ -1,0 +1,28 @@
+From 9624e10b3edebc19a4e327b1468aab0d6fd9bff4 Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sat, 13 Jun 2026 23:31:02 -0700
+Subject: [PATCH] schema: add br_stp_state bridge option
+
+---
+ schema/2/ifstate.conf.schema.json | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
+index 1fed76f..4ea2d03 100644
+--- a/schema/2/ifstate.conf.schema.json
++++ b/schema/2/ifstate.conf.schema.json
+@@ -3395,6 +3395,11 @@
+                                             "default": 30000,
+                                             "description": "FDB entry ageing time in milliseconds"
+                                         },
++                                        "br_stp_state": {
++                                            "type": "boolean",
++                                            "default": false,
++                                            "description": "enable Spanning Tree Protocol (STP) on bridge"
++                                        },
+                                         "br_vlan_protocol": {
+                                             "enum": [
+                                                 33024,
+-- 
+2.53.0
+

@@ -1,0 +1,44 @@
+From 80078e0eb27225c0a6558eb1e6d4f43588f8682f Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sat, 13 Jun 2026 22:09:37 -0700
+Subject: [PATCH] link: only set IPv6 token when it changed
+
+---
+ libifstate/link/base.py | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/libifstate/link/base.py b/libifstate/link/base.py
+index 1b525b6..1f0e36a 100644
+--- a/libifstate/link/base.py
++++ b/libifstate/link/base.py
+@@ -768,6 +768,7 @@ class Link(ABC):
+         old_state = self.iface['state']
+         has_link_changes = False
+         has_state_changes = False
++        has_token_changes = False
+         for setting in self.settings.keys():
+             differs = False
+ 
+@@ -808,6 +809,7 @@ class Link(ABC):
+                     self.token,
+                     extra={'iface': self.settings['ifname'], 'netns': self.netns})
+                 has_link_changes = True
++                has_token_changes = True
+ 
+         has_ethtool_changes = set()
+         if not self.ethtool is None:
+@@ -852,8 +854,9 @@ class Link(ABC):
+                 if not 'state' in self.settings:
+                     self.settings['state'] = 'up'
+ 
+-            # set token if supported
+-            if do_apply and self.iface['flags'] & IFF_NOARP == 0:
++            # set token only when it actually changed (avoids spurious
++            # EINVAL on ifaces that reject tokens, e.g. accept_ra=0)
++            if do_apply and has_token_changes:
+                 try:
+                     self.netns.ipr.link('set',
+                                         index=self.idx,
+-- 
+2.53.0
+

@@ -30,6 +30,12 @@ RDEPEND="
 	')
 "
 
+PATCHES=(
+	"${FILESDIR}/${P}-noarp-default-mac.patch"
+	"${FILESDIR}/${P}-ipv6-token-einval.patch"
+	"${FILESDIR}/${P}-bridge-stp-state.patch"
+)
+
 DOCS=( README.md CHANGELOG.md )
 
 python_install_all() {
