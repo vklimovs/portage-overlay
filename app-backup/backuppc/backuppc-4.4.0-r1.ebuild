@@ -18,7 +18,7 @@ S=${WORKDIR}/${MY_P}
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="~amd64 ~x86"
 IUSE="rrdtool rss samba systemd"
 
 DEPEND=">=dev-perl/BackupPC-XS-0.62
@@ -30,7 +30,7 @@ DEPEND=">=dev-perl/BackupPC-XS-0.62
 	dev-perl/Time-ParseDate"
 
 RDEPEND="${DEPEND}
-	>=net-misc/rsync-bpc-3.1.2.2
+	>=net-misc/rsync-bpc-3.1.3.0_p20251201-r1
 	rrdtool? ( net-analyzer/rrdtool[graph] )
 	rss? ( dev-perl/XML-RSS )
 	samba? ( net-fs/samba )
