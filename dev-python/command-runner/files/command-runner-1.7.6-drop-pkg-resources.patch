@@ -1,0 +1,30 @@
+Drop the deprecated pkg_resources dependency from setup.py.
+
+pkg_resources was removed in setuptools 81+, breaking the build with the
+"No module named 'pkg_resources'" error. It was only used to parse a trivial
+requirements.txt, so replace it with plain line parsing.
+
+Upstream: https://github.com/netinvent/command_runner
+
+--- a/setup.py
++++ b/setup.py
+@@ -14,7 +14,6 @@ PACKAGE_NAME = "command_runner"
+ import sys
+ import os
+
+-import pkg_resources
+ import setuptools
+
+
+@@ -65,8 +64,9 @@ def parse_requirements(filename):
+     try:
+         requirements_txt = _read_file(filename)
+         install_requires = [
+-            str(requirement)
+-            for requirement in pkg_resources.parse_requirements(requirements_txt)
++            line.strip()
++            for line in requirements_txt.splitlines()
++            if line.strip() and not line.strip().startswith("#")
+         ]
+         return install_requires
+     except OSError:

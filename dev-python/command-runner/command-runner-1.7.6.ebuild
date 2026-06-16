@@ -30,4 +30,8 @@ RESTRICT="test"
 
 RDEPEND=">=dev-python/psutil-5.6.0[${PYTHON_USEDEP}]"
 
+PATCHES=(
+	"${FILESDIR}/${P}-drop-pkg-resources.patch"
+)
+
 DOCS=( CHANGELOG.md README.md )
