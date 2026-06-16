@@ -1,5 +1,5 @@
 diff --git a/pkt_netflow.c b/pkt_netflow.c
-index 2057d4d..452feee 100644
+index d474e88..a06dbc6 100644
 --- a/pkt_netflow.c
 +++ b/pkt_netflow.c
 @@ -1820,6 +1820,7 @@ static ctl_table netflow_net_table[] = {

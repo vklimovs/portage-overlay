@@ -1,0 +1,12 @@
+diff --git a/snmp_netflow.c b/snmp_netflow.c
+index 76cd66d..275e0d0 100644
+--- a/snmp_netflow.c
++++ b/snmp_netflow.c
+@@ -12,6 +12,7 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
++#include <unistd.h>
+ #include <errno.h>
+ 
+ #include <net-snmp/net-snmp-config.h>

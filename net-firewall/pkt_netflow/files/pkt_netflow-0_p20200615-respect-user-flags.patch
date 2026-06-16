@@ -1,5 +1,5 @@
 diff --git a/Makefile.in b/Makefile.in
-index b3a5be8..2a52bf2 100644
+index b3a5be8..e40226a 100644
 --- a/Makefile.in
 +++ b/Makefile.in
 @@ -9,7 +9,7 @@ CARGS = @CARGS@
@@ -7,7 +7,7 @@ index b3a5be8..2a52bf2 100644
  SNMPCONF = /etc/snmp/snmpd.conf
  SNMPLINE = dlmod netflow $(SNMPTGSO)
 -CC = gcc
-+$(CC) ?= gcc
++CC ?= gcc
  
  # https://www.kernel.org/doc/Documentation/kbuild/modules.txt
  # https://www.kernel.org/doc/Documentation/kbuild/makefiles.txt

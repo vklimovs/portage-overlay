@@ -1,0 +1,18 @@
+diff --git a/compat.h b/compat.h
+index 58a6166..bdf1eef 100644
+--- a/compat.h
++++ b/compat.h
+@@ -76,6 +76,13 @@
+ # define del_timer_sync timer_delete_sync
+ #endif
+ 
++/* strlcpy() was removed in 6.8; strscpy() has the same call signature and has
++ * been available since 4.3.  Every call site here ignores the return value, so
++ * the differing return semantics are not a concern. */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,8,0)
++# define strlcpy strscpy
++#endif
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
+ # define compat_hlist_for_each_entry			hlist_for_each_entry
+ # define compat_hlist_for_each_entry_safe		hlist_for_each_entry_safe

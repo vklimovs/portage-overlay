@@ -3,31 +3,37 @@
 
 EAPI=8
 
-inherit git-r3 linux-mod-r1 toolchain-funcs
+inherit linux-mod-r1 toolchain-funcs
+
+# Upstream has been frozen since 2020-06-15; pin to the last commit rather
+# than tracking a live branch that never moves.
+SNAPSHOT=86208e286e9dc57e46939191a16163a89105f4b4
 
 DESCRIPTION="Standalone kernel netflow module"
 HOMEPAGE="https://github.com/aabc/pkt-netflow"
-EGIT_REPO_URI="https://github.com/aabc/pkt-netflow"
+SRC_URI="https://github.com/aabc/pkt-netflow/archive/${SNAPSHOT}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/pkt-netflow-${SNAPSHOT}"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
-
+KEYWORDS="~amd64 ~x86"
 IUSE="snmp"
 
 RDEPEND="snmp? ( net-analyzer/net-snmp )"
-
-DEPEND="${RDEPEND}
-	virtual/linux-sources
-	virtual/pkgconfig
-"
+DEPEND="${RDEPEND}"
+BDEPEND="virtual/linux-sources"
 
 PATCHES=(
 	"${FILESDIR}/${P}-respect-user-flags.patch"
 	"${FILESDIR}/${P}-warn-on-failed-connection.patch"
 	"${FILESDIR}/${P}-fix-linux-headers-5.14.patch"
+	"${FILESDIR}/${P}-fix-6.2-timer-delete-sync.patch"
 	"${FILESDIR}/${P}-fix-6.4-register_sysctl_paths-removal.patch"
+	"${FILESDIR}/${P}-fix-6.8-strlcpy-removal.patch"
+	"${FILESDIR}/${P}-fix-6.11-const-sysctl-handlers.patch"
+	"${FILESDIR}/${P}-fix-6.12-unaligned-header.patch"
 	"${FILESDIR}/${P}-use-explicit-fallthrough-macro.patch"
+	"${FILESDIR}/${P}-snmp-include-unistd.patch"
 )
 
 CONFIG_CHECK="~IPV6 ~PROC_FS ~SYSCTL ~VLAN_8021Q"
@@ -35,6 +41,7 @@ CONFIG_CHECK="~IPV6 ~PROC_FS ~SYSCTL ~VLAN_8021Q"
 src_prepare() {
 	default
 
+	# Checking for the directory is enough
 	sed -i \
 		-e 's:-s /etc/snmp/snmpd.conf:-d /etc/snmp:' \
 		configure || die
@@ -47,6 +54,7 @@ do_conf() {
 }
 
 src_configure() {
+	# this configure script is not based on autotools
 	do_conf \
 		--disable-dkms \
 		--enable-aggregation \
@@ -64,7 +72,10 @@ src_compile() {
 }
 
 src_install() {
-	use snmp && emake DESTDIR="${D}" SNMPTGSO="/usr/$(get_libdir)/snmp/dlmod/snmp_netflow.so" sinstall
 	linux-mod-r1_src_install
+
+	use snmp && emake DESTDIR="${D}" \
+		SNMPTGSO="/usr/$(get_libdir)/snmp/dlmod/snmp_netflow.so" sinstall
+
 	dodoc README*
 }

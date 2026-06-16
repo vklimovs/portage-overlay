@@ -1,0 +1,103 @@
+diff --git a/compat.h b/compat.h
+index bdf1eef..7d3f331 100644
+--- a/compat.h
++++ b/compat.h
+@@ -83,6 +83,13 @@
+ # define strlcpy strscpy
+ #endif
+ 
++/* proc_handler's table argument was constified in 6.11 (commit 78eb4ea25cd5). */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,11,0)
++# define CONST_CTL const
++#else
++# define CONST_CTL
++#endif
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
+ # define compat_hlist_for_each_entry			hlist_for_each_entry
+ # define compat_hlist_for_each_entry_safe		hlist_for_each_entry_safe
+diff --git a/pkt_netflow.c b/pkt_netflow.c
+index a06dbc6..f5a2f12 100644
+--- a/pkt_netflow.c
++++ b/pkt_netflow.c
+@@ -1434,7 +1434,7 @@ unlock:
+ 
+ #ifdef CONFIG_SYSCTL
+ /* sysctl /proc/sys/net/netflow */
+-static int hsize_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int hsize_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret, hsize;
+@@ -1451,7 +1451,7 @@ static int hsize_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp
+ 		return ret;
+ }
+ 
+-static int sndbuf_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int sndbuf_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret;
+@@ -1486,7 +1486,7 @@ static int sndbuf_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *fil
+ }
+ 
+ static void free_templates(void);
+-static int destination_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int destination_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret;
+@@ -1503,7 +1503,7 @@ static int destination_procctl(ctl_table *ctl, int write, BEFORE2632(struct file
+ }
+ 
+ #ifdef ENABLE_AGGR
+-static int aggregation_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int aggregation_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret;
+@@ -1517,7 +1517,7 @@ static int aggregation_procctl(ctl_table *ctl, int write, BEFORE2632(struct file
+ }
+ #endif
+ 
+-static int promisc_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int promisc_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int newpromisc = promisc;
+@@ -1533,7 +1533,7 @@ static int promisc_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *fi
+ 
+ #ifdef ENABLE_SAMPLER
+ static int parse_sampler(char *ptr);
+-static int sampler_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int sampler_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret;
+@@ -1566,7 +1566,7 @@ static int sampler_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *fi
+ 
+ #ifdef SNMP_RULES
+ static int add_snmp_rules(char *ptr);
+-static int snmp_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int snmp_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+        int ret;
+@@ -1597,7 +1597,7 @@ static void netflow_export_flow_dummy(struct pkt_netflow *nf)
+ 	pkt_netflow_free(nf);
+ }
+ 
+-static int flush_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int flush_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret;
+@@ -1633,7 +1633,7 @@ static int flush_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp
+ 	return ret;
+ }
+ 
+-static int protocol_procctl(ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
++static int protocol_procctl(CONST_CTL ctl_table *ctl, int write, BEFORE2632(struct file *filp,)
+ 			 void __user *buffer, size_t *lenp, loff_t *fpos)
+ {
+ 	int ret;

@@ -1,0 +1,16 @@
+diff --git a/pkt_netflow.c b/pkt_netflow.c
+index f5a2f12..85acfcd 100644
+--- a/pkt_netflow.c
++++ b/pkt_netflow.c
+@@ -55,7 +55,11 @@
+ # include <linux/etherdevice.h>
+ #endif
+ #include <linux/version.h>
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6,12,0)
+ #include <asm/unaligned.h>
++#else
++#include <linux/unaligned.h>
++#endif /* 6.12.0 */
+ #ifdef HAVE_LLIST
+ 	/* llist.h is officially defined since linux 3.1,
+ 	 * but centos6 have it backported on its 2.6.32.el6 */

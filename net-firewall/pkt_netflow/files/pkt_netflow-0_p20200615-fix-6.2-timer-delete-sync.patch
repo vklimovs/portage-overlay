@@ -1,0 +1,17 @@
+diff --git a/compat.h b/compat.h
+index 4c6d9c3..58a6166 100644
+--- a/compat.h
++++ b/compat.h
+@@ -70,6 +70,12 @@
+ # endif
+ #endif
+ 
++/* del_timer_sync() was removed in favour of timer_delete_sync(), which has
++ * been available since 6.2. */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,2,0)
++# define del_timer_sync timer_delete_sync
++#endif
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
+ # define compat_hlist_for_each_entry			hlist_for_each_entry
+ # define compat_hlist_for_each_entry_safe		hlist_for_each_entry_safe
