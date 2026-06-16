@@ -23,7 +23,7 @@ RESTRICT="!test? ( test )"
 RDEPEND="
 	dev-libs/openssl:0=[${MULTILIB_USEDEP},static-libs?]
 	examples? (
-		net-misc/curl
+		net-misc/curl:=
 		dev-libs/protobuf:=
 		dev-qt/qtbase:6[gui,widgets] )"
 
@@ -38,13 +38,13 @@ src_prepare() {
 	# conf.py references git.Repo but doesn't import gitpython; remove the dead
 	# line so has_release_date() runs instead — it reads CHANGELOG.md and
 	# returns true for any release tarball, giving release = version naturally.
-	sed -i '/repo = git\.Repo/d' "${S}"/manual/conf.py
+	sed -i '/repo = git\.Repo/d' "${S}"/manual/conf.py || die
 
 	# CAFTargets.cmake exposes OpenSSL::SSL/OpenSSL::Crypto as
 	# INTERFACE_LINK_LIBRARIES but CAFConfig.cmake.in never calls
 	# find_dependency(OpenSSL), breaking downstream cmake consumers.
 	sed -i '/find_dependency(Threads)/a find_dependency(OpenSSL)' \
-		"${S}"/cmake/CAFConfig.cmake.in
+		"${S}"/cmake/CAFConfig.cmake.in || die
 
 	cmake_src_prepare
 }
