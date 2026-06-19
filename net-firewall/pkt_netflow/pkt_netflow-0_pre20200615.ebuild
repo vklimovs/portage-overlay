@@ -7,12 +7,12 @@ inherit linux-mod-r1 toolchain-funcs
 
 # Upstream has been frozen since 2020-06-15; pin to the last commit rather
 # than tracking a live branch that never moves.
-SNAPSHOT=86208e286e9dc57e46939191a16163a89105f4b4
+COMMIT="86208e286e9dc57e46939191a16163a89105f4b4"
 
 DESCRIPTION="Standalone kernel netflow module"
 HOMEPAGE="https://github.com/aabc/pkt-netflow"
-SRC_URI="https://github.com/aabc/pkt-netflow/archive/${SNAPSHOT}.tar.gz -> ${P}.tar.gz"
-S="${WORKDIR}/pkt-netflow-${SNAPSHOT}"
+SRC_URI="https://github.com/aabc/pkt-netflow/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/pkt-netflow-${COMMIT}"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -63,7 +63,7 @@ src_configure() {
 		--enable-vlan \
 		--kdir="${KV_DIR}" \
 		--kver="${KV_FULL}" \
-		$(use snmp && echo '--enable-snmp-rules' || echo '--disable-snmp-agent')
+		$(usex snmp --enable-snmp-rules --disable-snmp-agent)
 }
 
 src_compile() {
@@ -74,7 +74,7 @@ src_compile() {
 src_install() {
 	linux-mod-r1_src_install
 
-	use snmp && emake DESTDIR="${D}" \
+	use snmp && emake CC="$(tc-getCC)" DESTDIR="${D}" \
 		SNMPTGSO="/usr/$(get_libdir)/snmp/dlmod/snmp_netflow.so" sinstall
 
 	dodoc README*
