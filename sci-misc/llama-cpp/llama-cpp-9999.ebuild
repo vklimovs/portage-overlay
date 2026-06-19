@@ -22,11 +22,16 @@ fi
 
 LICENSE="MIT"
 SLOT="0"
-CPU_FLAGS_X86=( avx avx2 f16c )
-IUSE="blis curl cuda flexiblas openblas opencl +openmp openssl rocm vulkan wmma"
+IUSE="blis cpu_flags_x86_avx cpu_flags_x86_avx2 cpu_flags_x86_f16c
+	cpu_flags_x86_fma3 cpu_flags_x86_sse4_2 cuda flexiblas openblas opencl
+	+openmp openssl rocm rpc vulkan wmma"
 
 REQUIRED_USE="
 	?? ( blis flexiblas openblas )
+	cpu_flags_x86_avx? ( cpu_flags_x86_sse4_2 )
+	cpu_flags_x86_avx2? ( cpu_flags_x86_avx )
+	cpu_flags_x86_f16c? ( cpu_flags_x86_avx )
+	cpu_flags_x86_fma3? ( cpu_flags_x86_avx )
 	rocm? ( ${ROCM_REQUIRED_USE} )
 	wmma? ( rocm )
 "
@@ -35,7 +40,6 @@ RESTRICT="test"
 
 CDEPEND="
 	blis? ( sci-libs/blis:= )
-	curl? ( net-misc/curl:= )
 	cuda? ( dev-util/nvidia-cuda-toolkit:= )
 	flexiblas? ( sci-libs/flexiblas:= )
 	openblas? ( sci-libs/openblas:= )
@@ -86,18 +90,21 @@ src_configure() {
 		-DCMAKE_INSTALL_LIBDIR="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_INSTALL_RPATH="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_SKIP_BUILD_RPATH=ON
+		-DGGML_AVX=$(usex cpu_flags_x86_avx ON OFF)
+		-DGGML_AVX2=$(usex cpu_flags_x86_avx2 ON OFF)
 		-DGGML_CUDA=$(usex cuda ON OFF)
+		-DGGML_F16C=$(usex cpu_flags_x86_f16c ON OFF)
+		-DGGML_FMA=$(usex cpu_flags_x86_fma3 ON OFF)
 		-DGGML_NATIVE=OFF
 		-DGGML_OPENCL=$(usex opencl ON OFF)
 		-DGGML_OPENMP=$(usex openmp ON OFF)
-		-DGGML_RPC=ON
+		-DGGML_RPC=$(usex rpc ON OFF)
+		-DGGML_SSE42=$(usex cpu_flags_x86_sse4_2 ON OFF)
 		-DGGML_VULKAN=$(usex vulkan ON OFF)
 		-DLLAMA_BUILD_EXAMPLES=OFF
 		-DLLAMA_BUILD_SERVER=ON
 		-DLLAMA_BUILD_TESTS=OFF
 		-DLLAMA_BUILD_UI=OFF
-		-DLLAMA_BUILD_WEBUI=OFF
-		-DLLAMA_CURL=$(usex curl ON OFF)
 		-DLLAMA_OPENSSL=$(usex openssl ON OFF)
 	)
 
@@ -125,9 +132,4 @@ src_configure() {
 	fi
 
 	cmake_src_configure
-}
-
-src_install() {
-	cmake_src_install
-	dobin "${BUILD_DIR}/bin/rpc-server"
 }
