@@ -16,7 +16,7 @@
 -  CFLAGS += -O2
  endif
 
- .PHONY: all clean depend format $(SUBDIRS)
+ ifdef ASAN
 --- a/src/Makefile
 +++ b/src/Makefile
 @@ -54,10 +54,10 @@

@@ -5,7 +5,7 @@ EAPI=8
 
 inherit toolchain-funcs
 
-COMMIT="76d0f41bf3eb5c4008713d64b9767b461a9129a3"
+COMMIT="18f207428068a50f2c35706c5d0b21f53c769016"
 
 DESCRIPTION="Seccomp-bpf policy language and compiler library"
 HOMEPAGE="https://github.com/google/kafel"
