@@ -3,14 +3,14 @@
 
 EAPI=8
 
-KAFEL_COMMIT="76d0f41bf3eb5c4008713d64b9767b461a9129a3"
-
 inherit toolchain-funcs
+
+COMMIT="76d0f41bf3eb5c4008713d64b9767b461a9129a3"
 
 DESCRIPTION="Seccomp-bpf policy language and compiler library"
 HOMEPAGE="https://github.com/google/kafel"
-SRC_URI="https://github.com/google/${PN}/archive/${KAFEL_COMMIT}.tar.gz -> ${P}.tar.gz"
-S="${WORKDIR}/${PN}-${KAFEL_COMMIT}"
+SRC_URI="https://github.com/google/${PN}/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/${PN}-${COMMIT}"
 
 LICENSE="Apache-2.0"
 SLOT="0/1"
@@ -37,7 +37,7 @@ src_install() {
 	doheader include/kafel.h
 
 	cat > "${T}"/kafel.pc <<-EOF || die
-		prefix=/usr
+		prefix=${EPREFIX}/usr
 		libdir=\${prefix}/$(get_libdir)
 		includedir=\${prefix}/include
 
