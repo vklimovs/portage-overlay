@@ -5,12 +5,12 @@ EAPI=8
 
 inherit toolchain-funcs
 
-MY_COMMIT="f8381f3331d9c56a9792f9b4a35f61c41108c39e"
+COMMIT="f8381f3331d9c56a9792f9b4a35f61c41108c39e"
 
-DESCRIPTION="Library and command-line tool for highway hash functions"
+DESCRIPTION="Fast strong hash functions: SipHash and HighwayHash"
 HOMEPAGE="https://github.com/google/highwayhash"
-SRC_URI="https://github.com/google/highwayhash/archive/${MY_COMMIT}.tar.gz -> ${P}.tar.gz"
-S="${WORKDIR}/highwayhash-${MY_COMMIT}"
+SRC_URI="https://github.com/google/highwayhash/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/highwayhash-${COMMIT}"
 
 LICENSE="Apache-2.0"
 SLOT="0/0"
