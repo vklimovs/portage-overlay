@@ -86,7 +86,7 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=(
-		-DBUILD_NUMBER="${PV#0_pre}"
+		-DLLAMA_BUILD_NUMBER="${PV#0_pre}"
 		-DCMAKE_INSTALL_LIBDIR="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_INSTALL_RPATH="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_SKIP_BUILD_RPATH=ON
