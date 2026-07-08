@@ -1,0 +1,8 @@
+# Vjaceslavs Klimovs <vklimovs@gmail.com> (2026-06-22)
+# 14.2.5 made reproc::event::source::process by-value, breaking zeek's bundled
+# spicy; zeek pins <14.2.5. Masked so it doesn't shadow 14.2.4 (RedundantVersion).
+>=dev-libs/reproc-14.2.5
+
+# Pinned to 9.3.1 to match ::gentoo's max elasticsearch. Masked so it
+# doesn't shadow 9.3.1 (RedundantVersion).
+>=www-apps/kibana-bin-9.4.2
