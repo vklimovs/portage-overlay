@@ -47,7 +47,7 @@ src_prepare() {
 	local script
 	for script in bin/*; do
 		grep -q '^NODE="' "${script}" \
-			|| die "${script} no longer contains a NODE= assignment"
+			|| die
 		sed -i \
 			-e 's@^NODE=.*@NODE="/usr/bin/node"@' \
 			-e '\@^NODE="@a export UNSAFE_DISABLE_NODE_VERSION_VALIDATION=1' \
