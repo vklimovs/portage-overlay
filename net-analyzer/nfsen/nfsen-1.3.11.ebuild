@@ -9,7 +9,8 @@ inherit perl-module webapp
 
 DESCRIPTION="Graphical netflow analyzer using nfdump tools"
 HOMEPAGE="https://github.com/phaag/nfsen"
-SRC_URI="https://github.com/phaag/${PN}/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/phaag/${PN}/archive/refs/tags/v.${PV}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/${PN}-v.${PV}"
 
 LICENSE="BSD"
 SLOT="0"
