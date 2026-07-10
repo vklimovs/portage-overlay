@@ -15,10 +15,28 @@ S="${WORKDIR}/highwayhash-${COMMIT}"
 LICENSE="Apache-2.0"
 SLOT="0/0"
 KEYWORDS="~amd64"
-IUSE="static-libs"
+IUSE="static-libs test"
+RESTRICT="!test? ( test )"
+
+src_prepare() {
+	default
+	# Upstream force-appends -O3 (override CXXFLAGS +=), overriding the user's
+	# -O level; drop it so CXXFLAGS wins. SIMD comes from per-object -mavx2/
+	# -msse4.1, independent of -O level.
+	sed -i 's/ -O3//' Makefile || die
+}
 
 src_compile() {
 	emake CXX="$(tc-getCXX)" AR="$(tc-getAR)" lib/libhighwayhash.a lib/libhighwayhash.so
+}
+
+src_test() {
+	emake CXX="$(tc-getCXX)" AR="$(tc-getAR)" \
+		bin/sip_hash_test bin/highwayhash_test bin/vector_test
+	local t
+	for t in sip_hash_test highwayhash_test vector_test; do
+		bin/${t} || die
+	done
 }
 
 src_install() {
@@ -39,7 +57,7 @@ src_install() {
 
 		Name: highwayhash
 		Description: ${DESCRIPTION}
-		Version: ${PV}
+		Version: ${PV#0_p}
 		Libs: -L\${libdir} -lhighwayhash
 		Cflags: -I\${includedir}
 	EOF
