@@ -27,7 +27,7 @@ BDEPEND="test? (
 	dev-python/requests[${PYTHON_USEDEP}]
 )"
 
-PATCHES=( "${FILESDIR}/${PN}-pyproject-package-data.patch" )
+PATCHES=( "${FILESDIR}/${PN}-2.33.0.20260408-pyproject-package-data.patch" )
 
 python_test() {
 	# Mirrors typeshed's stubs/requests/@tests/stubtest_allowlist.txt;
