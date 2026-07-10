@@ -9,7 +9,6 @@ PYTHON_COMPAT=( python3_{11..14} )
 inherit distutils-r1 pypi
 
 DESCRIPTION="Typing stubs for requests"
-PATCHES=( "${FILESDIR}/${PN}-pyproject-package-data.patch" )
 HOMEPAGE="
 	https://pypi.org/project/types-requests/
 	https://github.com/python/typeshed/tree/master/stubs/requests
@@ -28,6 +27,8 @@ BDEPEND="test? (
 	dev-python/requests[${PYTHON_USEDEP}]
 )"
 
+PATCHES=( "${FILESDIR}/${PN}-pyproject-package-data.patch" )
+
 python_test() {
 	# Mirrors typeshed's stubs/requests/@tests/stubtest_allowlist.txt;
 	# PyPI's sdist strips @tests/, so the allowlist is inlined here.
@@ -44,5 +45,5 @@ python_test() {
 
 	MYPYPATH="${S}" "${EPYTHON}" -m mypy.stubtest \
 		--allowlist "${allowlist}" requests \
-		|| die "stubtest failed for ${EPYTHON}"
+		|| die
 }
