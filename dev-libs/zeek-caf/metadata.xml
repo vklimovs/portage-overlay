@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+    <maintainer type="person">
+        <email>vklimovs@gmail.com</email>
+        <name>Vjaceslavs Klimovs</name>
+    </maintainer>
+    <upstream>
+        <remote-id type="github">zeek/actor-framework</remote-id>
+    </upstream>
+    <longdescription lang="en">
+        The C++ Actor Framework (CAF) as forked and pinned by Zeek's Broker
+        messaging library (github.com/zeek/actor-framework). It is version
+        stamped 0.18.5 but diverges substantially from upstream CAF 0.18.5 (the
+        streaming subsystem is removed, among other changes), so it is not a
+        drop-in for dev-libs/caf and blocks it. Built minimally as shared
+        libraries -- only the core, io and net modules that Broker links -- so
+        net-analyzer/zeek can unbundle its vendored copy and link this instead.
+    </longdescription>
+</pkgmetadata>
