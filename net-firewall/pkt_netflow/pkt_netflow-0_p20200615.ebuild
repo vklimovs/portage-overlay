@@ -50,7 +50,7 @@ src_prepare() {
 do_conf() {
 	tc-export CC
 	echo ./configure "$@"
-	./configure "$@" ${EXTRA_ECONF} || die 'configure failed'
+	./configure "$@" ${EXTRA_ECONF} || die
 }
 
 src_configure() {
