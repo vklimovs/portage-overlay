@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit bash-completion-r1 git-r3
+inherit git-r3 shell-completion
 
 DESCRIPTION="Dependency manager for PHP"
 HOMEPAGE="https://getcomposer.org https://github.com/composer/composer"
@@ -15,11 +15,11 @@ HOMEPAGE="https://getcomposer.org https://github.com/composer/composer"
 SRC_URI="https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
 
 EGIT_REPO_URI="https://github.com/${PN}/${PN}"
-EGIT_COMMIT="4120703b9bda8795075047b40361d7ec4d2abe49"
+EGIT_COMMIT="8d4439f572a97670a9edc039eb3b093cc976b4bc"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS=""
 IUSE="doc"
 
 RDEPEND=">=dev-lang/php-8.2:*[cli,phar]"
