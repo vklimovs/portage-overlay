@@ -24,8 +24,8 @@ SLOT="0/3"
 KEYWORDS="~amd64"
 IUSE="test"
 
-# Unicode 16.0.0 conformance data for the test suite (see src_prepare).
-BDEPEND="test? ( =app-i18n/unicode-data-16.0* )"
+# Unicode 17.0.0 conformance data for the test suite (see src_prepare).
+BDEPEND="test? ( =app-i18n/unicode-data-17.0* )"
 
 RESTRICT="!test? ( test )"
 

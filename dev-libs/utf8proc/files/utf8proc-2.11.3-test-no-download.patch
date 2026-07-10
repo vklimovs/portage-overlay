@@ -6,10 +6,10 @@ testgraphemetest/testnormtest cases expect them.
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -67,8 +67,8 @@ if(UTF8PROC_ENABLE_TESTING)
+@@ -86,8 +86,8 @@
    enable_testing()
    file(MAKE_DIRECTORY data)
-   set(UNICODE_VERSION 16.0.0)
+   set(UNICODE_VERSION 17.0.0)
 -  file(DOWNLOAD https://www.unicode.org/Public/${UNICODE_VERSION}/ucd/NormalizationTest.txt ${CMAKE_BINARY_DIR}/data/NormalizationTest.txt SHOW_PROGRESS)
 -  file(DOWNLOAD https://www.unicode.org/Public/${UNICODE_VERSION}/ucd/auxiliary/GraphemeBreakTest.txt ${CMAKE_BINARY_DIR}/data/GraphemeBreakTest.txt SHOW_PROGRESS)
 +  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/NormalizationTest.txt ${CMAKE_BINARY_DIR}/data/NormalizationTest.txt COPYONLY)
