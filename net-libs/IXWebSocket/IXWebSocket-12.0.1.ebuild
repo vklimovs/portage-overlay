@@ -12,12 +12,10 @@ SRC_URI="https://github.com/machinezone/IXWebSocket/archive/v${PV}.tar.gz
 S="${WORKDIR}/IXWebSocket-${PV}"
 
 LICENSE="BSD"
-# CMake derives the SONAME from the project VERSION (= internal
-# IX_WEBSOCKET_VERSION 11.4.6); no SOVERSION is set. Decoupled from the git tag /
-# PV (12.0.0) and may lag or stay constant across bumps, so track the full SONAME
-# version here so := consumers (zeek) rebuild on real ABI changes; re-derive with
+# Subslot tracks the SONAME (libixwebsocket.so.$SLOT, from CMake project VERSION,
+# no explicit SOVERSION) so := consumers rebuild on ABI changes; re-derive with
 # `objdump -p` on each bump.
-SLOT="0/11.4.6"
+SLOT="0/12.0.1"
 KEYWORDS="~amd64"
 
 RDEPEND="
