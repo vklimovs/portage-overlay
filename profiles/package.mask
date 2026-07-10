@@ -6,3 +6,7 @@
 # Pinned to 9.3.1 to match ::gentoo's max elasticsearch. Masked so it
 # doesn't shadow 9.3.1 (RedundantVersion).
 >=www-apps/kibana-bin-9.4.2
+
+# Pinned to 9.3.1 to match ::gentoo's max elasticsearch. Masked so it
+# doesn't shadow 9.3.1 (RedundantVersion).
+>=app-admin/filebeat-9.4.3
