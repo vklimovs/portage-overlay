@@ -24,7 +24,7 @@ S="${WORKDIR}/beats-${PV}"
 LICENSE="Apache-2.0 BSD BSD-2 CC-BY-3.0 CC0-1.0 EPL-2.0 ISC MIT MPL-2.0 public-domain PYTHON ZLIB"
 SLOT="0"
 KEYWORDS="~amd64"
-BDEPEND=">=dev-lang/go-1.25.9:="
+BDEPEND=">=dev-lang/go-1.26.4:="
 
 src_prepare() {
 	default
