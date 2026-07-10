@@ -1,3 +1,4 @@
 opencode.jsonc
 metadata/md5-cache
-scripts/
+__pycache__/
+*.pyc
