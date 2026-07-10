@@ -259,8 +259,9 @@ def normalize_tag(tag: str, pkg: "Package") -> str:
         t = t[len(pn_prefix):]
     if t.startswith("release-"):
         t = t[len("release-"):]
-    if len(t) > 1 and t[0] in "vV" and t[1].isdigit():
-        t = t[1:]
+    m = re.match(r"[vV]\.?(\d.*)", t)
+    if m:
+        t = m.group(1)
     for cpn, pat, repl in TAG_REWRITES:
         if cpn == pkg.cpn:
             t = pat.sub(repl, t)
