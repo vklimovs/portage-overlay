@@ -22,7 +22,10 @@ IUSE="+ansible test"
 RESTRICT="!test? ( test )"
 
 RDEPEND="ansible? ( app-admin/ansible[${PYTHON_USEDEP}] )"
-BDEPEND="test? ( dev-python/pytest-import-check[${PYTHON_USEDEP}] )"
+BDEPEND="test? (
+	dev-python/pytest-import-check[${PYTHON_USEDEP}]
+	app-admin/ansible[${PYTHON_USEDEP}]
+)"
 
 python_install() {
 	distutils-r1_python_install
@@ -45,6 +48,7 @@ python_test() {
 	local EPYTEST_IGNORE=(
 		"${BUILD_DIR}/install${sitedir}/mitogen/compat/pkgutil.py"
 		"${BUILD_DIR}/install${sitedir}/mitogen/imports/_py314.py"
+		"${BUILD_DIR}/install${sitedir}/ansible_mitogen/plugins/connection/mitogen_kubectl.py"
 	)
 	epytest --import-check "${BUILD_DIR}/install${sitedir}"
 }
