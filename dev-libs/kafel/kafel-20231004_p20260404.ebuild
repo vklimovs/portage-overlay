@@ -22,7 +22,7 @@ BDEPEND="
 	app-alternatives/yacc
 "
 
-PATCHES=( "${FILESDIR}/${PN}-respect-user-flags.patch" )
+PATCHES=( "${FILESDIR}/${P}-respect-user-flags.patch" )
 
 src_compile() {
 	tc-export CC AR LD OBJCOPY OBJDUMP
