@@ -65,7 +65,7 @@ RDEPEND="${CDEPEND}
 BDEPEND="vulkan? ( media-libs/shaderc )"
 
 PATCHES=(
-	"${FILESDIR}/${PN}-blas-ld.patch"
+	"${FILESDIR}/${PN}-0_pre9012-blas-ld.patch"
 )
 
 pkg_setup() {
