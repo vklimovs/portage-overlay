@@ -71,8 +71,8 @@ multilib_src_compile() {
 	cmake_src_compile
 
 	if multilib_is_native_abi && use doc; then
-		doxygen "${S}"/Doxyfile || die "doxygen failed"
-		sphinx-build "${S}"/manual "${S}"/manual/html || die "sphinx failed"
+		doxygen "${S}"/Doxyfile || die
+		sphinx-build "${S}"/manual "${S}"/manual/html || die
 	fi
 }
 
