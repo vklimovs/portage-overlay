@@ -1,4 +1,3 @@
-# Vjaceslavs Klimovs <vklimovs@gmail.com> (2026-06-22)
 # 14.2.5 made reproc::event::source::process by-value, breaking zeek's bundled
 # spicy; zeek pins <14.2.5. Masked so it doesn't shadow 14.2.4 (RedundantVersion).
 >=dev-libs/reproc-14.2.5
