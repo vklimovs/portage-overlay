@@ -15,6 +15,5 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 src_install() {
-	insinto /usr/include
-	doins -r include/ztd
+	doheader -r include/ztd
 }
