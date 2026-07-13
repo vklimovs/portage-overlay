@@ -9,6 +9,10 @@ command_args="daemon"
 command_background=true
 pidfile="/run/${RC_SVCNAME}.pid"
 
+# zrepl blocks SIGTERM until the running replication step ends; force
+# SIGKILL after a grace period, which is safe as receives are resumable.
+retry="SIGTERM/30/SIGKILL/5"
+
 depend() {
 	use net logger
 	after clock
