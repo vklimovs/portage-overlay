@@ -25,7 +25,7 @@ LICENSE="MIT"
 LICENSE+=" Apache-2.0 BSD ISC LGPL-3+ MPL-2.0"
 SLOT="0"
 KEYWORDS="~amd64"
-BDEPEND=">=dev-lang/go-1.24:="
+BDEPEND=">=dev-lang/go-1.24.13:="
 
 DOCS=( README.md )
 
