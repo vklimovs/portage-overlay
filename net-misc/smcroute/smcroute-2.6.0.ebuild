@@ -6,7 +6,7 @@ EAPI=8
 inherit autotools linux-info
 
 DESCRIPTION="Static multicast routing for UNIX"
-HOMEPAGE="https://troglobit.com/projects/smcroute"
+HOMEPAGE="https://troglobit.com/projects/smcroute/"
 SRC_URI="https://github.com/troglobit/smcroute/archive/${PV}.tar.gz ->
 	${P}.tar.gz"
 LICENSE="GPL-2"
