@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit bash-completion-r1 systemd
+inherit shell-completion systemd
 
 DESCRIPTION="A fully featured network monitoring system"
 HOMEPAGE="https://www.librenms.org/ https://github.com/librenms/librenms"
