@@ -151,31 +151,29 @@ DISTDIR=$(portageq envvar DISTDIR 2>/dev/null || echo /var/cache/distfiles)
 # package discovery
 # --------------------------------------------------------------------------- #
 
-# Print "cat/pn ebuild_path" for each ebuild that declares a vendor recipe.
+# Print "cat/pn<TAB>ebuild_path" for EVERY ebuild that declares a vendor recipe.
 # If FILTERS is non-empty, only packages whose cat/pn matches a filter are
-# emitted. The newest matching ebuild per package is selected by `ls -v`.
+# emitted. All versions carrying a recipe are emitted (not just the newest), so a
+# package that keeps several versions in the tree (e.g. an LTS + a feature
+# release) gets each version's tarball built and uploaded. process_package's
+# skip-if-asset-exists check keeps repeated runs idempotent.
 discover_ebuilds() {
     local match
-    declare -A seen=()
-    while IFS= read -r -d '' ebuild; do
-        grep -qF "$RECIPE_MARKER" "$ebuild" || continue
-        local pn cat cpn
-        pn=$(basename "$(dirname "$ebuild")")
-        cat=$(basename "$(dirname "$(dirname "$ebuild")")")
-        cpn="$cat/$pn"
-        if (( ${#FILTERS[@]} )); then
-            match=0
-            for f in "${FILTERS[@]}"; do [[ $cpn == "$f" ]] && match=1 && break; done
-            (( match )) || continue
-        fi
-        # Keep newest version per package.
-        if [[ -z ${seen[$cpn]+x} || $ebuild > ${seen[$cpn]} ]]; then
-            seen[$cpn]=$ebuild
-        fi
-    done < <(find . -type f -name '*.ebuild' -not -path './.git/*' -print0)
-    for cpn in "${!seen[@]}"; do
-        printf '%s\t%s\n' "$cpn" "${seen[$cpn]}"
-    done | sort
+    {
+        while IFS= read -r -d '' ebuild; do
+            grep -qF "$RECIPE_MARKER" "$ebuild" || continue
+            local pn cat cpn
+            pn=$(basename "$(dirname "$ebuild")")
+            cat=$(basename "$(dirname "$(dirname "$ebuild")")")
+            cpn="$cat/$pn"
+            if (( ${#FILTERS[@]} )); then
+                match=0
+                for f in "${FILTERS[@]}"; do [[ $cpn == "$f" ]] && match=1 && break; done
+                (( match )) || continue
+            fi
+            printf '%s\t%s\n' "$cpn" "$ebuild"
+        done < <(find . -type f -name '*.ebuild' -not -path './.git/*' -print0)
+    } | sort
 }
 
 # Strip leading ${PN}- and trailing -rN to recover bare PV.
