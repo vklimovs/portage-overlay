@@ -16,10 +16,10 @@ import os
 import re
 import subprocess
 import sys
-import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,12 +31,19 @@ USER_AGENT = "portage-overlay-version-check/1.0"
 PASS_ENTRY = "Github/portage-overlay-releases"
 SKIP_CATEGORIES = {"acct-group", "acct-user", "metadata", "profiles", "scripts",
                    "eclass", "licenses", "distfiles"}
-PROBE_ORDER = ("github", "pypi", "codeberg")
 EBUILD_RE = re.compile(r"^(?P<pn>.+)-(?P<pv>\d[^-]*(?:[._-][^-]+)*?)(?:-r\d+)?\.ebuild$")
 COMMIT_RE = re.compile(r"(?:archive/|COMMIT\s*=\s*[\"']?)([0-9a-f]{40})\b")
 # Snapshot PVs (date or _pre build) can't be compared to release tags, so
 # these are the ones for which a pinned commit is the right thing to diff.
 SNAPSHOT_RE = re.compile(r"_pre|_p\d{6,}|^\d{8}")
+
+# Per-package upstream-tag rewrites: when an upstream's tag scheme doesn't
+# match Gentoo PV ordering, map it to the form used by the ebuild here so
+# vercmp does the right thing.  llama.cpp tags daily builds as bNNNN; the
+# ebuilds use 0_preNNNN.
+TAG_REWRITES: tuple[tuple[str, re.Pattern[str], str], ...] = (
+    ("sci-misc/llama-cpp", re.compile(r"^b(\d+)$"), r"0_pre\1"),
+)
 
 
 @dataclass(frozen=True)
@@ -62,23 +69,34 @@ class Result:
         if self.error:
             return "error"
         if self.commit_state is not None:
-            if self.commit_state == "identical":
-                return "current"
-            if self.commit_state == "ahead":
-                return "outdated"
-            if self.commit_state == "behind":
-                return "ahead"
-            return "unknown"
+            return {"identical": "current", "ahead": "outdated",
+                    "behind": "ahead", "diverged": "current"}.get(self.commit_state, "unknown")
         if self.pkg.current is None or self.upstream is None:
             return "unknown"
         cmp = vercmp(self.pkg.current, self.upstream, silent=1)
         if cmp is None:
             return "unknown"
-        if cmp < 0:
-            return "outdated"
-        if cmp > 0:
-            return "ahead"
-        return "current"
+        return "outdated" if cmp < 0 else "ahead" if cmp > 0 else "current"
+
+    @property
+    def display(self) -> str:
+        """The text shown in the Upstream column (colour is added by render)."""
+        if self.error:
+            return f"ERROR ({self.error})"
+        if self.commit_state is not None:
+            if self.commit_state == "diverged":
+                return "HEAD (pinned)"
+            n = self.commit_behind or 0
+            return {
+                "current": "HEAD (up to date)",
+                "outdated": f"HEAD ({n} commit{'' if n == 1 else 's'} behind)",
+                "ahead": "HEAD (local ahead)",
+            }.get(self.status, f"HEAD ({self.commit_state})")
+        if self.status == "outdated":
+            return f"{self.upstream}  <-- outdated"
+        if self.status == "ahead":
+            return f"{self.upstream}  (local newer)"
+        return self.upstream or "-"
 
 
 # --------------------------------------------------------------------------- #
@@ -94,10 +112,10 @@ def discover_packages(overlay: Path) -> list[Package]:
             ebuilds = list(pkg_dir.glob("*.ebuild"))
             if not ebuilds:
                 continue
-            current, current_ebuild = pick_current(ebuilds)
             remotes = parse_remote_ids(pkg_dir / "metadata.xml")
             if not remotes:
                 continue
+            current, current_ebuild = pick_current(ebuilds)
             pkgs.append(Package(
                 cpn=f"{cat.name}/{pkg_dir.name}",
                 pn=pkg_dir.name,
@@ -157,6 +175,42 @@ def parse_remote_ids(metadata_xml: Path) -> dict[str, str]:
 
 
 # --------------------------------------------------------------------------- #
+# tag normalisation
+# --------------------------------------------------------------------------- #
+
+def normalize_tag(tag: str, pkg: Package) -> str:
+    """Convert an upstream tag/version to the PV form the ebuilds use."""
+    t = tag.strip()
+    pn_prefix = f"{pkg.pn}-"
+    if t.lower().startswith(pn_prefix.lower()):
+        t = t[len(pn_prefix):]
+    if t.startswith("release-"):
+        t = t[len("release-"):]
+    m = re.match(r"[vV]\.?(\d.*)", t)
+    if m:
+        t = m.group(1)
+    for cpn, pat, repl in TAG_REWRITES:
+        if cpn == pkg.cpn:
+            t = pat.sub(repl, t)
+    return t
+
+
+def highest(pkg: Package, raw_tags: Iterable[str]) -> str | None:
+    """Highest candidate by Gentoo version ordering, normalised to PV form.
+
+    Candidates that vercmp cannot order (rolling tags like "nightly", "latest")
+    are skipped so they can't shadow a real version by sorting first."""
+    best: str | None = None
+    for raw in raw_tags:
+        pv = normalize_tag(raw or "", pkg)
+        if not pv or vercmp(pv, "0", silent=1) is None:
+            continue
+        if best is None or (vercmp(pv, best, silent=1) or 0) > 0:
+            best = pv
+    return best
+
+
+# --------------------------------------------------------------------------- #
 # upstream probes
 # --------------------------------------------------------------------------- #
 
@@ -178,24 +232,52 @@ def _quote_repo(repo: str) -> str:
     return "/".join(urllib.parse.quote(p, safe="") for p in parts)
 
 
-def latest_github(repo: str, token: str | None) -> str:
+def github_candidates(repo: str, token: str | None) -> list[str]:
+    # Prefer published releases (highest by version, not whatever upstream
+    # marked "latest" -- some pin an older LTS line there); fall back to tags.
     safe = _quote_repo(repo)
     headers = {"Authorization": f"Bearer {token}"} if token else None
-    try:
-        data = http_json(f"https://api.github.com/repos/{safe}/releases/latest", headers)
-        if isinstance(data, dict):
-            tag = (data.get("tag_name") or "").strip()
-            if tag:
-                return tag
-    except urllib.error.HTTPError as e:
-        if e.code != 404:
-            raise
-    data = http_json(f"https://api.github.com/repos/{safe}/tags?per_page=10", headers)
+    data = http_json(f"https://api.github.com/repos/{safe}/releases?per_page=100", headers)
+    if isinstance(data, list):
+        tags = [r.get("tag_name") or "" for r in data
+                if isinstance(r, dict) and not r.get("prerelease") and not r.get("draft")]
+        tags = [t for t in tags if t]
+        if tags:
+            return tags
+    data = http_json(f"https://api.github.com/repos/{safe}/tags?per_page=100", headers)
+    if isinstance(data, list):
+        return [t.get("name") or "" for t in data if isinstance(t, dict) and t.get("name")]
+    return []
+
+
+def pypi_candidates(name: str, token: str | None = None) -> list[str]:
+    safe = urllib.parse.quote(name, safe="")
+    data = http_json(f"https://pypi.org/pypi/{safe}/json")
+    version = ((data.get("info") or {}).get("version") or "").strip() if isinstance(data, dict) else ""
+    return [version] if version else []
+
+
+def codeberg_candidates(repo: str, token: str | None = None) -> list[str]:
+    safe = _quote_repo(repo)
+    data = http_json(f"https://codeberg.org/api/v1/repos/{safe}/releases?limit=1")
+    if isinstance(data, list) and data:
+        tag = (data[0].get("tag_name") or "").strip()
+        if tag:
+            return [tag]
+    data = http_json(f"https://codeberg.org/api/v1/repos/{safe}/tags?limit=1")
     if isinstance(data, list) and data:
         name = (data[0].get("name") or "").strip()
         if name:
-            return name
-    raise RuntimeError("no releases or tags")
+            return [name]
+    return []
+
+
+# Probed in order; the first remote-id present on a package wins.
+REMOTE_CANDIDATES = {
+    "github": github_candidates,
+    "pypi": pypi_candidates,
+    "codeberg": codeberg_candidates,
+}
 
 
 def github_commit_state(repo: str, commit: str, token: str | None) -> tuple[str, int]:
@@ -213,59 +295,33 @@ def github_commit_state(repo: str, commit: str, token: str | None) -> tuple[str,
     return data["status"], int(data.get("ahead_by") or 0)
 
 
-def latest_pypi(name: str) -> str:
-    safe = urllib.parse.quote(name, safe="")
-    data = http_json(f"https://pypi.org/pypi/{safe}/json")
-    if not isinstance(data, dict):
-        raise RuntimeError("unexpected response shape")
-    version = (((data.get("info") or {}).get("version")) or "").strip()
-    if not version:
-        raise RuntimeError("no version in info")
-    return version
-
-
-def latest_codeberg(repo: str) -> str:
-    safe = _quote_repo(repo)
-    data = http_json(f"https://codeberg.org/api/v1/repos/{safe}/releases?limit=1")
-    if isinstance(data, list) and data:
-        tag = (data[0].get("tag_name") or "").strip()
-        if tag:
-            return tag
-    data = http_json(f"https://codeberg.org/api/v1/repos/{safe}/tags?limit=1")
-    if isinstance(data, list) and data:
-        name = (data[0].get("name") or "").strip()
-        if name:
-            return name
-    raise RuntimeError("no releases or tags")
-
-
-# --------------------------------------------------------------------------- #
-# normalisation + driver
-# --------------------------------------------------------------------------- #
-
-# Per-package upstream-tag rewrites. Hacky but local: when an upstream's
-# tag scheme doesn't match Gentoo PV ordering, map it to the form used by
-# the ebuild here so vercmp does the right thing.
-TAG_REWRITES: tuple[tuple[str, re.Pattern[str], str], ...] = (
-    # llama.cpp tags daily builds as bNNNN; ebuilds use 0_preNNNN.
-    ("sci-misc/llama-cpp", re.compile(r"^b(\d+)$"), r"0_pre\1"),
-)
-
-
-def normalize_tag(tag: str, pkg: "Package") -> str:
-    t = tag.strip()
-    pn_prefix = f"{pkg.pn}-"
-    if t.lower().startswith(pn_prefix.lower()):
-        t = t[len(pn_prefix):]
-    if t.startswith("release-"):
-        t = t[len("release-"):]
-    m = re.match(r"[vV]\.?(\d.*)", t)
-    if m:
-        t = m.group(1)
-    for cpn, pat, repl in TAG_REWRITES:
-        if cpn == pkg.cpn:
-            t = pat.sub(repl, t)
-    return t
+def fetch_upstream(pkg: Package, token: str | None) -> Result:
+    # Live-only ebuilds always track upstream HEAD; there is no meaningful
+    # release to compare against, so just mirror "9999" and call it current.
+    if pkg.current == "9999":
+        return Result(pkg=pkg, upstream="9999", error=None)
+    # Snapshot ebuilds pin a commit; comparing PV against the newest tag is
+    # meaningless, so diff the pinned SHA against upstream HEAD instead.
+    if pkg.commit and pkg.remotes.get("github"):
+        try:
+            state, behind = github_commit_state(pkg.remotes["github"], pkg.commit, token)
+            return Result(pkg=pkg, upstream="HEAD", error=None,
+                          commit_state=state, commit_behind=behind)
+        except Exception as e:
+            return Result(pkg=pkg, upstream=None, error=f"github: {e}")
+    last_error: str | None = None
+    for kind, fetch in REMOTE_CANDIDATES.items():
+        rid = pkg.remotes.get(kind)
+        if not rid:
+            continue
+        try:
+            best = highest(pkg, fetch(rid, token))
+            if best:
+                return Result(pkg=pkg, upstream=best, error=None)
+            last_error = f"{kind}: no releases or tags"
+        except Exception as e:
+            last_error = f"{kind}: {e}"
+    return Result(pkg=pkg, upstream=None, error=last_error or "no usable remote-id")
 
 
 def token_from_pass() -> str | None:
@@ -290,39 +346,12 @@ def token_from_pass() -> str | None:
     return line or None
 
 
-def fetch_upstream(pkg: Package, token: str | None) -> Result:
-    # Live-only ebuilds always track upstream HEAD; there is no meaningful
-    # release to compare against, so just mirror "9999" and call it current.
-    if pkg.current == "9999":
-        return Result(pkg=pkg, upstream="9999", error=None)
-    # Snapshot ebuilds pin a commit; comparing PV against the newest tag is
-    # meaningless, so diff the pinned SHA against upstream HEAD instead.
-    if pkg.commit and pkg.remotes.get("github"):
-        try:
-            state, behind = github_commit_state(
-                pkg.remotes["github"], pkg.commit, token)
-            return Result(pkg=pkg, upstream="HEAD", error=None,
-                          commit_state=state, commit_behind=behind)
-        except Exception as e:
-            return Result(pkg=pkg, upstream=None, error=f"github: {e}")
-    last_error: str | None = None
-    for kind in PROBE_ORDER:
-        rid = pkg.remotes.get(kind)
-        if not rid:
-            continue
-        try:
-            if kind == "github":
-                raw = latest_github(rid, token)
-            elif kind == "pypi":
-                raw = latest_pypi(rid)
-            elif kind == "codeberg":
-                raw = latest_codeberg(rid)
-            else:
-                continue
-            return Result(pkg=pkg, upstream=normalize_tag(raw, pkg), error=None)
-        except Exception as e:
-            last_error = f"{kind}: {e}"
-    return Result(pkg=pkg, upstream=None, error=last_error or "no usable remote-id")
+# --------------------------------------------------------------------------- #
+# output
+# --------------------------------------------------------------------------- #
+
+STATUS_COLOR = {"current": "32", "outdated": "33", "ahead": "36",
+                "unknown": "35", "error": "31"}
 
 
 def render(results: list[Result], use_color: bool) -> tuple[int, int]:
@@ -332,38 +361,16 @@ def render(results: list[Result], use_color: bool) -> tuple[int, int]:
     name_w = max((len(r.pkg.cpn) for r in results), default=8)
     cur_w = max((len(r.pkg.current or "-") for r in results), default=8)
 
-    header = f"{'Package':<{name_w}} | {'Current':<{cur_w}} | Upstream"
-    print(header)
+    print(f"{'Package':<{name_w}} | {'Current':<{cur_w}} | Upstream")
     print("-" * (name_w + cur_w + 20))
 
     outdated = errors = 0
     for r in results:
-        cur = r.pkg.current or "-"
         status = r.status
-        if r.commit_state is not None and status != "error":
-            n = r.commit_behind or 0
-            label = {
-                "current": "HEAD (up to date)",
-                "outdated": f"HEAD ({n} commit{'s' if n != 1 else ''} behind)",
-                "ahead": "HEAD (local ahead)",
-            }.get(status, f"HEAD ({r.commit_state})")
-            color = {"current": "32", "outdated": "33", "ahead": "36"}.get(status, "35")
-            outdated += status == "outdated"
-            print(f"{r.pkg.cpn:<{name_w}} | {cur:<{cur_w}} | {paint(label, color)}")
-            continue
-        if status == "error":
-            up = paint(f"ERROR ({r.error})", "31")
-            errors += 1
-        elif status == "outdated":
-            up = paint(f"{r.upstream}  <-- outdated", "33")
-            outdated += 1
-        elif status == "ahead":
-            up = paint(f"{r.upstream}  (local newer)", "36")
-        elif status == "unknown":
-            up = paint(r.upstream or "-", "35")
-        else:
-            up = paint(r.upstream or "-", "32")
-        print(f"{r.pkg.cpn:<{name_w}} | {cur:<{cur_w}} | {up}")
+        outdated += status == "outdated"
+        errors += status == "error"
+        cur = r.pkg.current or "-"
+        print(f"{r.pkg.cpn:<{name_w}} | {cur:<{cur_w}} | {paint(r.display, STATUS_COLOR[status])}")
     return outdated, errors
 
 
@@ -400,10 +407,8 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
 
     workers = max(1, min(args.workers, len(pkgs)))
-    results: list[Result] = []
     with cf.ThreadPoolExecutor(max_workers=workers) as ex:
-        for r in ex.map(lambda p: fetch_upstream(p, token), pkgs):
-            results.append(r)
+        results = list(ex.map(lambda p: fetch_upstream(p, token), pkgs))
     results.sort(key=lambda r: r.pkg.cpn)
 
     use_color = sys.stdout.isatty() and not args.no_color and os.environ.get("NO_COLOR") is None
