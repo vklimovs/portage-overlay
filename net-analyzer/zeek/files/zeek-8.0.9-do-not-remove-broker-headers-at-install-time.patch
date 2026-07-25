@@ -1,3 +1,5 @@
+# Don't let Broker's install step wipe ${CMAKE_INSTALL_PREFIX}/include/broker;
+# portage manages file installation/removal and this would clobber the image.
 --- a/auxil/broker/CMakeLists.txt
 +++ b/auxil/broker/CMakeLists.txt
 @@ -274,8 +274,8 @@

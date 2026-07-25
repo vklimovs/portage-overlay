@@ -1,3 +1,5 @@
+# Don't install(DIRECTORY) /var/lib (ZEEK_STATE_DIR, an FHS dir owned by
+# baselayout) or var/lib/zkg at build time; portage's keepdir handles the latter.
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -595,7 +595,7 @@

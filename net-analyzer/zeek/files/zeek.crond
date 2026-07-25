@@ -1,0 +1,2 @@
+# Restart crashed nodes and expire old logs/crash dirs (see LogExpireInterval).
+*/5 * * * * root /usr/bin/zeekctl cron

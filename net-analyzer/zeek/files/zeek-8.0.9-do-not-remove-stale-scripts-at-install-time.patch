@@ -1,3 +1,5 @@
+# Don't delete old .bro scripts from the live install path at install time;
+# portage owns cross-version file cleanup.
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -627,14 +627,14 @@

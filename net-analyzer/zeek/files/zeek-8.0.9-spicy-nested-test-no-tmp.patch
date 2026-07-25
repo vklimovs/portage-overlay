@@ -1,0 +1,18 @@
+file-analyzer-nested: write the execution trace to the test's working dir.
+
+The test hardcodes a shared, fixed path under /tmp for zeek's -t execution
+trace. Under a multi-user build (e.g. portage) a stale /tmp/zeek.trace owned by
+another user is unwritable due to /tmp's sticky bit, which fails the test for
+reasons unrelated to what it checks. The trace file itself is never diffed, so
+write it to the per-test cwd instead.
+
+--- a/testing/btest/spicy/file-analyzer-nested.zeek
++++ b/testing/btest/spicy/file-analyzer-nested.zeek
+@@ -8,6 +8,6 @@
+ #
+ # Check that exceeding max-file-depth leads to aborting and an event.
+-# @TEST-EXEC: zeek -t /tmp/zeek.trace -r ${TRACES}/http/post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
++# @TEST-EXEC: zeek -t zeek.trace -r ${TRACES}/http/post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
+ # @TEST-EXEC: cat notice.log | zeek-cut note | grep -q "Spicy_Max_File_Depth_Exceeded"
+ # @TEST-EXEC: btest-diff output-max
+

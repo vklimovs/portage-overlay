@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+# Single-machine multiprocess Zeek; define the topology in /etc/zeek/node.cfg.
+
+description="Zeek Network Security Monitor (zeekctl-managed)"
+
+depend() {
+	need net
+	after firewall
+}
+
+start() {
+	ebegin "Deploying Zeek cluster"
+	/usr/bin/zeekctl deploy
+	eend $? "zeekctl deploy failed"
+}
+
+stop() {
+	ebegin "Stopping Zeek cluster"
+	/usr/bin/zeekctl stop
+	eend $? "zeekctl stop failed"
+}
+
+status() {
+	/usr/bin/zeekctl status
+}

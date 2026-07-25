@@ -1,0 +1,21 @@
+from_json(): parse floating point at full precision so values round-trip exactly.
+
+rapidjson's default parser uses a fast float-to-double conversion that may be off
+by up to a few ULP. to_json() emits the shortest round-trippable representation,
+but without kParseFullPrecisionFlag from_json() can parse it back to a slightly
+different double, breaking round-trips (e.g. intervals serialized as doubles).
+The bundled rapidjson happened to mask this for some values; a system rapidjson
+exposes it. Verified: writing 0.11990499496459961 and parsing it back compares
+equal only with kParseFullPrecisionFlag (the default parser is off by 1 ULP).
+
+--- a/src/Val.cc
++++ b/src/Val.cc
+@@ -1301,7 +1301,7 @@ zeek::expected<ValPtr, std::string> detail::ValFromJSON(std::string_view json_st
+ zeek::expected<ValPtr, std::string> detail::ValFromJSON(std::string_view json_str, const TypePtr& t,
+                                                         const FuncPtr& key_func) {
+     rapidjson::Document doc;
+-    rapidjson::ParseResult ok = doc.Parse(json_str.data(), json_str.length());
++    rapidjson::ParseResult ok = doc.Parse<rapidjson::kParseFullPrecisionFlag>(json_str.data(), json_str.length());
+
+     if ( ! ok )
+         return zeek::unexpected<std::string>(
