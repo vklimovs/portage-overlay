@@ -16,9 +16,11 @@
         <flag name="kerberos">Enable Kerberos protocol analysis</flag>
         <flag name="nodejs">Enable Node.js support</flag>
         <flag name="python">Build the Broker Python bindings (also required by the zeekctl, zeek-client and zkg tools)</flag>
+        <flag name="redis">Enable the Redis storage backend via dev-libs/hiredis</flag>
         <flag name="sendmail">Enable Zeek and ZeekControl to send mail</flag>
         <flag name="spicy">Enable the bundled Spicy protocol analyzer framework</flag>
         <flag name="static-libs">Build static libraries</flag>
+        <flag name="systemd">Build and install the zeek-systemd-generator (for systemd init systems)</flag>
         <flag name="tcmalloc">Use the tcmalloc allocator from dev-util/google-perftools</flag>
         <flag name="tools">Install auxiliary command-line tools (zeek-cut, zeek-archiver, trace-summary, ...)</flag>
         <flag name="zeek-client">Install zeek-client CLI management tool</flag>
