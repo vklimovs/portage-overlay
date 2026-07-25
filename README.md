@@ -40,10 +40,20 @@ pkgcheck scan --commits   # only changed packages, fastest while developing
 pkgcheck scan --net       # full scan including network URL checks
 ```
 
-### Go vendor tarballs
+### Unbundling
 
-Go packages using the `go-module` eclass pull a vendored-dependency tarball from
-this overlay's GitHub releases:
+Vendored third-party code gets unbundled per [UNBUNDLING.md](UNBUNDLING.md):
+every vendored tree is classified with evidence, replaced by a system package
+or enumerated as an exception, and swept fail-closed in `src_prepare` so a
+bump that vendors something new breaks the build instead of compiling
+silently. `net-analyzer/zeek` is the reference implementation.
+
+### Vendor tarballs
+
+Packages that need pre-assembled source material pull a sidecar tarball from
+this overlay's GitHub releases: Go module trees for the `go-module` eclass
+(zrepl, filebeat), PHP composer trees (composer, librenms, phpldapadmin), and
+zeek's unbundling patch series.
 
 ```
 https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz
@@ -71,8 +81,8 @@ unauthenticated requests (60 req/hr).
 
 ### `scripts/upload_vendor_tarballs.sh`
 
-Builds and uploads Go vendor tarballs to GitHub releases, reading the recipe
-comment blocks in the `go-module` ebuilds.
+Builds and uploads vendor tarballs to GitHub releases, reading the recipe
+comment blocks embedded in the ebuilds.
 
 ```sh
 scripts/upload_vendor_tarballs.sh               # all packages
