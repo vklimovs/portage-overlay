@@ -34,7 +34,7 @@ RDEPEND="
 	dev-libs/expat
 	dev-libs/nspr
 	dev-libs/nss
-	~net-libs/nodejs-24.14.0[inspector,ssl]
+	~net-libs/nodejs-24.16.0[inspector,ssl]
 	sys-libs/glibc
 "
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-elastic )"
