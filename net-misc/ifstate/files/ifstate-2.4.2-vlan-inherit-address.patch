@@ -1,0 +1,211 @@
+From 4ac2cf784cd56ddaac6fe80c16c2a01cfc920d3b Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Fri, 4 Sep 2026 15:45:18 -0700
+Subject: [PATCH] link: allow vlan interfaces to inherit the MAC address from
+ their link
+
+---
+ libifstate/__init__.py            |  6 +++++-
+ libifstate/link/base.py           | 30 +++++++++++++++---------------
+ libifstate/link/physical.py       | 10 +++++++++-
+ libifstate/link/vlan.py           | 20 ++++++++++++++++++++
+ libifstate/util.py                | 15 +++++++++++++++
+ schema/2/ifstate.conf.schema.json | 25 +++++++++++++++++++++++++
+ 6 files changed, 89 insertions(+), 17 deletions(-)
+
+diff --git a/libifstate/__init__.py b/libifstate/__init__.py
+index 99fab96..a5b06c3 100644
+--- a/libifstate/__init__.py
++++ b/libifstate/__init__.py
+@@ -43,7 +43,7 @@ except ModuleNotFoundError:
+     pass
+ 
+ from libifstate.netns import NetNameSpace, prepare_netns, LinkRegistry, get_netns_instances
+-from libifstate.util import logger, root_iw, kind_has_identify, IfStateLogging, LinkDependency, IDENTIFY_LOOKUPS
++from libifstate.util import logger, root_iw, kind_has_identify, IfStateLogging, LinkAddressDefault, LinkDependency, IDENTIFY_LOOKUPS
+ from libifstate.exception import FeatureMissingError, LinkCircularLinked, LinkNoConfigFound, ParserValidationError
+ from ipaddress import ip_network, ip_interface
+ from copy import deepcopy
+@@ -146,6 +146,10 @@ class IfState():
+         # prepare hooks
+         self.hooks = Hooks(ifstates['parameters'].get('hooks', {}))
+ 
++        # configure MAC address defaults
++        self.link_address_default = LinkAddressDefault(
++            ifstates['parameters'].get('link_address_default', {}))
++
+         # build link registry over all named netns
+         self.link_registry = LinkRegistry(self.ignore.get('ifname', []), self.root_netns)
+ 
+diff --git a/libifstate/link/base.py b/libifstate/link/base.py
+index c212ae5..0da00ca 100644
+--- a/libifstate/link/base.py
++++ b/libifstate/link/base.py
+@@ -258,6 +258,15 @@ class Link(ABC):
+ 
+         return None
+ 
++    def get_link_address_default(self, item):
++        """
++        This method returns the default L2 address of the
++        interface or None if no default should be implied.
++        """
++
++        # build a reproducible mac address for virtual interfaces
++        return self.netns.build_iface_mac(self.settings['ifname'])
++
+     def _drill_attr(self, data, keys):
+         key = keys[0]
+         d = data.get_attr(key)
+@@ -559,21 +568,12 @@ class Link(ABC):
+                 set_address = False
+ 
+             if set_address:
+-                if self.settings['kind'] == 'physical':
+-                    if item is not None and 'perm_address' in item.attributes:
+-                        # set default to `perm_address` for physical interfaces
+-                        self.settings['address'] = item.attributes['perm_address']
+-                        logger.debug(f"reset mac address to {self.settings['address']}", extra={
+-                                            'iface': self.settings['ifname'],
+-                                            'netns': self.netns})
+-                else:
+-                    # build a reproducible mac address for virtual interfaces
+-                    mac = self.netns.build_iface_mac(self.settings['ifname'])
+-                    if mac is not None:
+-                        self.settings['address'] = mac
+-                        logger.debug(f"set default mac address to {mac}", extra={
+-                                        'iface': self.settings['ifname'],
+-                                        'netns': self.netns})
++                mac = self.get_link_address_default(item)
++                if mac is not None:
++                    self.settings['address'] = mac
++                    logger.debug(f"set default mac address to {mac}", extra={
++                                    'iface': self.settings['ifname'],
++                                    'netns': self.netns})
+ 
+         # check if bind_netns option requires a recreate
+         try:
+diff --git a/libifstate/link/physical.py b/libifstate/link/physical.py
+index 717e7cb..16bf6b3 100644
+--- a/libifstate/link/physical.py
++++ b/libifstate/link/physical.py
+@@ -1,4 +1,4 @@
+-from libifstate.util import logger
++from libifstate.util import logger, LinkAddressDefaultMode
+ from libifstate.link.base import Link
+ from libifstate.exception import LinkCannotAdd
+ 
+@@ -11,3 +11,11 @@ class PhysicalLink(Link):
+  
+     def create(self, do_apply, sysctl, excpts, oper="add"):
+         logger.warning('unable to create physical link', extra={'iface': self.settings.get('ifname'), 'netns': self.netns})
++
++    def get_link_address_default(self, item):
++        # optionally use a reproducible mac address
++        if self.ifstate.link_address_default.physical == LinkAddressDefaultMode.GENERATED:
++            return self.netns.build_iface_mac(self.settings['ifname'])
++
++        # set default to `perm_address` for physical interfaces
++        return None if item is None else item.attributes.get('perm_address')
+diff --git a/libifstate/link/vlan.py b/libifstate/link/vlan.py
+index 9e39b76..225943d 100644
+--- a/libifstate/link/vlan.py
++++ b/libifstate/link/vlan.py
+@@ -1,4 +1,5 @@
+ from libifstate.link.base import Link
++from libifstate.util import LinkAddressDefaultMode
+ import enum
+ 
+ class VlanFlags(enum.IntFlag):
+@@ -25,3 +26,22 @@ class VlanLink(Link):
+             link['vlan_flags'] = vlan_flags
+ 
+         super().__init__(ifstate, netns, name, link, identify, ethtool, hooks, vrrp, brport, brvlan, token)
++
++    def get_link_address_default(self, item):
++        # by default we use a link independent address
++        if self.ifstate.link_address_default.vlan == LinkAddressDefaultMode.GENERATED:
++            return self.netns.build_iface_mac(self.settings['ifname'])
++
++        # the foreign netns name of the link interface is not tracked,
++        # so its MAC address cannot be looked up
++        if 'link_netnsid' in self.settings:
++            return None
++
++        link_item = self.ifstate.link_registry.get_link(
++            index=self.settings['link'], netns=self.netns.netns)
++
++        # ignore a missing link for now
++        if link_item is None:
++            return None
++
++        return link_item.attributes.get('address')
+diff --git a/libifstate/util.py b/libifstate/util.py
+index 0f4e3c6..f9ebc97 100644
+--- a/libifstate/util.py
++++ b/libifstate/util.py
+@@ -14,6 +14,7 @@ except ModuleNotFoundError:
+ 
+ import atexit
+ import socket
++from enum import StrEnum
+ import fcntl
+ import re
+ import struct
+@@ -305,3 +306,17 @@ try:
+     root_iw = IW()
+ except NetlinkError:
+     root_iw = None
++
++
++class LinkAddressDefaultMode(StrEnum):
++    GENERATED = 'generated'
++    INHERITED = 'inherited'
++    PERMANENT = 'permanent'
++
++
++class LinkAddressDefault():
++    def __init__(self, config):
++        self.physical = LinkAddressDefaultMode(
++            config.get('physical', LinkAddressDefaultMode.PERMANENT))
++        self.vlan = LinkAddressDefaultMode(
++            config.get('vlan', LinkAddressDefaultMode.GENERATED))
+diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
+index 1fed76f..d5114ca 100644
+--- a/schema/2/ifstate.conf.schema.json
++++ b/schema/2/ifstate.conf.schema.json
+@@ -2295,6 +2295,31 @@
+                         }
+                     }
+                 },
++                "link_address_default": {
++                    "description": "Configure how ifstate determines the *default* MAC address for some interface kinds.",
++                    "type": "object",
++                    "additionalProperties": false,
++                    "properties": {
++                        "physical": {
++                            "description": "Physical interfaces by default use their permanent address.",
++                            "type": "string",
++                            "enum": [
++                                "generated",
++                                "permanent"
++                            ],
++                            "default": "permanent"
++                        },
++                        "vlan": {
++                            "description": "VLAN interfaces by default get generated address. It is also possible to inherit the address from the link interface.",
++                            "type": "string",
++                            "enum": [
++                                "generated",
++                                "inherited"
++                            ],
++                            "default": "generated"
++                        }
++                    }
++                },
+                 "machine_id": {
+                     "description": "Use this [machine-id](https://www.freedesktop.org/software/systemd/man/latest/machine-id.html) instead of the value from `/etc/machine-id` or `/var/lib/dbus/machine-id`.",
+                     "type": "string",
+-- 
+2.55.0
+

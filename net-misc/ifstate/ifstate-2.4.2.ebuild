@@ -31,9 +31,8 @@ RDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/${P}-noarp-default-mac.patch"
-	"${FILESDIR}/${P}-ipv6-token-einval.patch"
-	"${FILESDIR}/${P}-bridge-stp-state.patch"
+	"${FILESDIR}/${PN}-2.4.1-bridge-stp-state.patch"
+	"${FILESDIR}/${P}-vlan-inherit-address.patch"
 )
 
 DOCS=( README.md CHANGELOG.md )
