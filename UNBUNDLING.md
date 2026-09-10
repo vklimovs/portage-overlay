@@ -8,18 +8,20 @@ code in this overlay. MUST, MUST NOT, SHOULD, and MAY are as in RFC 2119;
 
 ## 1. Position relative to Gentoo policy
 
-Gentoo's baseline is that bundling is harmful, whether that means shipping a
-private copy of a library, statically linking one, or "including and
-(unconditionally) using snippets of code copied from a library": security
-fixes lag behind the system copy, disk and memory are duplicated, symbols
-collide, and downstream time goes into provenance archaeology
-([Why not bundle dependencies](https://wiki.gentoo.org/wiki/Why_not_bundle_dependencies)).
+Gentoo's case against bundling is
+[Why not bundle dependencies](https://wiki.gentoo.org/wiki/Why_not_bundle_dependencies),
+and this file does not restate it. ::gentoo tempers that baseline with
+per-package judgment and `system-*` / `bundled-libs` USE flags, because the
+tree serves every arch, profile, and maintainer-bandwidth reality. None of
+those constraints exist here: one profile
+(`amd64/23.0/desktop/plasma/hardened`), one maintainer, no stabilization
+workflow.
 
-::gentoo tempers that baseline with per-package judgment and `system-*` /
-`bundled-libs` USE flags, because the tree serves every arch, profile, and
-maintainer-bandwidth reality. None of those constraints exist here: one
-profile (`amd64/23.0/desktop/plasma/hardened`), one maintainer, no
-stabilization workflow. This overlay is therefore stricter than ::gentoo:
+Those conditions shape this policy twice over. The obligations the tree
+carries for reasons that do not apply here — staging through stabilization,
+coordinating with arch teams, keeping a bundled path alive for profiles
+nothing here targets — are not carried. What those same conditions make
+cheap, the policy takes further:
 
 - Bundling is never the default. Every retained vendored tree is an
   enumerated, justified exception at the enforcement point (§5.2).
