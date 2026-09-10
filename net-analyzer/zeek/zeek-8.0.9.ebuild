@@ -112,7 +112,7 @@ PATCHES=(
 	"${FILESDIR}"/${P}-do-not-remove-stale-scripts-at-install-time.patch
 	# Make the btest suite pass against the system libraries. from-json is a
 	# genuine round-trip bug exposed by system rapidjson; the rest adjust test
-	# data, not behaviour.
+	# data, not behavior.
 	"${FILESDIR}"/${P}-from-json-full-precision.patch
 	"${FILESDIR}"/${P}-spicy-nested-test-no-tmp.patch
 	"${FILESDIR}"/${P}-sqlite-wikipedia-baseline.patch

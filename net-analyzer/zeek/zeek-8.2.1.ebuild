@@ -108,11 +108,11 @@ REQUIRED_USE="zeekctl? ( python )
 RESTRICT="!btest? ( test )"
 
 PATCHES=(
-	# Install-behaviour and test-data fixes are unchanged since 8.0.9 and shared
+	# Install-behavior and test-data fixes are unchanged since 8.0.9 and shared
 	# with those ebuilds; per Gentoo convention they keep the filename of the
 	# version that introduced them rather than being copied per version. from-json
 	# is a genuine round-trip bug exposed by system rapidjson; the rest adjust
-	# test data, not behaviour.
+	# test data, not behavior.
 	"${FILESDIR}"/${PN}-8.0.9-do-not-strip-broker-binary.patch
 	"${FILESDIR}"/${PN}-8.0.9-do-not-remove-broker-headers-at-install-time.patch
 	"${FILESDIR}"/${PN}-8.0.9-do-not-create-run-dirs-at-install-time.patch

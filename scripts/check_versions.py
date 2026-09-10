@@ -3,7 +3,7 @@
 against the latest release reported by its ``<remote-id>`` upstream.
 
 Discovery is driven entirely by the overlay tree: any ``metadata.xml`` with a
-recognised ``<remote-id>`` (github, pypi, codeberg) is probed.  No per-package
+recognized ``<remote-id>`` (github, pypi, codeberg) is probed.  No per-package
 configuration lives in this script.
 """
 
@@ -80,7 +80,7 @@ class Result:
 
     @property
     def display(self) -> str:
-        """The text shown in the Upstream column (colour is added by render)."""
+        """The text shown in the Upstream column (color is added by render)."""
         if self.error:
             return f"ERROR ({self.error})"
         if self.commit_state is not None:
@@ -175,7 +175,7 @@ def parse_remote_ids(metadata_xml: Path) -> dict[str, str]:
 
 
 # --------------------------------------------------------------------------- #
-# tag normalisation
+# tag normalization
 # --------------------------------------------------------------------------- #
 
 def normalize_tag(tag: str, pkg: Package) -> str:
@@ -196,7 +196,7 @@ def normalize_tag(tag: str, pkg: Package) -> str:
 
 
 def highest(pkg: Package, raw_tags: Iterable[str]) -> str | None:
-    """Highest candidate by Gentoo version ordering, normalised to PV form.
+    """Highest candidate by Gentoo version ordering, normalized to PV form.
 
     Candidates that vercmp cannot order (rolling tags like "nightly", "latest")
     are skipped so they can't shadow a real version by sorting first."""
@@ -386,7 +386,7 @@ def main(argv: list[str] | None = None) -> int:
                          f"else `pass show {PASS_ENTRY}`)")
     ap.add_argument("--no-pass", action="store_true",
                     help="do not consult pass(1) for the token")
-    ap.add_argument("--no-color", action="store_true", help="disable ANSI colour output")
+    ap.add_argument("--no-color", action="store_true", help="disable ANSI color output")
     args = ap.parse_args(argv)
 
     overlay: Path = args.overlay.resolve()
