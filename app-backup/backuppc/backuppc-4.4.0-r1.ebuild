@@ -170,7 +170,7 @@ pkg_postinst() {
 	elog
 	elog "- To enable the web GUI:"
 	elog "    - Install web parts of BackupPC using webapp-config."
-	elog "	  - Set up a web server of your choise to run BackupPC_Admin"
+	elog "	  - Set up a web server of your choice to run BackupPC_Admin"
 	elog "      via CGI."
 	elog "    - Set up a web server to serve static assets. BackupPC expects"
 	elog "      static assets on ${IMAGEDIRURL} path."
