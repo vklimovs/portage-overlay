@@ -13,7 +13,8 @@ HOMEPAGE="https://zrepl.github.io https://github.com/zrepl/zrepl"
 #   cd ${P}
 #   go mod vendor
 #   cd ..
-#   tar -caf ${P}-vendor.tar.xz ${P}/vendor
+#   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+#       -cf - ${P}/vendor | xz -9e >"${P}-vendor.tar.xz"
 SRC_URI="
 	https://github.com/zrepl/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz
 	https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz
