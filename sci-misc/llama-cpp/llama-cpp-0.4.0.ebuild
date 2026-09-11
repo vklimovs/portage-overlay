@@ -14,9 +14,11 @@ if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/ggml-org/llama.cpp.git"
 else
-	MY_PV="b${PV#0_pre}"
-	SRC_URI="https://github.com/ggml-org/llama.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz"
-	S="${WORKDIR}/llama.cpp-${MY_PV}"
+	# Upstream cuts semver tags (docs/release.md) alongside the per-commit bNNNN
+	# nightly tags; both point at the same commits, only the vX.Y.Z ones are
+	# releases.
+	SRC_URI="https://github.com/ggml-org/llama.cpp/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+	S="${WORKDIR}/llama.cpp-${PV}"
 	KEYWORDS="~amd64"
 fi
 
@@ -24,7 +26,7 @@ LICENSE="MIT"
 SLOT="0"
 IUSE="blis cpu_flags_x86_avx cpu_flags_x86_avx2 cpu_flags_x86_f16c
 	cpu_flags_x86_fma3 cpu_flags_x86_sse4_2 cuda flexiblas openblas opencl
-	+openmp openssl rocm rpc vulkan wmma"
+	+openmp openssl rocm rpc vulkan"
 
 REQUIRED_USE="
 	?? ( blis flexiblas openblas )
@@ -33,7 +35,6 @@ REQUIRED_USE="
 	cpu_flags_x86_f16c? ( cpu_flags_x86_avx )
 	cpu_flags_x86_fma3? ( cpu_flags_x86_avx )
 	rocm? ( ${ROCM_REQUIRED_USE} )
-	wmma? ( rocm )
 "
 
 RESTRICT="test"
@@ -48,7 +49,6 @@ CDEPEND="
 	rocm? (
 		>=dev-util/hip-${ROCM_VERSION}:=
 		>=sci-libs/hipBLAS-${ROCM_VERSION}:=[${ROCM_USEDEP}]
-		wmma? ( >=sci-libs/rocWMMA-${ROCM_VERSION}:=[${ROCM_USEDEP}] )
 	)
 "
 DEPEND="${CDEPEND}
@@ -86,10 +86,16 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=(
-		# Must be this name: build-info.cmake does a plain set(BUILD_NUMBER 0) and
-		# then derives from git, absent in a tarball, so -DBUILD_NUMBER silently
-		# yields "version: 0 (unknown)". Check llama-cli --version after a bump.
-		-DLLAMA_BUILD_NUMBER="${PV#0_pre}"
+		# Not in the tarball: build-info.cmake defaults BUILD_NUMBER to 0 and otherwise
+		# reads it from git. The value is `git rev-list --count` at the tag, which is
+		# also what the bNNNN nightly tag on that same commit is named after -- v0.4.0
+		# is b10809 -- so re-read it there on each bump. -DBUILD_NUMBER is read by
+		# nothing.
+		-DLLAMA_BUILD_NUMBER=10809
+		# Defaults ON, which suffixes LLAMA_VERSION with -dev and carries that into
+		# the installed llama.pc and llama-config-version.cmake; docs/release.md
+		# requires OFF when building from a release tag.
+		-DLLAMA_BUILD_IS_DEV=OFF
 		-DCMAKE_INSTALL_LIBDIR="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_INSTALL_RPATH="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_SKIP_BUILD_RPATH=ON
@@ -134,7 +140,6 @@ src_configure() {
 		mycmakeargs+=(
 			-DAMDGPU_TARGETS="$(get_amdgpu_flags)"
 			-DGGML_HIP=ON
-			-DGGML_HIP_ROCWMMA_FATTN=$(usex wmma ON OFF)
 		)
 	fi
 
