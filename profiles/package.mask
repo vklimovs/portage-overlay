@@ -9,3 +9,7 @@
 # Pinned to 9.3.1 to match ::gentoo's max elasticsearch. Masked so it
 # doesn't shadow 9.3.1 (RedundantVersion).
 >=app-admin/filebeat-9.4.3
+
+# Feature releases carry ~4 months of support and 8.2 ends when 9.0 ships, so
+# 8.0.x LTS is the default here. Masked so it doesn't shadow 8.0.10.
+>=net-analyzer/zeek-8.1
