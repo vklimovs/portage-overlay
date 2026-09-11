@@ -12,8 +12,9 @@ inherit cmake
 # (see RDEPEND). This package exists purely so net-analyzer/zeek can drop its
 # vendored copy and link a real, minimal, separately-versioned CAF instead.
 #
-# COMMIT is the caf submodule pin. zeek 8.0.8, 8.0.9, 8.2.0 and 8.2.1 all
-# point here. Re-verify on every zeek bump -- it must match the caf gitlink at:
+# COMMIT is the caf submodule pin, unchanged since zeek 8.0.8; every zeek
+# version packaged here points at it. Re-verify on every zeek bump -- it must
+# match the caf gitlink at:
 #   github.com/zeek/zeek @ vX.Y.Z  ->  auxil/broker  ->  caf
 # The _pYYYYMMDD in ${PV} is this commit's date.
 COMMIT="4aa660d003d8bbb922a33fb7a31f80d9d3271262"
