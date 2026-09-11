@@ -37,6 +37,8 @@ REQUIRED_USE="
 	rocm? ( ${ROCM_REQUIRED_USE} )
 "
 
+# The tokenizer tests git-clone a vocab repo from HuggingFace and cannot run
+# in the sandbox.
 RESTRICT="test"
 
 CDEPEND="
