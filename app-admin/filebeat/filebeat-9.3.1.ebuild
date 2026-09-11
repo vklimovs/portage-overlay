@@ -18,7 +18,8 @@ HOMEPAGE="https://www.elastic.co/beats/filebeat https://github.com/elastic/beats
 #   rm -r x-pack
 #   go mod vendor
 #   cd ..
-#   tar -caf ${P}-vendor.tar.xz beats-${PV}/vendor
+#   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+#       -cf - beats-${PV}/vendor | xz -9e >"${P}-vendor.tar.xz"
 SRC_URI="
 	https://github.com/elastic/beats/archive/v${PV}.tar.gz -> ${P}.tar.gz
 	https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz
