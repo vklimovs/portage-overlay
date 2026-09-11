@@ -8,6 +8,10 @@ inherit go-module systemd
 DESCRIPTION="Lightweight log shipper for Logstash and Elasticsearch"
 HOMEPAGE="https://www.elastic.co/beats/filebeat https://github.com/elastic/beats"
 
+# go mod vendor stamps every file with the run's wall-clock mtime and tar records
+# them, so two generations of the same version differ in hash. Upload the tarball
+# before running `ebuild ... manifest`, or the digest will not match what is at
+# the URL; pkgcheck reports DeadUrl until the upload lands.
 # To generate the vendor tarball:
 #   tar -xf ${P}.tar.gz
 #   cd beats-${PV}
@@ -24,7 +28,8 @@ S="${WORKDIR}/beats-${PV}"
 LICENSE="Apache-2.0 BSD BSD-2 CC-BY-3.0 CC0-1.0 EPL-2.0 ISC MIT MPL-2.0 public-domain PYTHON ZLIB"
 SLOT="0"
 KEYWORDS="~amd64"
-BDEPEND=">=dev-lang/go-1.26.4:="
+# Pin comes from .go-version at the beats tag, not go.mod.
+BDEPEND=">=dev-lang/go-1.26.4"
 
 src_prepare() {
 	default
