@@ -13,6 +13,12 @@
 #
 # Options:
 #   --dry-run    Show what would happen; do not run recipes or upload.
+#   --verify     Re-run each recipe and compare against the Manifest instead of
+#                uploading. Needs no token. Exits non-zero on mismatch.
+#   --from DIR   Take ${P}-vendor.tar.xz from DIR instead of running the recipe,
+#                for builds produced elsewhere. The Manifest check still applies.
+#   --published  Download each released asset and check it against the Manifest.
+#                Implies --verify. Needs no token.
 #   --force      Re-upload even if the asset already exists on the release.
 #   --yes        Skip the per-package recipe confirmation prompt.
 #   --token TOK  GitHub API token (default: $GITHUB_TOKEN, else `pass show` entry).
@@ -23,6 +29,9 @@
 #   upload_vendor_tarballs.sh                       # all packages, interactive
 #   upload_vendor_tarballs.sh net-nds/phpldapadmin  # one package
 #   upload_vendor_tarballs.sh --dry-run             # rehearse everything
+#   upload_vendor_tarballs.sh --verify --yes        # rebuild and check every hash
+#   upload_vendor_tarballs.sh --published           # check what users actually fetch
+#   upload_vendor_tarballs.sh --from ~/jail/distfiles --force --yes
 
 set -euo pipefail
 
@@ -33,6 +42,9 @@ readonly UPLOADS="https://uploads.github.com"
 readonly PASS_ENTRY="Github/portage-overlay-releases"
 
 DRY_RUN=0
+VERIFY=0
+PUBLISHED=0
+FROM_DIR=""
 FORCE=0
 ASSUME_YES=0
 TOKEN_ARG=""
@@ -47,7 +59,7 @@ log()  { printf '==> %s\n' "$*" >&2; }
 warn() { printf 'WARN: %s\n' "$*" >&2; }
 die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
-usage() { sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,/^$/{s/^# \{0,1\}//;p}' "$0"; }
 
 require_cmd() {
     local cmd
@@ -65,47 +77,17 @@ confirm() {
     [[ $reply =~ ^[Yy]$ ]]
 }
 
-# Pause and wait for the user to be ready before invoking `pass`, since a
-# gpg-agent pinentry prompt that times out unattended makes `pass` fail.
-wait_for_pass() {
-    [[ -r /dev/tty ]] || return 0
-    printf 'About to run `pass show` -- a pinentry prompt may appear. Press Enter when ready: ' >&2
-    read -r _ </dev/tty
-}
-
-# First line of `pass show $PASS_ENTRY`, or empty on any failure (pass not
-# installed, entry missing, GPG agent locked, ...). Never fatal on its own;
-# resolve_token decides whether a missing token is an error.
-token_from_pass() {
-    command -v pass >/dev/null 2>&1 || return 0
-    local out
-    wait_for_pass
-    out=$(pass show "$PASS_ENTRY" 2>/dev/null) || return 0
-    # Take only the first line (pass entries conventionally store the secret on
-    # line 1 and metadata below).
-    out=${out%%$'\n'*}
-    printf '%s' "$out"
-}
-
-# Resolve the GitHub token from, in order: --token, $GITHUB_TOKEN, then
-# `pass show $PASS_ENTRY` (unless --no-pass). Mirrors check_versions.py's
-# precedence. Token is kept in a single variable and never exported.
+# Empty is not fatal here -- main decides that.
 resolve_token() {
-    if [[ -n $TOKEN_ARG ]]; then
-        printf '%s' "$TOKEN_ARG"; return 0
+    if [[ -n $TOKEN_ARG ]]; then printf '%s' "$TOKEN_ARG"
+    elif [[ -n ${GITHUB_TOKEN:-} ]]; then printf '%s' "$GITHUB_TOKEN"
+    elif (( ! NO_PASS )) && command -v pass >/dev/null 2>&1; then
+        pass show "$PASS_ENTRY" 2>/dev/null | head -n1 || true
     fi
-    if [[ -n ${GITHUB_TOKEN:-} ]]; then
-        printf '%s' "$GITHUB_TOKEN"; return 0
-    fi
-    (( NO_PASS )) && return 0
-    token_from_pass
 }
 
-# curl wrapper:
-#   - fails on HTTP >= 400 (with body printed)
-#   - never accepts a downgraded redirect
-#   - reads the Authorization header from stdin so the token never appears in
-#     argv (visible via /proc/*/cmdline).
+# The Authorization header comes from stdin so the token stays out of argv,
+# which is world-readable via /proc.
 gh_curl() {
     local token="$1"; shift
     printf 'Authorization: Bearer %s\n' "$token" | \
@@ -125,6 +107,10 @@ gh_curl() {
 while (( $# )); do
     case "$1" in
         --dry-run) DRY_RUN=1 ;;
+        --verify)  VERIFY=1 ;;
+        --published) PUBLISHED=1; VERIFY=1 ;;
+        --from)    shift; (( $# )) || die "--from requires an argument"; FROM_DIR="$1" ;;
+        --from=*)  FROM_DIR="${1#--from=}" ;;
         --force)   FORCE=1 ;;
         --yes|-y)  ASSUME_YES=1 ;;
         --token)   shift; (( $# )) || die "--token requires an argument"; TOKEN_ARG="$1" ;;
@@ -138,7 +124,7 @@ while (( $# )); do
     shift
 done
 
-require_cmd curl jq awk portageq
+require_cmd curl jq awk portageq b2sum sha512sum
 
 OVERLAY_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$OVERLAY_ROOT"
@@ -151,70 +137,37 @@ DISTDIR=$(portageq envvar DISTDIR 2>/dev/null || echo /var/cache/distfiles)
 # package discovery
 # --------------------------------------------------------------------------- #
 
-# Print "cat/pn<TAB>ebuild_path" for EVERY ebuild that declares a vendor recipe.
-# If FILTERS is non-empty, only packages whose cat/pn matches a filter are
-# emitted. All versions carrying a recipe are emitted (not just the newest), so a
-# package that keeps several versions in the tree (e.g. an LTS + a feature
-# release) gets each version's tarball built and uploaded. process_package's
-# skip-if-asset-exists check keeps repeated runs idempotent.
+# Every version with a recipe, not just the newest: a package can keep an LTS
+# and a feature release side by side and both need their tarball.
 discover_ebuilds() {
-    local match
-    {
-        while IFS= read -r -d '' ebuild; do
-            grep -qF "$RECIPE_MARKER" "$ebuild" || continue
-            local pn cat cpn
-            pn=$(basename "$(dirname "$ebuild")")
-            cat=$(basename "$(dirname "$(dirname "$ebuild")")")
-            cpn="$cat/$pn"
-            if (( ${#FILTERS[@]} )); then
-                match=0
-                for f in "${FILTERS[@]}"; do [[ $cpn == "$f" ]] && match=1 && break; done
-                (( match )) || continue
-            fi
-            printf '%s\t%s\n' "$cpn" "$ebuild"
-        done < <(find . -type f -name '*.ebuild' -not -path './.git/*' -print0)
-    } | sort
+    while IFS= read -r -d '' ebuild; do
+        grep -qF "$RECIPE_MARKER" "$ebuild" || continue
+        ebuild=${ebuild#./}
+        local cpn=${ebuild%/*}
+        if (( ${#FILTERS[@]} )); then
+            [[ " ${FILTERS[*]} " == *" $cpn "* ]] || continue
+        fi
+        printf '%s\t%s\n' "$cpn" "$ebuild"
+    done < <(find . -type f -name '*.ebuild' -not -path './.git/*' -print0) | sort
 }
 
-# Strip leading ${PN}- and trailing -rN to recover bare PV.
-derive_pv() {
-    local pn="$1" p="$2" pv
-    pv=${p#"${pn}-"}
-    pv=${pv%-r[0-9]*}
-    printf '%s' "$pv"
-}
-
-# Expand SRC_URI for $cat/$p via portageq (handles ${PV}, ${MY_PN}, etc.) and
-# emit one "url<TAB>filename" line per source. USE-conditional groups are
-# evaluated against the current USE; we strip "use? ( ... )" wrappers entirely
-# (best-effort -- the vendor recipes here never depend on USE).
+# Emits "url<TAB>filename" per source. USE conditionals are flattened rather
+# than evaluated, which holds only because no vendor recipe depends on USE.
 expand_src_uri() {
     local cpn="$1" p="$2" raw
     raw=$(PORTDIR_OVERLAY="$OVERLAY_ROOT" \
           portageq metadata / ebuild "${cpn%/*}/$p" SRC_URI 2>/dev/null) || return 0
-    # Drop "use? (" / "!use? (" / ")" tokens; keep urls and "-> name" pairs.
-    awk '
-        {
-            for (i = 1; i <= NF; i++) {
-                t = $i
-                if (t ~ /\?$/ || t == "(" || t == ")") continue
-                if (t == "->") { rename = 1; continue }
-                if (rename) { name = t; rename = 0; printf "%s\t%s\n", url, name; url = ""; continue }
-                if (url != "") {
-                    n = url; sub(".*/", "", n)
-                    printf "%s\t%s\n", url, n
-                }
-                url = t
-            }
+    awk '{
+        for (i = 1; i <= NF; i++) {
+            t = $i
+            if (t ~ /\?$/ || t == "(" || t == ")") continue
+            if ($(i+1) == "->") { print t "\t" $(i+2); i += 2; continue }
+            n = t; sub(".*/", "", n); print t "\t" n
         }
-        END {
-            if (url != "") { n = url; sub(".*/", "", n); printf "%s\t%s\n", url, n }
-        }
-    ' <<<"$raw"
+    }' <<<"$raw"
 }
 
-# Extract recipe body between the marker and the first non-indented comment or
-# code line. Bodies are unindented by stripping the leading "#   " (4 chars).
+# The body ends at the first line not indented by "#   ".
 extract_recipe() {
     local ebuild="$1"
     awk -v marker="$RECIPE_MARKER" '
@@ -227,11 +180,40 @@ extract_recipe() {
     ' "$ebuild"
 }
 
+# Echoes "size blake2b sha512", or nothing when the entry is absent.
+manifest_entry() {
+    local manifest="$1" filename="$2"
+    [[ -f $manifest ]] || return 0
+    awk -v n="$filename" '$1=="DIST" && $2==n {
+        for (i = 4; i < NF; i += 2) h[$i] = $(i+1)
+        print $3, h["BLAKE2B"], h["SHA512"]
+        exit
+    }' "$manifest"
+}
+
+# 0 = match, 1 = mismatch, 2 = no Manifest entry to check against.
+verify_tarball() {
+    local ebuild="$1" file="$2" filename entry size b2 sha got
+    filename=$(basename "$file")
+    entry=$(manifest_entry "$(dirname "$ebuild")/Manifest" "$filename")
+    [[ -n $entry ]] || { warn "no Manifest entry for $filename"; return 2; }
+    read -r size b2 sha <<<"$entry"
+    got="$(stat -c %s "$file") $(b2sum "$file" | cut -d' ' -f1) $(sha512sum "$file" | cut -d' ' -f1)"
+    if [[ $got == "$size $b2 $sha" ]]; then
+        log "MATCH $filename"
+        return 0
+    fi
+    warn "MISMATCH $filename"
+    warn "  manifest: $size $b2 $sha"
+    warn "  local:    $got"
+    return 1
+}
+
 # --------------------------------------------------------------------------- #
 # GitHub release / asset operations
 # --------------------------------------------------------------------------- #
 
-# Echoes the release id for a tag, creating the release if missing.
+# Creates the release if the tag has none.
 ensure_release() {
     local token="$1" tag="$2" payload response
     if response=$(gh_curl "$token" "$API/repos/$REPO/releases/tags/$tag" 2>/dev/null); then
@@ -246,7 +228,6 @@ ensure_release() {
     jq -r '.id' <<<"$response"
 }
 
-# Echoes the asset id (if any) for a filename on a release.
 find_asset_id() {
     local token="$1" release_id="$2" filename="$3" response
     response=$(gh_curl "$token" "$API/repos/$REPO/releases/$release_id/assets?per_page=100") || return 1
@@ -270,6 +251,31 @@ delete_asset() {
     gh_curl "$token" -X DELETE "$API/repos/$REPO/releases/assets/$asset_id" >/dev/null
 }
 
+# Mismatch is fatal. A missing entry is not -- that is an upload made before
+# `pkgdev manifest` has seen the file.
+publish_tarball() {
+    local token="$1" ebuild="$2" file="$3" tag="$4" tarball="$5" rc=0
+
+    verify_tarball "$ebuild" "$file" || rc=$?
+    case $rc in
+        0) ;;
+        2) warn "uploading $tarball unverified" ;;
+        *) die "refusing to upload $tarball: does not match the Manifest" ;;
+    esac
+
+    local rid aid
+    rid=$(ensure_release "$token" "$tag")
+    [[ -n $rid ]] || die "could not resolve release id for $tag"
+
+    if (( FORCE )); then
+        aid=$(find_asset_id "$token" "$rid" "$tarball" || true)
+        [[ -n $aid ]] && delete_asset "$token" "$aid"
+    fi
+
+    upload_asset "$token" "$rid" "$file"
+    log "uploaded $tarball to release $tag"
+}
+
 # --------------------------------------------------------------------------- #
 # per-package processing
 # --------------------------------------------------------------------------- #
@@ -278,30 +284,61 @@ process_package() {
     local token="$1" cpn="$2" ebuild="$3"
     local pn p pv tarball tag
     pn=${cpn#*/}
-    p=$(basename "$ebuild" .ebuild)
+    p=${ebuild##*/}
+    p=${p%.ebuild}
     p=${p%-r[0-9]*}
-    pv=$(derive_pv "$pn" "$p")
+    pv=${p#"${pn}-"}
     tarball="${p}-vendor.tar.xz"
     tag="$tarball"
 
     log "=== $cpn  ($p) ==="
 
-    # Skip-if-exists check before doing any work.
-    if (( ! FORCE )); then
-        local rid aid=""
-        if rid=$(gh_curl "$token" "$API/repos/$REPO/releases/tags/$tag" 2>/dev/null \
-                     | jq -r '.id // empty'); then
-            if [[ -n $rid ]]; then
-                aid=$(find_asset_id "$token" "$rid" "$tarball" || true)
-                if [[ -n $aid ]]; then
-                    log "$tarball already exists on release $tag (asset id $aid); skipping (use --force to replace)"
-                    return 0
-                fi
-            fi
+    if (( ! FORCE && ! VERIFY )); then
+        local rid aid
+        rid=$(gh_curl "$token" "$API/repos/$REPO/releases/tags/$tag" 2>/dev/null \
+                  | jq -r '.id // empty') || rid=""
+        aid=$([[ -n $rid ]] && find_asset_id "$token" "$rid" "$tarball" || true)
+        if [[ -n $aid ]]; then
+            log "$tarball already on release $tag (asset id $aid), skipping (use --force to replace)"
+            return 0
         fi
     fi
 
-    # Extract recipe.
+    # A Manifest bumped without the upload happening passes every other check.
+    if (( PUBLISHED )); then
+        local pubdir
+        pubdir=$(mktemp -d -t "vendor-${pn}.XXXXXX")
+        trap 'rm -rf "$pubdir"' RETURN
+        if ! curl --silent --show-error --fail --location \
+                  --proto '=https' --proto-redir '=https' \
+                  -o "$pubdir/$tarball" \
+                  "https://github.com/$REPO/releases/download/$tag/$tarball"; then
+            warn "not published: $tarball"
+            return 1
+        fi
+        verify_tarball "$ebuild" "$pubdir/$tarball" || return 1
+        return 0
+    fi
+
+    # Nothing is rebuilt, so the Manifest check is all that vouches for these.
+    if [[ -n $FROM_DIR ]]; then
+        local src="$FROM_DIR/$tarball"
+        [[ -f $src ]] || { warn "no $tarball in $FROM_DIR"; return 1; }
+
+        if (( VERIFY )); then
+            verify_tarball "$ebuild" "$src" || return 1
+            return 0
+        fi
+
+        if (( DRY_RUN )); then
+            log "dry-run: would check $src against the Manifest and upload it"
+            return 0
+        fi
+
+        publish_tarball "$token" "$ebuild" "$src" "$tag" "$tarball"
+        return
+    fi
+
     local recipe
     recipe=$(extract_recipe "$ebuild")
     [[ -n $recipe ]] || { warn "could not extract recipe from $ebuild"; return 1; }
@@ -309,7 +346,11 @@ process_package() {
     printf -- '--- recipe for %s ---\n%s\n--- end recipe ---\n' "$p" "$recipe"
 
     if (( DRY_RUN )); then
-        log "dry-run: would fetch distfiles, run recipe, and upload $tarball"
+        if (( VERIFY )); then
+            log "dry-run: would fetch distfiles, run recipe, and check $tarball against the Manifest"
+        else
+            log "dry-run: would fetch distfiles, run recipe, and upload $tarball"
+        fi
         return 0
     fi
 
@@ -317,14 +358,10 @@ process_package() {
 
     local workdir
     workdir=$(mktemp -d -t "vendor-${pn}.XXXXXX")
-    local _cleanup_workdir="$workdir"
-    trap 'rm -rf "${_cleanup_workdir:-}"' RETURN
+    trap 'rm -rf "$workdir"' RETURN
 
-    # Bootstrap base distfiles into $workdir. We do NOT use `ebuild fetch`
-    # because for a freshly-bumped ebuild the Manifest does not yet contain
-    # the new file's hash, so portage refuses to keep the download.
-    # Instead, expand SRC_URI via portageq and download each entry directly
-    # (skipping the vendor tarball, which is what we're about to generate).
+    # Not `ebuild fetch`: on a fresh bump the Manifest lacks the new hash, so
+    # portage discards the download.
     local url name
     while IFS=$'\t' read -r url name; do
         [[ -z $url ]] && continue
@@ -341,10 +378,8 @@ process_package() {
         fi
     done < <(expand_src_uri "$cpn" "$p")
 
-    # The recipe is trusted input: it is authored in this overlay's own
-    # ebuilds, not fetched from anywhere. It runs in a clean bash -e process;
-    # the shell exits non-zero if any command in the recipe fails.
-    # GITHUB_TOKEN is NOT exported here.
+    # Trusted input -- it comes from this overlay's own ebuilds. The token is
+    # deliberately not exported into it.
     if ! ( cd "$workdir" && P="$p" PN="$pn" PV="$pv" bash -eo pipefail -c "$recipe" ); then
         warn "recipe failed for $p"
         return 1
@@ -355,18 +390,12 @@ process_package() {
         return 1
     fi
 
-    local rid aid
-    rid=$(ensure_release "$token" "$tag")
-    [[ -n $rid ]] || die "could not resolve release id for $tag"
-
-    if (( FORCE )); then
-        aid=$(find_asset_id "$token" "$rid" "$tarball" || true)
-        [[ -n $aid ]] && delete_asset "$token" "$aid"
+    if (( VERIFY )); then
+        verify_tarball "$ebuild" "$workdir/$tarball" || return 1
+        return 0
     fi
 
-    upload_asset "$token" "$rid" "$workdir/$tarball"
-    log "uploaded $tarball to release $tag"
-    # $workdir is removed by the RETURN trap set above.
+    publish_tarball "$token" "$ebuild" "$workdir/$tarball" "$tag" "$tarball"
 }
 
 # --------------------------------------------------------------------------- #
@@ -386,7 +415,7 @@ main() {
     for e in "${entries[@]}"; do log "  ${e%%$'\t'*}"; done
 
     local token=""
-    if (( ! DRY_RUN )); then
+    if (( ! DRY_RUN && ! VERIFY )); then
         token=$(resolve_token)
         [[ -n $token ]] || die "no GitHub token (use --token, set \$GITHUB_TOKEN, or store it in \`pass\` as $PASS_ENTRY)"
     fi
@@ -399,6 +428,11 @@ main() {
         fi
     done
 
+    if (( VERIFY )); then
+        (( failed == 0 )) || die "$failed package(s) did not match the Manifest"
+        log "all ${#entries[@]} package(s) match the Manifest"
+        return
+    fi
     (( failed == 0 )) || die "$failed package(s) failed"
     log "all done"
 }
