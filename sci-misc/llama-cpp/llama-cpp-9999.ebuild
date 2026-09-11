@@ -86,7 +86,6 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=(
-		-DBUILD_NUMBER="${PV}"
 		-DCMAKE_INSTALL_LIBDIR="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_INSTALL_RPATH="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_SKIP_BUILD_RPATH=ON
@@ -95,6 +94,10 @@ src_configure() {
 		-DGGML_CUDA=$(usex cuda ON OFF)
 		-DGGML_F16C=$(usex cpu_flags_x86_f16c ON OFF)
 		-DGGML_FMA=$(usex cpu_flags_x86_fma3 ON OFF)
+		# OFF does not mean scalar: it hands the choice to ggml's INS_ENB, which
+		# force-enables AVX2/FMA regardless of CPU_FLAGS_X86 (SIGILL on older CPUs)
+		# and drops to no SIMD at all if SOURCE_DATE_EPOCH is set. Hence the
+		# explicit GGML_* mapping above -- fma3 is Gentoo's name for GGML_FMA.
 		-DGGML_NATIVE=OFF
 		-DGGML_OPENCL=$(usex opencl ON OFF)
 		-DGGML_OPENMP=$(usex openmp ON OFF)

@@ -86,6 +86,9 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=(
+		# Must be this name: build-info.cmake does a plain set(BUILD_NUMBER 0) and
+		# then derives from git, absent in a tarball, so -DBUILD_NUMBER silently
+		# yields "version: 0 (unknown)". Check llama-cli --version after a bump.
 		-DLLAMA_BUILD_NUMBER="${PV#0_pre}"
 		-DCMAKE_INSTALL_LIBDIR="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
 		-DCMAKE_INSTALL_RPATH="${EPREFIX}/usr/$(get_libdir)/llama.cpp"
@@ -95,6 +98,10 @@ src_configure() {
 		-DGGML_CUDA=$(usex cuda ON OFF)
 		-DGGML_F16C=$(usex cpu_flags_x86_f16c ON OFF)
 		-DGGML_FMA=$(usex cpu_flags_x86_fma3 ON OFF)
+		# OFF does not mean scalar: it hands the choice to ggml's INS_ENB, which
+		# force-enables AVX2/FMA regardless of CPU_FLAGS_X86 (SIGILL on older CPUs)
+		# and drops to no SIMD at all if SOURCE_DATE_EPOCH is set. Hence the
+		# explicit GGML_* mapping above -- fma3 is Gentoo's name for GGML_FMA.
 		-DGGML_NATIVE=OFF
 		-DGGML_OPENCL=$(usex opencl ON OFF)
 		-DGGML_OPENMP=$(usex openmp ON OFF)
