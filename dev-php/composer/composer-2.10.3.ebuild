@@ -11,7 +11,8 @@ HOMEPAGE="https://getcomposer.org https://github.com/composer/composer"
 # To regenerate the vendor tarball:
 #   git clone -b ${PV} https://github.com/composer/composer ${P}
 #   ( cd ${P} && composer install --no-dev --optimize-autoloader )
-#   XZ_OPT='-T0 -9' tar -caf ${P}-vendor.tar.xz ${P}/vendor/
+#   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+#       -cf - ${P}/vendor | xz -9e >"${P}-vendor.tar.xz"
 SRC_URI="https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
 
 # git-r3 rather than the release tarball: bin/compile stamps the phar version
