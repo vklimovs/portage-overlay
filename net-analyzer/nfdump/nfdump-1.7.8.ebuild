@@ -9,7 +9,7 @@ HOMEPAGE="https://github.com/phaag/nfdump"
 SRC_URI="https://github.com/phaag/nfdump/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="BSD"
-SLOT="0/${PV}"
+SLOT="0/1.7.8"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug ftconv jnat nfpcapd nfprofile readpcap"
 
