@@ -14,9 +14,11 @@ if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/ggml-org/llama.cpp.git"
 else
-	MY_PV="b${PV#0_pre}"
-	SRC_URI="https://github.com/ggml-org/llama.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz"
-	S="${WORKDIR}/llama.cpp-${MY_PV}"
+	# Upstream cuts semver tags (docs/release.md) alongside the per-commit bNNNN
+	# nightly tags; both point at the same commits, only the vX.Y.Z ones are
+	# releases.
+	SRC_URI="https://github.com/ggml-org/llama.cpp/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+	S="${WORKDIR}/llama.cpp-${PV}"
 	KEYWORDS="~amd64"
 fi
 
@@ -24,7 +26,7 @@ LICENSE="MIT"
 SLOT="0"
 IUSE="blis cpu_flags_x86_avx cpu_flags_x86_avx2 cpu_flags_x86_f16c
 	cpu_flags_x86_fma3 cpu_flags_x86_sse4_2 cuda flexiblas openblas opencl
-	+openmp openssl rocm rpc vulkan wmma"
+	+openmp openssl rocm rpc vulkan"
 
 REQUIRED_USE="
 	?? ( blis flexiblas openblas )
@@ -33,7 +35,6 @@ REQUIRED_USE="
 	cpu_flags_x86_f16c? ( cpu_flags_x86_avx )
 	cpu_flags_x86_fma3? ( cpu_flags_x86_avx )
 	rocm? ( ${ROCM_REQUIRED_USE} )
-	wmma? ( rocm )
 "
 
 RESTRICT="test"
@@ -48,7 +49,6 @@ CDEPEND="
 	rocm? (
 		>=dev-util/hip-${ROCM_VERSION}:=
 		>=sci-libs/hipBLAS-${ROCM_VERSION}:=[${ROCM_USEDEP}]
-		wmma? ( >=sci-libs/rocWMMA-${ROCM_VERSION}:=[${ROCM_USEDEP}] )
 	)
 "
 DEPEND="${CDEPEND}
@@ -130,7 +130,6 @@ src_configure() {
 		mycmakeargs+=(
 			-DAMDGPU_TARGETS="$(get_amdgpu_flags)"
 			-DGGML_HIP=ON
-			-DGGML_HIP_ROCWMMA_FATTN=$(usex wmma ON OFF)
 		)
 	fi
 
