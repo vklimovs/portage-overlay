@@ -18,7 +18,7 @@ SRC_URI="https://github.com/vklimovs/portage-overlay/releases/download/${P}-vend
 # through git rev-list/describe, and GitHub's git-archive honors export-ignore,
 # which strips CHANGELOG.md, README.md and doc/ out from under DOCS.
 EGIT_REPO_URI="https://github.com/${PN}/${PN}"
-EGIT_COMMIT="8d4439f572a97670a9edc039eb3b093cc976b4bc"
+EGIT_COMMIT="f0de0bf90226853b841672f086d8b58b02332504"
 
 LICENSE="MIT"
 SLOT="0"
