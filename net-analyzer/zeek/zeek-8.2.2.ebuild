@@ -81,8 +81,8 @@ RDEPEND="
 	zeromq? ( net-libs/zeromq:= )
 	zkg? ( ${PYTHON_DEPS}
 		$(python_gen_cond_dep '
-			dev-python/gitpython[${PYTHON_USEDEP}]
-			dev-python/semantic-version[${PYTHON_USEDEP}]
+			>=dev-python/gitpython-3.1.43[${PYTHON_USEDEP}]
+			>=dev-python/semantic-version-2.10.0[${PYTHON_USEDEP}]
 		')
 	)"
 
