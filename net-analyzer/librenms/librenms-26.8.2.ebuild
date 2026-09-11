@@ -69,10 +69,13 @@ src_prepare() {
 
 src_install() {
 	rm -rf .github doc licenses tests || die
-	rm -f .editorconfig .git-blame-ignore-revs .php-cs-fixer.php .styleci.yml \
+	# No -f: an entry upstream has dropped must fail the build rather than be
+	# skipped, since the file it was replaced by would otherwise ship silently
+	# (26.8.2 swapped .php-cs-fixer.php for pint.json this way).
+	rm .editorconfig .git-blame-ignore-revs .styleci.yml \
 		LICENSE.txt mkdocs.yml package.json package-lock.json phpunit.xml \
-		phpstan-baseline-deprecated.neon phpstan-baseline.neon \
-		phpstan-deprecated.neon phpstan-legacy.neon phpstan.neon \
+		phpstan-baseline-deprecated.neon phpstan-deprecated.neon \
+		phpstan-legacy.neon phpstan.neon pint.json \
 		rector.php requirements.txt vite.config.mjs || die
 
 	dodoc AUTHORS.md CHANGELOG.md CODE_OF_CONDUCT.md CONTRIBUTING.md \
