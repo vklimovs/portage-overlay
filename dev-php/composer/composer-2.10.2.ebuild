@@ -14,6 +14,9 @@ HOMEPAGE="https://getcomposer.org https://github.com/composer/composer"
 #   XZ_OPT='-T0 -9' tar -caf ${P}-vendor.tar.xz ${P}/vendor/
 SRC_URI="https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
 
+# git-r3 rather than the release tarball: bin/compile stamps the phar version
+# through git rev-list/describe, and GitHub's git-archive honors export-ignore,
+# which strips CHANGELOG.md, README.md and doc/ out from under DOCS.
 EGIT_REPO_URI="https://github.com/${PN}/${PN}"
 EGIT_COMMIT="8d4439f572a97670a9edc039eb3b093cc976b4bc"
 
