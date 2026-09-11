@@ -49,7 +49,7 @@ RDEPEND="
 	>=dev-libs/rapidjson-1.1.0_p20250205
 	dev-libs/zeek-caf:=
 	net-dns/c-ares:=
-	net-libs/IXWebSocket:=
+	>=net-libs/IXWebSocket-12.0.1_p20260910:=
 	net-libs/LightPcapNg:=
 	net-libs/libpcap:=
 	virtual/zlib:0=
@@ -121,8 +121,9 @@ PATCHES=(
 	# Tracks sqlite's float rendering (>=3.41 is shortest-round-trip); re-run
 	# btest -U if it shifts again.
 	"${FILESDIR}"/${PN}-8.0.9-sqlite-wikipedia-baseline.patch
-	# Rebased for 8.2.1's restructured loaded-scripts canonifier, so version-specific.
-	"${FILESDIR}"/${P}-coverage-load-baseline-canonifier.patch
+	# Rebased for 8.2.1's restructured loaded-scripts canonifier, so it is not
+	# shared with the 8.0.x line; unchanged since, hence the 8.2.1 filename.
+	"${FILESDIR}"/${PN}-8.2.1-coverage-load-baseline-canonifier.patch
 )
 
 if [[ ! ${PV} == 9999 ]]; then
@@ -313,7 +314,9 @@ src_test() {
 	# tree is out-of-source, so expose it under the name btest expects.
 	ln -snf "${BUILD_DIR}" "${S}/build" || die
 
-	# Under a PID 1 that does not reap, the zeromq-encryption cases hang on kill -0.
+	# Cases that poll a killed process with kill -0 need a PID 1 that reaps:
+	# against a zombie it keeps succeeding, so the zeromq-encryption ones hang
+	# and cluster.websocket.cloexec-leak fails outright.
 	pushd testing/btest >/dev/null || die
 	../../auxil/btest/btest -b -j "$(makeopts_jobs)" \
 		|| die

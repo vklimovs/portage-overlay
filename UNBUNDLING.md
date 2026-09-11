@@ -218,7 +218,7 @@ a `keep_bundled` entry with a reason, in the ebuild, where it is enforced.
 Changing this policy means changing this file, in the same commit series as
 the ebuild change that motivates it.
 
-## Appendix: zeek class assignments (8.0.9 / 8.2.1)
+## Appendix: zeek class assignments (8.0.9 / 8.2.2)
 
 | Class | Trees |
 |-------|-------|
