@@ -114,7 +114,11 @@ PATCHES=(
 	# genuine round-trip bug exposed by system rapidjson; the rest adjust test
 	# data, not behavior.
 	"${FILESDIR}"/${P}-from-json-full-precision.patch
+	# The test hardcodes /tmp/zeek.trace; a root-owned copy left by an earlier
+	# root-run suite fails it for the portage user.
 	"${FILESDIR}"/${P}-spicy-nested-test-no-tmp.patch
+	# Tracks sqlite's float rendering (>=3.41 is shortest-round-trip); re-run
+	# btest -U if it shifts again.
 	"${FILESDIR}"/${P}-sqlite-wikipedia-baseline.patch
 	"${FILESDIR}"/${P}-coverage-load-baseline-canonifier.patch
 )
@@ -124,9 +128,12 @@ if [[ ! ${PV} == 9999 ]]; then
 fi
 
 src_prepare() {
-	# Replace the vendored auxil/ libraries with system packages. The series is
-	# hosted out of ${FILESDIR} (see the vendor-tarball recipe above) and applied
-	# before ${PATCHES} so the test-suite fixes land on the unbundled tree.
+	# Replace the vendored auxil/ libraries with system packages. The series comes
+	# from the vendor tarball (recipe above) and is applied before ${PATCHES} so
+	# the test-suite fixes land on the unbundled tree. When rebasing it: system
+	# utf8proc and b64 attach PUBLIC to the *-rt-objects OBJECT libs, never to
+	# hilti-rt/spicy-rt -- those are raw ar archives with no link interface, and
+	# consumers reach the objects through cmake/Util.cmake.
 	eapply "${WORKDIR}"/unbundle
 
 	if ! use static-libs; then
@@ -166,6 +173,10 @@ src_prepare() {
 		[auxil/zeekctl/auxil/trace-summary]=1
 
 		# Third-party kept bundled — no independently-packaged upstream:
+		# fiber's amd64 asm switches context by raw jmp and manual rsp swap with no
+		# .note.gnu.property and no endbr64, so the linker strips IBT/SHSTK from
+		# zeek and every spicy-linked binary. Expected on the hardened profile;
+		# restoring the note faults on the first fiber switch during parsing.
 		[auxil/spicy/3rdparty/fiber]=1               # Spicy-internal, no released upstream
 		[auxil/spicy/3rdparty/justrx]=1              # Spicy-internal, no released upstream
 		[auxil/spicy/3rdparty/SafeInt]=1             # header-only, no Gentoo package
@@ -314,10 +325,17 @@ src_test() {
 	# tree is out-of-source, so expose it under the name btest expects.
 	ln -snf "${BUILD_DIR}" "${S}/build" || die
 
+	# Under a PID 1 that does not reap, the zeromq-encryption cases hang on kill -0.
 	pushd testing/btest >/dev/null || die
 	../../auxil/btest/btest -b -j "$(makeopts_jobs)" \
 		|| die
 	popd >/dev/null || die
+
+	# Blind spot: the in-tree build resolves utf8proc/base64 whatever the series
+	# does, so a broken installed link interface passes everything above. After
+	# merging, spicy-config --ldflags must list -lb64 and -lutf8proc, and
+	# hilti-config --ldflags -lutf8proc; the rt archives are static-only and carry
+	# those symbols undefined.
 }
 
 src_install() {
