@@ -23,18 +23,15 @@ SLOT="0"
 KEYWORDS="-* ~amd64"
 RESTRICT="mirror strip"
 
-# Upstream pins an exact nodejs version (strict === check) that rarely
-# matches what's in ::gentoo, so we depend on the closest available version;
-# src_prepare injects the upstream-provided
-# UNSAFE_DISABLE_NODE_VERSION_VALIDATION env var into all launcher scripts
-# so the check is bypassed at runtime.
+# The launcher version check is disabled below, so this dep is the only guard.
+# ::gentoo does not always carry the exact nodejs version upstream pins.
 RDEPEND="
 	acct-group/kibana
 	acct-user/kibana
 	dev-libs/expat
 	dev-libs/nspr
 	dev-libs/nss
-	~net-libs/nodejs-22.21.1[inspector,ssl]
+	~net-libs/nodejs-22.23.2[inspector,ssl]
 	sys-libs/glibc
 "
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-elastic )"

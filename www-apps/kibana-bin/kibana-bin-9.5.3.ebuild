@@ -23,11 +23,8 @@ SLOT="0"
 KEYWORDS="-* ~amd64"
 RESTRICT="mirror strip"
 
-# Upstream pins an exact nodejs version (strict === check) that rarely
-# matches what's in ::gentoo, so we depend on the closest available version;
-# src_prepare injects the upstream-provided
-# UNSAFE_DISABLE_NODE_VERSION_VALIDATION env var into all launcher scripts
-# so the check is bypassed at runtime.
+# The launcher version check is disabled below, so this dep is the only guard.
+# ::gentoo does not always carry the exact nodejs version upstream pins.
 RDEPEND="
 	acct-group/kibana
 	acct-user/kibana
