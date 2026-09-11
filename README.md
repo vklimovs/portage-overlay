@@ -113,20 +113,32 @@ directory, and uploads the result.
 
 ## Working on it
 
+The full pass below is the ideal, not a gate every change has to clear — a
+typo fix does not need a build test. Take the steps a given change earns, and
+know which ones you skipped.
+
 ```sh
 ebuild <pkg>.ebuild manifest       # refresh distfile digests
-ebuild <pkg>.ebuild clean install  # phase loop while developing
-emerge -1 <pkg>                    # real sandbox; the only build test that counts
-eoldnew <pkg> && qa-cmp            # bumps: file-list and SONAME regressions
+ebuild <pkg>.ebuild clean install  # phase loop; proves nothing about sandboxing
+emerge -1 <pkg>                    # real FEATURES="sandbox network-sandbox"
+eoldnew <pkg>                      # bumps: file-list and SONAME regressions
 qa-vdb <pkg-version>               # RDEPEND vs DT_NEEDED; dlopen deps read as false misses
-pkgcheck scan --commits            # changed packages only; bare `pkgcheck scan` for everything
+pkgcheck scan <cat/pkg> ...        # only this form sees uncommitted work
+pkgcheck scan --commits            # after committing, before pushing
 pkgdev commit -s && pkgdev push --pull
 ```
 
-`eoldnew`, `qa-cmp`, and `qa-vdb` come from `app-portage/iwdevtools`; the
-first two want its bashrc hooks sourced from `/etc/portage/bashrc`.
-`metadata/pkgcheck.conf` already turns on URL checks (`net`, `timeout = 30`)
-and the two disables explained above, so `pkgcheck scan` needs no flags.
+`eoldnew`, `qa-cmp`, and `qa-vdb` come from `app-portage/iwdevtools`. They
+read the VDB and compare built images, so they belong wherever the merge
+itself runs rather than alongside the repo checkout. Regenerating the
+composer and librenms vendor tarballs needs a PHP toolchain on hand.
+
+`metadata/pkgcheck.conf` turns on URL checks (`net`, `timeout = 30`) and the
+two disables explained above, so `pkgcheck scan` needs no flags. It exits 0
+whether or not it finds anything; use `--exit ERROR` to make findings fail a
+script. Exclude `DeadUrl` from any such gate — with `net` on, results depend
+on remote hosts answering, and scanning a long `CRATES` list reliably
+provokes read timeouts from a throttling mirror.
 
 ## Package notes
 
