@@ -5,19 +5,24 @@ EAPI=8
 
 CRATES="
 	allocator-api2@0.2.21
+	anstream@1.0.0
+	anstyle-parse@1.0.0
+	anstyle-query@1.1.5
+	anstyle-wincon@3.0.11
+	anstyle@1.0.14
 	anyhow@1.0.102
-	atty@0.2.14
-	autocfg@1.5.0
-	base64@0.13.1
-	bitflags@1.3.2
+	base64@0.22.1
+	base64@0.23.1
 	bitflags@2.11.0
 	bumpalo@3.20.2
 	byteorder@1.5.0
-	cbindgen@0.26.0
-	cc@1.2.56
+	cbindgen@0.29.4
+	cc@1.4.4
 	cfg-if@1.0.4
-	clap@3.2.25
-	clap_lex@0.2.4
+	clap@4.6.4
+	clap_builder@4.6.2
+	clap_lex@1.1.0
+	colorchoice@1.0.5
 	concread@0.5.10
 	crossbeam-epoch@0.9.18
 	crossbeam-queue@0.3.12
@@ -25,38 +30,35 @@ CRATES="
 	equivalent@1.0.2
 	errno@0.3.14
 	fastrand@2.3.0
-	fernet@0.1.4
-	find-msvc-tools@0.1.9
+	fernet@0.2.2
+	find-msvc-tools@0.1.11
 	foldhash@0.1.5
 	foldhash@0.2.0
-	foreign-types@0.3.2
 	foreign-types-shared@0.1.1
+	foreign-types@0.3.2
 	getrandom@0.2.17
 	getrandom@0.3.4
 	getrandom@0.4.1
-	hashbrown@0.12.3
 	hashbrown@0.15.5
 	hashbrown@0.16.1
-	heck@0.4.1
 	heck@0.5.0
-	hermit-abi@0.1.19
 	id-arena@2.3.0
-	indexmap@1.9.3
 	indexmap@2.13.0
+	is_terminal_polyfill@1.70.2
 	itoa@1.0.17
 	jobserver@0.1.34
 	js-sys@0.3.95
 	leb128fmt@0.1.0
-	libc@0.2.182
+	libc@0.2.189
 	linux-raw-sys@0.11.0
 	log@0.4.29
 	lru@0.16.3
 	memchr@2.8.0
 	once_cell@1.21.3
-	openssl@0.10.79
+	once_cell_polyfill@1.70.2
 	openssl-macros@0.1.1
-	openssl-sys@0.9.115
-	os_str_bytes@6.6.1
+	openssl-sys@0.9.117
+	openssl@0.10.81
 	paste@1.0.15
 	pin-project-lite@0.2.16
 	pkg-config@0.3.32
@@ -71,44 +73,44 @@ CRATES="
 	serde_core@1.0.228
 	serde_derive@1.0.228
 	serde_json@1.0.149
-	shlex@1.3.0
+	serde_spanned@1.1.1
+	shlex@2.0.1
 	smallvec@1.15.1
 	sptr@0.3.2
-	strsim@0.10.0
-	syn@1.0.109
+	strsim@0.11.1
 	syn@2.0.117
 	tempfile@3.25.0
-	termcolor@1.4.1
-	textwrap@0.16.2
 	tokio@1.49.0
-	toml@0.5.11
-	tracing@0.1.44
+	toml@0.9.12+spec-1.1.0
+	toml_datetime@0.7.5+spec-1.1.0
+	toml_parser@1.1.2+spec-1.1.0
+	toml_writer@1.1.2+spec-1.1.0
 	tracing-attributes@0.1.31
 	tracing-core@0.1.36
+	tracing@0.1.44
 	unicode-ident@1.0.24
 	unicode-xid@0.2.6
-	uuid@1.23.1
+	utf8parse@0.2.2
+	uuid@1.26.0
 	vcpkg@0.2.15
 	wasi@0.11.1+wasi-snapshot-preview1
 	wasip2@1.0.2+wasi-0.2.9
 	wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06
-	wasm-bindgen@0.2.118
-	wasm-bindgen-macro@0.2.118
 	wasm-bindgen-macro-support@0.2.118
+	wasm-bindgen-macro@0.2.118
 	wasm-bindgen-shared@0.2.118
+	wasm-bindgen@0.2.118
 	wasm-encoder@0.244.0
 	wasm-metadata@0.244.0
 	wasmparser@0.244.0
-	winapi@0.3.9
-	winapi-i686-pc-windows-gnu@0.4.0
-	winapi-util@0.1.11
-	winapi-x86_64-pc-windows-gnu@0.4.0
 	windows-link@0.2.1
 	windows-sys@0.61.2
-	wit-bindgen@0.51.0
+	winnow@0.7.15
+	winnow@1.0.4
 	wit-bindgen-core@0.51.0
-	wit-bindgen-rust@0.51.0
 	wit-bindgen-rust-macro@0.51.0
+	wit-bindgen-rust@0.51.0
+	wit-bindgen@0.51.0
 	wit-component@0.244.0
 	wit-parser@0.244.0
 	zeroize@1.8.2
@@ -116,7 +118,7 @@ CRATES="
 	zmij@1.0.21
 "
 
-PYTHON_COMPAT=( python3_{11..14} )
+PYTHON_COMPAT=( python3_{11..15} )
 
 DISTUTILS_SINGLE_IMPL=1
 DISTUTILS_USE_PEP517=setuptools
@@ -133,7 +135,7 @@ S="${WORKDIR}/${PN}-${P}"
 
 LICENSE="GPL-3+"
 # Dependent crate licenses
-LICENSE+=" Apache-2.0 BSD MIT MPL-2.0 Unicode-DFS-2016"
+LICENSE+=" Apache-2.0 BSD MIT MPL-2.0 Unicode-3.0 ZLIB"
 
 SLOT="0"
 KEYWORDS="~amd64 ~arm64"
@@ -222,9 +224,6 @@ pkg_setup() {
 }
 
 src_prepare() {
-	# according to an upstream comment, this got committed by accident
-	rm src/librslapd/Cargo.lock || die
-
 	# https://github.com/389ds/389-ds-base/issues/4292
 	if ! use systemd; then
 		sed -i \
@@ -297,6 +296,12 @@ src_install() {
 	newinitd "${FILESDIR}"/389-ds-snmp.initd 389-ds-snmp
 
 	dotmpfiles "${FILESDIR}"/389-ds-base.conf
+
+	# 3.3.1 moved sysctldir into configure's with_systemd branch, so a
+	# USE=-systemd build installs it nowhere -- 3.3.0 installed it always, none
+	# of the tuning in it is systemd-specific, and OpenRC reads this dir too.
+	insinto /usr/lib/sysctl.d
+	doins ldap/admin/src/70-dirsrv.conf
 
 	# cope with libraries being in /usr/lib/dirsrv
 	dodir /etc/env.d
