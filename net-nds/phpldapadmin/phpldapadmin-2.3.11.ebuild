@@ -25,7 +25,7 @@ SRC_URI="https://github.com/leenooks/${MY_PN}/archive/${PV}.tar.gz -> ${P}.tar.g
 S="${WORKDIR}/${MY_PN}-${PV}"
 
 LICENSE="GPL-2"
-SLOT="${PVR}"
+SLOT="2.3.11"
 KEYWORDS="~amd64"
 
 # PHP extensions required by phpLDAPadmin (ext-fileinfo, ext-iconv) and
