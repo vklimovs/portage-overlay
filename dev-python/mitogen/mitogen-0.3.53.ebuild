@@ -48,6 +48,7 @@ python_test() {
 	local EPYTEST_IGNORE=(
 		"${BUILD_DIR}/install${sitedir}/mitogen/compat/pkgutil.py"
 		"${BUILD_DIR}/install${sitedir}/mitogen/imports/_py314.py"
+		"${BUILD_DIR}/install${sitedir}/mitogen/imports/_py315.py"
 		# Resolves the out-of-core kubectl transport at import time, so it fails
 		# without the kubernetes.core collection. kubectl and ssh are the only
 		# plugins that resolve eagerly today and ssh is core; an ansible-core bump
