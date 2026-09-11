@@ -39,6 +39,8 @@ RDEPEND="
 "
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-elastic )"
 
+QA_PREBUILT="opt/${MY_PN}/*"
+
 src_prepare() {
 	default
 
