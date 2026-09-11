@@ -2,8 +2,8 @@
 <!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
 	<maintainer type="person">
-		<email>vklimovs@example.com</email>
-		<name>vklimovs</name>
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
 	</maintainer>
 	<upstream>
 		<remote-id type="github">anomalyco/opencode</remote-id>
