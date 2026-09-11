@@ -11,11 +11,12 @@ MY_PN="phpLDAPadmin"
 #   composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
 #   npm install && npm run production
 #   cd ..
-#   tar -cJf phpldapadmin-${PV}-vendor.tar.xz \
+#   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf - \
 #       phpLDAPadmin-${PV}/vendor/ \
 #       phpLDAPadmin-${PV}/public/js/ \
 #       phpLDAPadmin-${PV}/public/css/ \
-#       phpLDAPadmin-${PV}/public/fonts/
+#       phpLDAPadmin-${PV}/public/fonts/ \
+#       | xz -9e >"phpldapadmin-${PV}-vendor.tar.xz"
 
 DESCRIPTION="A web-based tool for managing LDAP servers"
 HOMEPAGE="https://phpldapadmin.org https://github.com/leenooks/phpLDAPadmin"
