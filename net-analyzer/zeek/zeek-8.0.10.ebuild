@@ -4,7 +4,9 @@
 EAPI=8
 
 PYTHON_COMPAT=( python3_{11..15} )
-inherit cmake multiprocessing python-single-r1
+VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/zeek.asc
+
+inherit cmake multiprocessing python-single-r1 verify-sig
 
 DESCRIPTION="The Zeek Network Security Monitor"
 HOMEPAGE="https://zeek.org/"
@@ -12,9 +14,11 @@ HOMEPAGE="https://zeek.org/"
 # The vendor tarball carries the unbundling patch series (the vendored auxil/
 # libraries replaced by system packages), format-patch'd from the zeek
 # unbundling git project. Export ZEEK_UNBUNDLE_DIR to point at that project
-# before regenerating.
+# before regenerating. --full-index keeps the output independent of that
+# project's object count, which otherwise decides how far git abbreviates the
+# index lines and so changes the tarball's hash.
 # To (re)generate the vendor tarball:
-#   git -C "${ZEEK_UNBUNDLE_DIR:?}" format-patch --no-signature \
+#   git -C "${ZEEK_UNBUNDLE_DIR:?}" format-patch --no-signature --full-index \
 #       -o "${PWD}/unbundle" "zeek-${PV}-pristine".."unbundle-${PV}"
 #   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
 #       -cf - unbundle | xz -9e >"${P}-vendor.tar.xz"
@@ -26,7 +30,8 @@ else
 	MY_P="${PN}-${PV/_/-}"
 	MY_PV="${PV/_/-}"
 	SRC_URI="https://github.com/zeek/zeek/releases/download/v${MY_PV}/${MY_P}.tar.gz
-		https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
+		https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz
+		verify-sig? ( https://github.com/zeek/zeek/releases/download/v${MY_PV}/${MY_P}.tar.gz.asc )"
 	KEYWORDS="~amd64"
 fi
 
@@ -35,7 +40,7 @@ LICENSE="BSD BSD-4 CC-BY-4.0 ISC UoI-NCSA
 SLOT="0"
 # nodejs/javascript is auto-detected upstream so defaults off here.
 IUSE="+btest cron curl debug geoip2 ipsumdump jemalloc kerberos
-	nodejs +python sendmail +spicy static-libs tcmalloc +tools +zeek-client
+	nodejs +python redis sendmail +spicy static-libs tcmalloc +tools +zeek-client
 	+zeekctl +zkg +zeromq"
 
 RDEPEND="
@@ -49,7 +54,7 @@ RDEPEND="
 	>=dev-libs/rapidjson-1.1.0_p20250205
 	dev-libs/zeek-caf:=
 	net-dns/c-ares:=
-	net-libs/IXWebSocket:=
+	>=net-libs/IXWebSocket-12.0.1_p20260910:=
 	net-libs/libpcap:=
 	virtual/zlib:0=
 	www-servers/civetweb[cxx]
@@ -61,6 +66,7 @@ RDEPEND="
 	kerberos? ( virtual/krb5 )
 	nodejs? ( net-libs/nodejs:= )
 	python? ( ${PYTHON_DEPS} )
+	redis? ( dev-libs/hiredis:= )
 	sendmail? ( virtual/mta )
 	spicy? (
 		dev-cpp/nlohmann_json
@@ -93,7 +99,8 @@ BDEPEND="dev-cpp/doctest
 		$(python_gen_cond_dep '>=dev-python/pybind11-2.6.1[${PYTHON_USEDEP}]')
 	)
 	zeekctl? ( >=dev-lang/swig-3.0 )
-	zeromq? ( >=net-libs/cppzmq-4.9.0 )"
+	zeromq? ( >=net-libs/cppzmq-4.9.0 )
+	verify-sig? ( sec-keys/openpgp-keys-zeek )"
 
 REQUIRED_USE="zeekctl? ( python )
 	zeek-client? ( python )
@@ -106,26 +113,41 @@ REQUIRED_USE="zeekctl? ( python )
 RESTRICT="!btest? ( test )"
 
 PATCHES=(
-	"${FILESDIR}"/${P}-do-not-strip-broker-binary.patch
-	"${FILESDIR}"/${P}-do-not-remove-broker-headers-at-install-time.patch
-	"${FILESDIR}"/${P}-do-not-create-run-dirs-at-install-time.patch
-	"${FILESDIR}"/${P}-do-not-remove-stale-scripts-at-install-time.patch
+	# Introduced for 8.0.9 and unchanged since; per Gentoo convention a patch keeps
+	# the filename of the version that introduced it.
+	"${FILESDIR}"/${PN}-8.0.9-do-not-strip-broker-binary.patch
+	"${FILESDIR}"/${PN}-8.0.9-do-not-remove-broker-headers-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.9-do-not-create-run-dirs-at-install-time.patch
+	"${FILESDIR}"/${PN}-8.0.9-do-not-remove-stale-scripts-at-install-time.patch
 	# Make the btest suite pass against the system libraries. from-json is a
 	# genuine round-trip bug exposed by system rapidjson; the rest adjust test
 	# data, not behavior.
-	"${FILESDIR}"/${P}-from-json-full-precision.patch
+	"${FILESDIR}"/${PN}-8.0.9-from-json-full-precision.patch
 	# The test hardcodes /tmp/zeek.trace; a root-owned copy left by an earlier
 	# root-run suite fails it for the portage user.
-	"${FILESDIR}"/${P}-spicy-nested-test-no-tmp.patch
+	"${FILESDIR}"/${PN}-8.0.9-spicy-nested-test-no-tmp.patch
 	# Tracks sqlite's float rendering (>=3.41 is shortest-round-trip); re-run
 	# btest -U if it shifts again.
-	"${FILESDIR}"/${P}-sqlite-wikipedia-baseline.patch
-	"${FILESDIR}"/${P}-coverage-load-baseline-canonifier.patch
+	"${FILESDIR}"/${PN}-8.0.9-sqlite-wikipedia-baseline.patch
+	"${FILESDIR}"/${PN}-8.0.9-coverage-load-baseline-canonifier.patch
 )
 
 if [[ ! ${PV} == 9999 ]]; then
 	S="${WORKDIR}/${MY_P}"
 fi
+
+src_unpack() {
+	if [[ ${PV} == 9999 ]]; then
+		git-r3_src_unpack
+	else
+		# Only upstream's tarball is signed; the vendor tarball is this overlay's own
+		# release asset. verify-sig_src_unpack demands a signature for every distfile
+		# and would die on that one.
+		use verify-sig &&
+			verify-sig_verify_detached "${DISTDIR}"/${MY_P}.tar.gz{,.asc}
+		default
+	fi
+}
 
 src_prepare() {
 	# Replace the vendored auxil/ libraries with system packages. The series comes
@@ -280,6 +302,9 @@ src_configure() {
 		# vendored Google Benchmark tree.
 		-DSPICY_ENABLE_BENCHMARKS=no
 		-DENABLE_CLUSTER_BACKEND_ZEROMQ=$(usex zeromq)
+		# The Redis storage backend otherwise auto-enables whenever hiredis is
+		# found; pin it to the USE flag.
+		-DENABLE_STORAGE_BACKEND_REDIS=$(usex redis)
 		# Gate the otherwise-automagic GeoIP and Kerberos detection on USE flags.
 		-DCMAKE_DISABLE_FIND_PACKAGE_LibMMDB=$(usex geoip2 no yes)
 		-DCMAKE_DISABLE_FIND_PACKAGE_LibKrb5=$(usex kerberos no yes)
@@ -325,7 +350,9 @@ src_test() {
 	# tree is out-of-source, so expose it under the name btest expects.
 	ln -snf "${BUILD_DIR}" "${S}/build" || die
 
-	# Under a PID 1 that does not reap, the zeromq-encryption cases hang on kill -0.
+	# Cases that poll a killed process with kill -0 need a PID 1 that reaps:
+	# against a zombie it keeps succeeding, so the zeromq-encryption ones hang
+	# and cluster.websocket.cloexec-leak fails outright.
 	pushd testing/btest >/dev/null || die
 	../../auxil/btest/btest -b -j "$(makeopts_jobs)" \
 		|| die

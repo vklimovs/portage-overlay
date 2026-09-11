@@ -4,7 +4,9 @@
 EAPI=8
 
 PYTHON_COMPAT=( python3_{11..15} )
-inherit cmake multiprocessing python-single-r1
+VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/zeek.asc
+
+inherit cmake multiprocessing python-single-r1 verify-sig
 
 DESCRIPTION="The Zeek Network Security Monitor"
 HOMEPAGE="https://zeek.org/"
@@ -12,9 +14,11 @@ HOMEPAGE="https://zeek.org/"
 # The vendor tarball carries the unbundling patch series (the vendored auxil/
 # libraries replaced by system packages), format-patch'd from the zeek
 # unbundling git project. Export ZEEK_UNBUNDLE_DIR to point at that project
-# before regenerating.
+# before regenerating. --full-index keeps the output independent of that
+# project's object count, which otherwise decides how far git abbreviates the
+# index lines and so changes the tarball's hash.
 # To (re)generate the vendor tarball:
-#   git -C "${ZEEK_UNBUNDLE_DIR:?}" format-patch --no-signature \
+#   git -C "${ZEEK_UNBUNDLE_DIR:?}" format-patch --no-signature --full-index \
 #       -o "${PWD}/unbundle" "zeek-${PV}-pristine".."unbundle-${PV}"
 #   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
 #       -cf - unbundle | xz -9e >"${P}-vendor.tar.xz"
@@ -26,7 +30,8 @@ else
 	MY_P="${PN}-${PV/_/-}"
 	MY_PV="${PV/_/-}"
 	SRC_URI="https://github.com/zeek/zeek/releases/download/v${MY_PV}/${MY_P}.tar.gz
-		https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz"
+		https://github.com/vklimovs/portage-overlay/releases/download/${P}-vendor.tar.xz/${P}-vendor.tar.xz
+		verify-sig? ( https://github.com/zeek/zeek/releases/download/v${MY_PV}/${MY_P}.tar.gz.asc )"
 	KEYWORDS="~amd64"
 fi
 
@@ -95,7 +100,8 @@ BDEPEND="dev-cpp/doctest
 		$(python_gen_cond_dep '>=dev-python/pybind11-2.6.1[${PYTHON_USEDEP}]')
 	)
 	zeekctl? ( >=dev-lang/swig-3.0 )
-	zeromq? ( >=net-libs/cppzmq-4.9.0 )"
+	zeromq? ( >=net-libs/cppzmq-4.9.0 )
+	verify-sig? ( sec-keys/openpgp-keys-zeek )"
 
 REQUIRED_USE="zeekctl? ( python )
 	zeek-client? ( python )
@@ -129,6 +135,19 @@ PATCHES=(
 if [[ ! ${PV} == 9999 ]]; then
 	S="${WORKDIR}/${MY_P}"
 fi
+
+src_unpack() {
+	if [[ ${PV} == 9999 ]]; then
+		git-r3_src_unpack
+	else
+		# Only upstream's tarball is signed; the vendor tarball is this overlay's own
+		# release asset. verify-sig_src_unpack demands a signature for every distfile
+		# and would die on that one.
+		use verify-sig &&
+			verify-sig_verify_detached "${DISTDIR}"/${MY_P}.tar.gz{,.asc}
+		default
+	fi
+}
 
 src_prepare() {
 	# Replace the vendored auxil/ libraries with system packages. The series comes
