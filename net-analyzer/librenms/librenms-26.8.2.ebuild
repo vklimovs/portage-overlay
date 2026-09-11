@@ -13,7 +13,8 @@ HOMEPAGE="https://www.librenms.org/ https://github.com/librenms/librenms"
 #   cd ${P}
 #   composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
 #   cd ..
-#   XZ_OPT='-T0 -9e' tar -cJf ${P}-vendor.tar.xz ${P}/vendor
+#   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+#       -cf - ${P}/vendor | xz -9e >"${P}-vendor.tar.xz"
 # Then upload as a release asset to vklimovs/portage-overlay.
 SRC_URI="
 	https://github.com/${PN}/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz
