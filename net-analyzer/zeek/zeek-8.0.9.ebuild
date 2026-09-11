@@ -12,7 +12,7 @@ HOMEPAGE="https://zeek.org/"
 # The vendor tarball carries the unbundling patch series (the vendored auxil/
 # libraries replaced by system packages), format-patch'd from the zeek
 # unbundling git project. Export ZEEK_UNBUNDLE_DIR to point at that project
-# (e.g. ~/Projects/zeek) before regenerating.
+# before regenerating.
 # To (re)generate the vendor tarball:
 #   git -C "${ZEEK_UNBUNDLE_DIR:?}" format-patch --no-signature \
 #       -o "${PWD}/unbundle" "zeek-${PV}-pristine".."unbundle-${PV}"
