@@ -72,10 +72,11 @@ is the reference implementation.
   calls were re-litigated at every bump; the exceptions themselves live as
   `keep_bundled` entries in the ebuild, not in a document that can drift away
   from the build.
-- **Terse artifacts.** No explanatory comments in ebuilds, subject-only
-  commits, docs that link upstream rules instead of restating them. The
-  vendor-tarball recipes are the one comment exception — instructional, not
-  explanatory.
+- **Terse artifacts.** Subject-only commits, docs that link upstream rules
+  instead of restating them, and ebuild comments carrying only what the code
+  cannot say for itself — a *why* or a gotcha, in as few words as it takes.
+  Each sits against the line responsible rather than in a separate document
+  nobody opens.
 - **Correct over conventional.** CAF is packaged as the fork zeek actually
   uses, pinned, rather than bundled or force-fit onto upstream CAF; the
   copyright header matches the live `header.txt` rather than `skel.ebuild`.
@@ -85,7 +86,7 @@ is the reference implementation.
 | | |
 | --- | --- |
 | Copyright header | Exact copy of the live `header.txt` — `# Copyright <current year> Gentoo Authors`, not `skel.ebuild`'s `1999-YYYY` range. |
-| Comments | None in ebuilds unless a reader could not infer the constraint (a CVE ID, an upstream issue gating a workaround). |
+| Comments | Ultra-terse, and only two kinds. A *why*: the reasoning behind a constraint a reader could not infer (a pin, a CVE ID, an upstream issue gating a workaround, an automagic dependency being gated). A *gotcha*: behavior that neither upstream's documentation nor the resulting failure would tell you, such as a cmake variable that is silently a no-op. Never a restatement of what the line does, and never the obvious. The vendor-tarball recipes are instructional rather than either. |
 | `SLOT` | Literal: `SLOT="0/0.18.5"`, never `0/$(ver_cut 1-3)`. Package-manager metadata is written out, not computed. |
 | Version bounds | Only from a demonstrated failure or a documented upstream minimum; the bound *is* the record of that evidence. Never derived from whatever version upstream vendors. |
 | Patches | `${P}-description.patch`, the version being the one the patch was written against. On a bump, keep the old name unless the patch was actually regenerated. |
