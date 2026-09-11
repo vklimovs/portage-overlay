@@ -39,11 +39,10 @@ SNAPSHOT_RE = re.compile(r"_pre|_p\d{6,}|^\d{8}")
 
 # Per-package upstream-tag rewrites: when an upstream's tag scheme doesn't
 # match Gentoo PV ordering, map it to the form used by the ebuild here so
-# vercmp does the right thing.  llama.cpp tags daily builds as bNNNN; the
-# ebuilds use 0_preNNNN.
-TAG_REWRITES: tuple[tuple[str, re.Pattern[str], str], ...] = (
-    ("sci-misc/llama-cpp", re.compile(r"^b(\d+)$"), r"0_pre\1"),
-)
+# vercmp does the right thing.  Empty since llama.cpp started cutting vX.Y.Z
+# releases -- its bNNNN nightly tags are now unorderable and so simply ignored,
+# which is what we want.
+TAG_REWRITES: tuple[tuple[str, re.Pattern[str], str], ...] = ()
 
 
 @dataclass(frozen=True)
