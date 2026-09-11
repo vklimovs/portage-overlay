@@ -29,7 +29,7 @@ LICENSE="Apache-2.0 BSD BSD-2 CC-BY-3.0 CC0-1.0 EPL-2.0 ISC MIT MPL-2.0 public-d
 SLOT="0"
 KEYWORDS="~amd64"
 # Pin comes from .go-version at the beats tag, not go.mod.
-BDEPEND=">=dev-lang/go-1.26.4"
+BDEPEND=">=dev-lang/go-1.26.7"
 
 src_prepare() {
 	default
