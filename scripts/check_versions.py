@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Compare the highest non-live ebuild version of each package in this overlay
-against the latest release reported by its ``<remote-id>`` upstream.
+"""Compare each release line in this overlay against the latest release its
+``<remote-id>`` upstream reports.
 
-Discovery is driven entirely by the overlay tree: any ``metadata.xml`` with a
-recognized ``<remote-id>`` (github, pypi, codeberg) is probed.  No per-package
-configuration lives in this script.
+Discovery is driven by portage itself: the overlay is handed to a private
+``portdbapi`` at runtime, so it does not have to appear in ``repos.conf``.  Any
+package whose ``metadata.xml`` carries a recognized ``<remote-id>`` (github,
+pypi, codeberg) is probed, and no per-package configuration lives here.
+
+A package keeping more than one version is split by ``major.minor`` release
+line, so a maintained older line is compared against its own upstream line
+rather than being hidden by the newest one.  Versions masked in
+``profiles/package.mask`` are still probed and simply marked as masked.
 """
 
 from __future__ import annotations
@@ -18,315 +24,278 @@ import subprocess
 import sys
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
-from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import cmp_to_key
 from pathlib import Path
 
+import portage
+from portage.dbapi.porttree import portdbapi
+from portage.package.ebuild.config import config
+from portage.repository.config import RepoConfig
 from portage.versions import vercmp
-
+from portage.xml.metadata import MetaDataXML
 
 HTTP_TIMEOUT = 15
 USER_AGENT = "portage-overlay-version-check/1.0"
 PASS_ENTRY = "Github/portage-overlay-releases"
-SKIP_CATEGORIES = {"acct-group", "acct-user", "metadata", "profiles", "scripts",
-                   "eclass", "licenses", "distfiles"}
-EBUILD_RE = re.compile(r"^(?P<pn>.+)-(?P<pv>\d[^-]*(?:[._-][^-]+)*?)(?:-r\d+)?\.ebuild$")
 COMMIT_RE = re.compile(r"(?:archive/|COMMIT\s*=\s*[\"']?)([0-9a-f]{40})\b")
-# Snapshot PVs (date or _pre build) can't be compared to release tags, so
-# these are the ones for which a pinned commit is the right thing to diff.
+# Snapshot PVs (date or _pre build) cannot be compared to release tags, so for
+# these a pinned commit is the right thing to diff.
 SNAPSHOT_RE = re.compile(r"_pre|_p\d{6,}|^\d{8}")
-
-# Per-package upstream-tag rewrites: when an upstream's tag scheme doesn't
-# match Gentoo PV ordering, map it to the form used by the ebuild here so
-# vercmp does the right thing.  Empty since llama.cpp started cutting vX.Y.Z
-# releases -- its bNNNN nightly tags are now unorderable and so simply ignored,
-# which is what we want.
-TAG_REWRITES: tuple[tuple[str, re.Pattern[str], str], ...] = ()
+COLOR = {"current": "32", "outdated": "33", "ahead": "36",
+         "unknown": "35", "error": "31"}
+# Unorderable version pairs compare equal instead of raising, so one junk tag
+# cannot break a whole probe.
+VKEY = cmp_to_key(lambda a, b: vercmp(a, b, silent=1) or 0)
 
 
 @dataclass(frozen=True)
-class Package:
-    cpn: str
-    pn: str
-    current: str | None
+class Entry:
+    """The newest version of one release line of one package."""
+    cp: str
+    pv: str
+    line: str | None
+    primary: bool
+    masked: bool
     remotes: dict[str, str]
-    commit: str | None = None
+    commit: str | None
 
 
 @dataclass(frozen=True)
 class Result:
-    pkg: Package
-    upstream: str | None
-    error: str | None
-    # GitHub compare status of a pinned commit against upstream HEAD.
-    commit_state: str | None = None
-    commit_behind: int | None = None
-
-    @property
-    def status(self) -> str:
-        if self.error:
-            return "error"
-        if self.commit_state is not None:
-            return {"identical": "current", "ahead": "outdated",
-                    "behind": "ahead", "diverged": "current"}.get(self.commit_state, "unknown")
-        if self.pkg.current is None or self.upstream is None:
-            return "unknown"
-        cmp = vercmp(self.pkg.current, self.upstream, silent=1)
-        if cmp is None:
-            return "unknown"
-        return "outdated" if cmp < 0 else "ahead" if cmp > 0 else "current"
-
-    @property
-    def display(self) -> str:
-        """The text shown in the Upstream column (color is added by render)."""
-        if self.error:
-            return f"ERROR ({self.error})"
-        if self.commit_state is not None:
-            if self.commit_state == "diverged":
-                return "HEAD (pinned)"
-            n = self.commit_behind or 0
-            return {
-                "current": "HEAD (up to date)",
-                "outdated": f"HEAD ({n} commit{'' if n == 1 else 's'} behind)",
-                "ahead": "HEAD (local ahead)",
-            }.get(self.status, f"HEAD ({self.commit_state})")
-        if self.status == "outdated":
-            return f"{self.upstream}  <-- outdated"
-        if self.status == "ahead":
-            return f"{self.upstream}  (local newer)"
-        return self.upstream or "-"
+    entry: Entry
+    status: str
+    text: str
 
 
 # --------------------------------------------------------------------------- #
 # overlay discovery
 # --------------------------------------------------------------------------- #
 
-def discover_packages(overlay: Path) -> list[Package]:
-    pkgs: list[Package] = []
-    for cat in sorted(p for p in overlay.iterdir() if p.is_dir()):
-        if cat.name.startswith(".") or cat.name in SKIP_CATEGORIES or "-" not in cat.name:
+def open_overlay(overlay: Path) -> tuple[portdbapi, config, str]:
+    """A portdbapi that sees the overlay without it being in repos.conf.
+
+    ACCEPT_KEYWORDS is forced to ~amd64 because the overlay is ~arch only, and
+    otherwise every package would read as keyword-masked and drown out the
+    package.mask entries we actually want to surface."""
+    # The repos.conf section name has to match repo-name in layout.conf.
+    name = RepoConfig(None, {"location": str(overlay)}, local_config=False).name
+    main = portage.settings.repositories.mainRepoLocation()
+    cfg = config(env={
+        **os.environ,
+        "ACCEPT_KEYWORDS": "~amd64",
+        "PORTAGE_REPOSITORIES": (
+            f"[DEFAULT]\nmain-repo = gentoo\n"
+            f"[gentoo]\nlocation = {main}\n"
+            f"[{name}]\nlocation = {overlay}\nmasters = gentoo\n"),
+    })
+    location = next((r.location for r in cfg.repositories
+                     if Path(r.location) == overlay), None)
+    if location is None:
+        sys.exit(f"error: portage did not accept {overlay} as a repository")
+    return portdbapi(mysettings=cfg), cfg, location
+
+
+def release_line(pv: str) -> str:
+    """The major.minor prefix a version belongs to."""
+    head = pv.split("-")[0]
+    parts = head.split(".")
+    return ".".join(parts[:2]) if len(parts) > 1 else head
+
+
+def in_line(pv: str, line: str | None) -> bool:
+    """Whether a version belongs to a release line.  line=None accepts all."""
+    return line is None or pv == line or pv.startswith(f"{line}.")
+
+
+def scan(overlay: Path) -> list[Entry]:
+    db, cfg, path = open_overlay(overlay)
+    entries: list[Entry] = []
+    for cp in sorted(db.cp_all(trees=[path])):
+        remotes = remote_ids(Path(path) / cp / "metadata.xml")
+        if not remotes:
             continue
-        for pkg_dir in sorted(p for p in cat.iterdir() if p.is_dir()):
-            ebuilds = list(pkg_dir.glob("*.ebuild"))
-            if not ebuilds:
-                continue
-            remotes = parse_remote_ids(pkg_dir / "metadata.xml")
-            if not remotes:
-                continue
-            current, current_ebuild = pick_current(ebuilds)
-            pkgs.append(Package(
-                cpn=f"{cat.name}/{pkg_dir.name}",
-                pn=pkg_dir.name,
-                current=current,
-                remotes=remotes,
-                commit=(extract_commit(current_ebuild)
-                        if current_ebuild and current and SNAPSHOT_RE.search(current)
-                        else None),
-            ))
-    return pkgs
-
-
-def pick_current(ebuilds: list[Path]) -> tuple[str | None, Path | None]:
-    versions: list[tuple[str, Path]] = []
-    live: Path | None = None
-    for e in ebuilds:
-        m = EBUILD_RE.match(e.name)
-        if not m:
+        cpvs = db.cp_list(cp, mytree=path)
+        real = [c for c in cpvs if c.version != "9999"]
+        if not real:
+            if cpvs:
+                entries.append(Entry(cp, "9999", None, True, False, remotes, None))
             continue
-        pv = m.group("pv")
-        if pv == "9999":
-            live = e
-            continue
-        versions.append((pv, e))
-    if not versions:
-        return ("9999", live) if live else (None, None)
-    best = versions[0]
-    for v in versions[1:]:
-        if (vercmp(v[0], best[0], silent=1) or 0) > 0:
-            best = v
-    return best
+        # cp_list is ascending, so the last write per line is that line's newest.
+        newest = {release_line(c.version): c for c in real}
+        top = max((c.version for c in newest.values()), key=VKEY)
+        single = len(newest) == 1
+        entries.extend(sorted(
+            (Entry(cp=cp,
+                   pv=c.version,
+                   line=None if single else line,
+                   primary=c.version == top,
+                   masked="package.mask" in portage.getmaskingstatus(
+                       c, settings=cfg, portdb=db),
+                   remotes=remotes,
+                   commit=(commit_of(db.findname(c))
+                           if SNAPSHOT_RE.search(c.version) else None))
+             for line, c in newest.items()),
+            key=lambda e: (not e.primary, e.line or "")))
+    return entries
 
 
-def extract_commit(ebuild: Path) -> str | None:
+def commit_of(ebuild: str | None) -> str | None:
     try:
-        text = ebuild.read_text(encoding="utf-8", errors="replace")
-    except OSError:
+        m = COMMIT_RE.search(Path(ebuild).read_text(errors="replace"))
+    except (OSError, TypeError):
         return None
-    m = COMMIT_RE.search(text)
     return m.group(1) if m else None
 
 
-def parse_remote_ids(metadata_xml: Path) -> dict[str, str]:
-    if not metadata_xml.is_file():
-        return {}
+def remote_ids(metadata_xml: Path) -> dict[str, str]:
+    """First <remote-id> of each type, keyed by type."""
     try:
-        root = ET.parse(metadata_xml).getroot()
-    except ET.ParseError:
+        upstreams = MetaDataXML(str(metadata_xml), None).upstream()
+    except Exception:
         return {}
     out: dict[str, str] = {}
-    for r in root.iterfind("./upstream/remote-id"):
-        kind = (r.get("type") or "").strip()
-        value = (r.text or "").strip()
-        if kind and value and kind not in out:
-            out[kind] = value
+    for upstream in upstreams:
+        for value, kind in upstream.remoteids:
+            if kind and value:
+                out.setdefault(kind, value)
     return out
-
-
-# --------------------------------------------------------------------------- #
-# tag normalization
-# --------------------------------------------------------------------------- #
-
-def normalize_tag(tag: str, pkg: Package) -> str:
-    """Convert an upstream tag/version to the PV form the ebuilds use."""
-    t = tag.strip()
-    pn_prefix = f"{pkg.pn}-"
-    if t.lower().startswith(pn_prefix.lower()):
-        t = t[len(pn_prefix):]
-    if t.startswith("release-"):
-        t = t[len("release-"):]
-    m = re.match(r"[vV]\.?(\d.*)", t)
-    if m:
-        t = m.group(1)
-    for cpn, pat, repl in TAG_REWRITES:
-        if cpn == pkg.cpn:
-            t = pat.sub(repl, t)
-    return t
-
-
-def highest(pkg: Package, raw_tags: Iterable[str]) -> str | None:
-    """Highest candidate by Gentoo version ordering, normalized to PV form.
-
-    Candidates that vercmp cannot order (rolling tags like "nightly", "latest")
-    are skipped so they can't shadow a real version by sorting first."""
-    best: str | None = None
-    for raw in raw_tags:
-        pv = normalize_tag(raw or "", pkg)
-        if not pv or vercmp(pv, "0", silent=1) is None:
-            continue
-        if best is None or (vercmp(pv, best, silent=1) or 0) > 0:
-            best = pv
-    return best
 
 
 # --------------------------------------------------------------------------- #
 # upstream probes
 # --------------------------------------------------------------------------- #
 
-def http_json(url: str, headers: dict[str, str] | None = None) -> object:
+def http_json(url: str, token: str | None = None) -> object:
     if not url.startswith("https://"):
         raise ValueError(f"refusing non-https URL: {url}")
-    hdrs = {"User-Agent": USER_AGENT, "Accept": "application/json"}
-    if headers:
-        hdrs.update(headers)
-    req = urllib.request.Request(url, headers=hdrs)
-    with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    with urllib.request.urlopen(
+            urllib.request.Request(url, headers=headers), timeout=HTTP_TIMEOUT) as resp:
         return json.load(resp)
 
 
-def _quote_repo(repo: str) -> str:
+def quote_repo(repo: str) -> str:
     parts = repo.split("/", 1)
     if len(parts) != 2 or not all(parts):
         raise ValueError(f"bad repo spec: {repo!r}")
     return "/".join(urllib.parse.quote(p, safe="") for p in parts)
 
 
-def github_candidates(repo: str, token: str | None) -> list[str]:
-    # Prefer published releases (highest by version, not whatever upstream
-    # marked "latest" -- some pin an older LTS line there); fall back to tags.
-    safe = _quote_repo(repo)
-    headers = {"Authorization": f"Bearer {token}"} if token else None
-    data = http_json(f"https://api.github.com/repos/{safe}/releases?per_page=100", headers)
-    if isinstance(data, list):
-        tags = [r.get("tag_name") or "" for r in data
-                if isinstance(r, dict) and not r.get("prerelease") and not r.get("draft")]
-        tags = [t for t in tags if t]
-        if tags:
-            return tags
-    data = http_json(f"https://api.github.com/repos/{safe}/tags?per_page=100", headers)
-    if isinstance(data, list):
-        return [t.get("name") or "" for t in data if isinstance(t, dict) and t.get("name")]
+def github_tags(repo: str, token: str | None) -> list[str]:
+    # Prefer published releases, ranked by version rather than by whatever
+    # upstream flagged "latest" -- some pin an older LTS line there.
+    safe = quote_repo(repo)
+    releases = http_json(f"https://api.github.com/repos/{safe}/releases?per_page=100", token)
+    tags = [r.get("tag_name") for r in releases
+            if not r.get("prerelease") and not r.get("draft")]
+    if any(tags):
+        return [t for t in tags if t]
+    return [t.get("name") for t in
+            http_json(f"https://api.github.com/repos/{safe}/tags?per_page=100", token)]
+
+
+def pypi_tags(name: str, token: str | None = None) -> list[str]:
+    data = http_json(f"https://pypi.org/pypi/{urllib.parse.quote(name, safe='')}/json")
+    return [(data.get("info") or {}).get("version")]
+
+
+def codeberg_tags(repo: str, token: str | None = None) -> list[str]:
+    safe = quote_repo(repo)
+    for url, key in ((f"https://codeberg.org/api/v1/repos/{safe}/releases?limit=1", "tag_name"),
+                     (f"https://codeberg.org/api/v1/repos/{safe}/tags?limit=1", "name")):
+        data = http_json(url)
+        if data:
+            return [data[0].get(key)]
     return []
 
 
-def pypi_candidates(name: str, token: str | None = None) -> list[str]:
-    safe = urllib.parse.quote(name, safe="")
-    data = http_json(f"https://pypi.org/pypi/{safe}/json")
-    version = ((data.get("info") or {}).get("version") or "").strip() if isinstance(data, dict) else ""
-    return [version] if version else []
+# Probed in order, first remote-id present on a package wins.
+PROBES = {"github": github_tags, "pypi": pypi_tags, "codeberg": codeberg_tags}
 
 
-def codeberg_candidates(repo: str, token: str | None = None) -> list[str]:
-    safe = _quote_repo(repo)
-    data = http_json(f"https://codeberg.org/api/v1/repos/{safe}/releases?limit=1")
-    if isinstance(data, list) and data:
-        tag = (data[0].get("tag_name") or "").strip()
-        if tag:
-            return [tag]
-    data = http_json(f"https://codeberg.org/api/v1/repos/{safe}/tags?limit=1")
-    if isinstance(data, list) and data:
-        name = (data[0].get("name") or "").strip()
-        if name:
-            return [name]
-    return []
+def normalize(tag: str, pn: str) -> str:
+    """Convert an upstream tag to the PV form the ebuilds use."""
+    t = (tag or "").strip()
+    if t.lower().startswith(f"{pn.lower()}-"):
+        t = t[len(pn) + 1:]
+    t = t.removeprefix("release-")
+    m = re.match(r"[vV]\.?(\d.*)", t)
+    return m.group(1) if m else t
 
 
-# Probed in order; the first remote-id present on a package wins.
-REMOTE_CANDIDATES = {
-    "github": github_candidates,
-    "pypi": pypi_candidates,
-    "codeberg": codeberg_candidates,
-}
+def best_tag(entry: Entry, raw: list[str]) -> str | None:
+    """Highest candidate in this entry's line, in PV form.
+
+    Candidates vercmp cannot order (rolling tags like "nightly") are dropped so
+    they cannot shadow a real version by sorting first."""
+    pn = entry.cp.split("/")[1]
+    usable = [pv for pv in (normalize(t, pn) for t in raw)
+              if pv and vercmp(pv, "0", silent=1) is not None and in_line(pv, entry.line)]
+    return max(usable, key=VKEY, default=None)
 
 
 def github_commit_state(repo: str, commit: str, token: str | None) -> tuple[str, int]:
-    safe = _quote_repo(repo)
-    headers = {"Authorization": f"Bearer {token}"} if token else None
-    info = http_json(f"https://api.github.com/repos/{safe}", headers)
-    branch = (info.get("default_branch") or "").strip() if isinstance(info, dict) else ""
+    safe = quote_repo(repo)
+    info = http_json(f"https://api.github.com/repos/{safe}", token)
+    branch = (info.get("default_branch") or "").strip()
     if not branch:
         raise RuntimeError("no default branch")
     head = urllib.parse.quote(branch, safe="")
-    data = http_json(
-        f"https://api.github.com/repos/{safe}/compare/{commit}...{head}", headers)
-    if not isinstance(data, dict) or not data.get("status"):
+    data = http_json(f"https://api.github.com/repos/{safe}/compare/{commit}...{head}", token)
+    if not data.get("status"):
         raise RuntimeError("unexpected compare response")
     return data["status"], int(data.get("ahead_by") or 0)
 
 
-def fetch_upstream(pkg: Package, token: str | None) -> Result:
-    # Live-only ebuilds always track upstream HEAD; there is no meaningful
-    # release to compare against, so just mirror "9999" and call it current.
-    if pkg.current == "9999":
-        return Result(pkg=pkg, upstream="9999", error=None)
-    # Snapshot ebuilds pin a commit; comparing PV against the newest tag is
-    # meaningless, so diff the pinned SHA against upstream HEAD instead.
-    if pkg.commit and pkg.remotes.get("github"):
+def probe(entry: Entry, token: str | None) -> Result:
+    # Live ebuilds always track upstream HEAD, so there is nothing to compare.
+    if entry.pv == "9999":
+        return Result(entry, "current", "9999")
+    # Snapshot ebuilds pin a commit, so diff that SHA against HEAD instead.
+    if entry.commit and entry.remotes.get("github"):
         try:
-            state, behind = github_commit_state(pkg.remotes["github"], pkg.commit, token)
-            return Result(pkg=pkg, upstream="HEAD", error=None,
-                          commit_state=state, commit_behind=behind)
+            state, ahead = github_commit_state(entry.remotes["github"], entry.commit, token)
         except Exception as e:
-            return Result(pkg=pkg, upstream=None, error=f"github: {e}")
-    last_error: str | None = None
-    for kind, fetch in REMOTE_CANDIDATES.items():
-        rid = pkg.remotes.get(kind)
-        if not rid:
+            return Result(entry, "error", f"ERROR (github: {e})")
+        if state == "diverged":
+            return Result(entry, "current", "HEAD (pinned)")
+        status = {"identical": "current", "ahead": "outdated",
+                  "behind": "ahead"}.get(state, "unknown")
+        return Result(entry, status, {
+            "current": "HEAD (up to date)",
+            "outdated": f"HEAD ({ahead} commit{'' if ahead == 1 else 's'} behind)",
+            "ahead": "HEAD (local ahead)",
+        }.get(status, f"HEAD ({state})"))
+
+    error = "no usable remote-id"
+    for kind, fetch in PROBES.items():
+        if kind not in entry.remotes:
             continue
         try:
-            best = highest(pkg, fetch(rid, token))
-            if best:
-                return Result(pkg=pkg, upstream=best, error=None)
-            last_error = f"{kind}: no releases or tags"
+            found = best_tag(entry, fetch(entry.remotes[kind], token))
         except Exception as e:
-            last_error = f"{kind}: {e}"
-    return Result(pkg=pkg, upstream=None, error=last_error or "no usable remote-id")
+            error = f"{kind}: {e}"
+            continue
+        if not found:
+            error = f"{kind}: no releases or tags"
+            continue
+        cmp = vercmp(entry.pv, found, silent=1)
+        status = ("unknown" if cmp is None else
+                  "outdated" if cmp < 0 else "ahead" if cmp > 0 else "current")
+        return Result(entry, status, {
+            "outdated": f"{found}  <-- outdated",
+            "ahead": f"{found}  (local newer)",
+        }.get(status, found))
+    return Result(entry, "error", f"ERROR ({error})")
 
 
 def token_from_pass() -> str | None:
-    """Return the first line of `pass show $PASS_ENTRY`, or None on any failure
-    (pass not installed, entry missing, GPG agent locked, etc.). Never raises;
-    the script must remain usable without a token."""
+    """First line of `pass show $PASS_ENTRY`, or None on any failure (pass not
+    installed, entry missing, GPG agent locked).  Never raises, because the
+    script must stay usable without a token."""
     try:
         with open("/dev/tty") as tty:
             print("About to run `pass show` -- a pinentry prompt may appear. "
@@ -335,54 +304,51 @@ def token_from_pass() -> str | None:
     except OSError:
         pass
     try:
-        proc = subprocess.run(
-            ["pass", "show", PASS_ENTRY],
-            capture_output=True, text=True, timeout=10, check=True,
-        )
+        proc = subprocess.run(["pass", "show", PASS_ENTRY],
+                              capture_output=True, text=True, timeout=10, check=True)
     except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.CalledProcessError):
         return None
-    line = proc.stdout.splitlines()[0].strip() if proc.stdout else ""
-    return line or None
+    return (proc.stdout.splitlines() or [""])[0].strip() or None
 
 
 # --------------------------------------------------------------------------- #
 # output
 # --------------------------------------------------------------------------- #
 
-STATUS_COLOR = {"current": "32", "outdated": "33", "ahead": "36",
-                "unknown": "35", "error": "31"}
-
-
 def render(results: list[Result], use_color: bool) -> tuple[int, int]:
-    def paint(s: str, code: str) -> str:
-        return f"\x1b[{code}m{s}\x1b[0m" if use_color else s
+    def current(r: Result) -> str:
+        return f"{r.entry.pv} (masked)" if r.entry.masked else r.entry.pv
 
-    name_w = max((len(r.pkg.cpn) for r in results), default=8)
-    cur_w = max((len(r.pkg.current or "-") for r in results), default=8)
+    name_w = max((len(r.entry.cp) for r in results), default=8)
+    cur_w = max((len(current(r)) for r in results), default=8)
 
-    print(f"{'Package':<{name_w}} | {'Current':<{cur_w}} | Upstream")
-    print("-" * (name_w + cur_w + 20))
+    def table(rows: list[Result], heading: str | None = None) -> None:
+        if heading:
+            print(f"\n{heading}")
+        print(f"{'Package':<{name_w}} | {'Current':<{cur_w}} | Upstream")
+        print("-" * (name_w + cur_w + 20))
+        for r in rows:
+            text = f"\x1b[{COLOR[r.status]}m{r.text}\x1b[0m" if use_color else r.text
+            print(f"{r.entry.cp:<{name_w}} | {current(r):<{cur_w}} | {text}")
 
-    outdated = errors = 0
-    for r in results:
-        status = r.status
-        outdated += status == "outdated"
-        errors += status == "error"
-        cur = r.pkg.current or "-"
-        print(f"{r.pkg.cpn:<{name_w}} | {cur:<{cur_w}} | {paint(r.display, STATUS_COLOR[status])}")
-    return outdated, errors
+    table([r for r in results if r.entry.primary])
+    secondary = [r for r in results if not r.entry.primary]
+    if secondary:
+        table(secondary, "Older release lines kept alongside the newest:")
+    return (sum(r.status == "outdated" for r in results),
+            sum(r.status == "error" for r in results))
 
 
 def main(argv: list[str] | None = None) -> int:
-    default_overlay = Path(__file__).resolve().parent.parent
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--overlay", type=Path, default=default_overlay,
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--overlay", type=Path, default=Path(__file__).resolve().parent.parent,
                     help="overlay root (default: %(default)s)")
     ap.add_argument("--workers", type=int, default=8,
                     help="parallel upstream probes (default: %(default)s)")
     ap.add_argument("--token", default=None,
-                    help=f"GitHub API token (default: $GITHUB_TOKEN, "
-                         f"else `pass show {PASS_ENTRY}`)")
+                    help=f"GitHub API token (default: $GITHUB_TOKEN, else "
+                         f"`pass show {PASS_ENTRY}`)")
     ap.add_argument("--no-pass", action="store_true",
                     help="do not consult pass(1) for the token")
     ap.add_argument("--no-color", action="store_true", help="disable ANSI color output")
@@ -390,11 +356,12 @@ def main(argv: list[str] | None = None) -> int:
 
     overlay: Path = args.overlay.resolve()
     if not (overlay / "profiles").is_dir():
-        print(f"error: {overlay} does not look like a Gentoo overlay (no profiles/)", file=sys.stderr)
+        print(f"error: {overlay} does not look like a Gentoo overlay (no profiles/)",
+              file=sys.stderr)
         return 2
 
-    pkgs = discover_packages(overlay)
-    if not pkgs:
+    entries = scan(overlay)
+    if not entries:
         print("no packages with <remote-id> metadata found", file=sys.stderr)
         return 2
 
@@ -402,19 +369,16 @@ def main(argv: list[str] | None = None) -> int:
     if not token and not args.no_pass:
         token = token_from_pass()
     if not token:
-        print("note: no GitHub token available; rate limit is 60 req/hr",
-              file=sys.stderr)
+        print("note: no GitHub token available, rate limit is 60 req/hr", file=sys.stderr)
 
-    workers = max(1, min(args.workers, len(pkgs)))
-    with cf.ThreadPoolExecutor(max_workers=workers) as ex:
-        results = list(ex.map(lambda p: fetch_upstream(p, token), pkgs))
-    results.sort(key=lambda r: r.pkg.cpn)
+    with cf.ThreadPoolExecutor(max_workers=max(1, min(args.workers, len(entries)))) as ex:
+        results = sorted(ex.map(lambda e: probe(e, token), entries),
+                         key=lambda r: r.entry.cp)
 
-    use_color = sys.stdout.isatty() and not args.no_color and os.environ.get("NO_COLOR") is None
+    use_color = (sys.stdout.isatty() and not args.no_color
+                 and os.environ.get("NO_COLOR") is None)
     outdated, errors = render(results, use_color)
-
-    print()
-    print(f"{len(results)} packages, {outdated} outdated, {errors} errors")
+    print(f"\n{len(results)} release lines, {outdated} outdated, {errors} errors")
     return 1 if outdated or errors else 0
 
 
