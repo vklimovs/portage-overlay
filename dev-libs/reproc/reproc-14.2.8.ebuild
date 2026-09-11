@@ -7,7 +7,9 @@ inherit cmake
 
 DESCRIPTION="Cross-platform C/C++ library for starting and communicating with subprocesses"
 HOMEPAGE="https://github.com/DaanDeMeyer/reproc"
-SRC_URI="https://github.com/DaanDeMeyer/reproc/archive/v${PV}.tar.gz -> ${P}.tar.gz"
+# 14.2.8 is tagged without the "v" every earlier release carries; re-check the
+# tag name on each bump rather than assuming either form.
+SRC_URI="https://github.com/DaanDeMeyer/reproc/archive/${PV}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${P}"
 
 LICENSE="MIT"
