@@ -1,0 +1,7 @@
+/var/log/nut_exporter/nut_exporter.log {
+	missingok
+	size 5M
+	rotate 3
+	compress
+	copytruncate
+}

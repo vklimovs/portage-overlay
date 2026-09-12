@@ -10,6 +10,8 @@ command_background="true"
 command_user="nut_exporter:nut_exporter"
 pidfile="/run/${RC_SVCNAME}.pid"
 # Backgrounding would otherwise discard every scrape failure.
+# Same file for both: the exporter switches its logger to stderr right after
+# flag parsing, so stdout stays empty and the two never interleave.
 output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
 error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
 
