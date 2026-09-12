@@ -1,0 +1,6 @@
+# Arguments for nut_exporter, see `nut_exporter --help`. It listens on every
+# interface, and UPS metrics live at /ups_metrics rather than /metrics.
+command_args=""
+
+# Password for --nut.username. Restrict this file to root before setting one.
+#export NUT_EXPORTER_PASSWORD=""

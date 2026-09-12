@@ -1,0 +1,19 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+# shellcheck shell=sh disable=SC2034
+
+description="Prometheus exporter for Network UPS Tools"
+
+command="/usr/bin/nut_exporter"
+command_background="true"
+command_user="nut_exporter:nut_exporter"
+pidfile="/run/${RC_SVCNAME}.pid"
+# Backgrounding would otherwise discard every scrape failure.
+output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+
+depend() {
+	use net
+	after upsd
+}
