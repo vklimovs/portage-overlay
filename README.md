@@ -218,6 +218,7 @@ scripts/upload_vendor_tarballs.sh --force        # re-upload existing
 scripts/upload_vendor_tarballs.sh --verify       # rebuild and compare, no upload
 scripts/upload_vendor_tarballs.sh --published    # check the released assets
 scripts/upload_vendor_tarballs.sh --from DIR     # upload builds made elsewhere
+scripts/upload_vendor_tarballs.sh --yes          # skip the recipe confirmation
 ```
 
 The token comes from `--token`, then `$GITHUB_TOKEN`, then
