@@ -174,17 +174,26 @@ provokes read timeouts from a throttling mirror.
 - **nsjail** — built against `dev-libs/kafel` (packaged here) instead of its
   bundled copy.
 - **llama-cpp** — `-DLLAMA_BUILD_UI=OFF`: the web UI build chain fetches from
-  npm and HuggingFace, which `network-sandbox` rightly blocks.
+  npm and HuggingFace, which `network-sandbox` rightly blocks. Its four
+  `UncheckableDep` results are a pkgcore limit, not a defect: `ROCM_USEDEP`
+  expands to 21 conditional `amdgpu_targets_*(-)?` deps and pkgcheck bails on
+  any transitive-USE atom past 16, gated on its own
+  `_TRANSITIVE_USE_ATOM_BUG_IS_FIXED`. The atom is rocm.eclass's documented
+  form; this clears upstream or not at all.
 
 ## Scripts
 
 ### `scripts/check_versions.py`
 
-Compares the highest non-live ebuild version against the latest upstream
-release from each `metadata.xml`'s `<remote-id>`. GitHub, PyPI, and Codeberg
-are probed; `sourceforge` and `cpe` entries are ignored; packages with no
-remote-id are skipped. Snapshot ebuilds are handled by diffing their pinned
-commit against upstream HEAD instead of comparing versions.
+Lists every version the overlay carries and compares them against the latest
+upstream release from each `metadata.xml`'s `<remote-id>`. A package counts as
+current when any carried version has caught up, so an older line kept beside
+the newest does not read as outdated. Versions masked in
+`profiles/package.mask` are marked as masked.
+
+Only GitHub, PyPI, and Codeberg are probed. Packages with no remote-id are
+skipped. Snapshot ebuilds are handled by diffing their pinned commit against
+upstream HEAD instead of comparing versions.
 
 ```sh
 python scripts/check_versions.py
@@ -198,14 +207,22 @@ requests (60 req/hr).
 ### `scripts/upload_vendor_tarballs.sh`
 
 Rebuilds vendor tarballs from the recipes embedded in the ebuilds and uploads
-them to GitHub releases.
+them to GitHub releases. An upload is checked against the Manifest first and
+refused on a mismatch.
 
 ```sh
-scripts/upload_vendor_tarballs.sh               # all packages
-scripts/upload_vendor_tarballs.sh sys-fs/zrepl  # one package
-scripts/upload_vendor_tarballs.sh --dry-run     # rehearse only
-scripts/upload_vendor_tarballs.sh --force       # re-upload existing
+scripts/upload_vendor_tarballs.sh                # all packages
+scripts/upload_vendor_tarballs.sh sys-fs/zrepl   # one package
+scripts/upload_vendor_tarballs.sh --dry-run      # rehearse only
+scripts/upload_vendor_tarballs.sh --force        # re-upload existing
+scripts/upload_vendor_tarballs.sh --verify       # rebuild and compare, no upload
+scripts/upload_vendor_tarballs.sh --published    # check the released assets
+scripts/upload_vendor_tarballs.sh --from DIR     # upload builds made elsewhere
 ```
+
+The token comes from `--token`, then `$GITHUB_TOKEN`, then
+`pass show Github/portage-overlay-releases`, which `--no-pass` skips. Only
+uploading needs one: `--dry-run`, `--verify` and `--published` do not.
 
 ## Maintainer
 
