@@ -308,7 +308,8 @@ process_package() {
     if (( PUBLISHED )); then
         local pubdir
         pubdir=$(mktemp -d -t "vendor-${pn}.XXXXXX")
-        trap 'rm -rf "$pubdir"' RETURN
+        # A RETURN trap is global in bash, so it has to disarm itself.
+        trap 'rm -rf "$pubdir"; trap - RETURN' RETURN
         if ! curl --silent --show-error --fail --location \
                   --proto '=https' --proto-redir '=https' \
                   -o "$pubdir/$tarball" \
@@ -358,7 +359,8 @@ process_package() {
 
     local workdir
     workdir=$(mktemp -d -t "vendor-${pn}.XXXXXX")
-    trap 'rm -rf "$workdir"' RETURN
+    # A RETURN trap is global in bash, so it has to disarm itself.
+    trap 'rm -rf "$workdir"; trap - RETURN' RETURN
 
     # Not `ebuild fetch`: on a fresh bump the Manifest lacks the new hash, so
     # portage discards the download.
