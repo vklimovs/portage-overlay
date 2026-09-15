@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+# shellcheck shell=sh disable=SC2034
+
+description="Prometheus exporter for IPMI baseboard management controllers"
+
+command="/usr/bin/ipmi_exporter"
+command_background="true"
+command_user="ipmi_exporter:ipmi_exporter"
+pidfile="/run/${RC_SVCNAME}.pid"
+# Backgrounding would otherwise discard every scrape failure.
+# Same file for both: the exporter switches its logger to stderr right after
+# flag parsing, so stdout stays empty and the two never interleave.
+output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+
+depend() {
+	use net
+}
