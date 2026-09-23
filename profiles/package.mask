@@ -13,3 +13,7 @@
 # Feature releases carry ~4 months of support and 8.2 ends when 9.0 ships, so
 # 8.0.x LTS is the default here. Masked so it doesn't shadow 8.0.10.
 >=net-analyzer/zeek-8.1
+
+# zeek 9.0.x's CAF pin, unmasked together with net-analyzer/zeek-9.0.0. Masked
+# so it doesn't shadow the 8.0.x pin (RedundantVersion).
+>=dev-libs/zeek-caf-0.18.5_p20260714

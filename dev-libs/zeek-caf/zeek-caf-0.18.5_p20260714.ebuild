@@ -12,11 +12,11 @@ inherit cmake
 # (see RDEPEND). This package exists purely so net-analyzer/zeek can drop its
 # vendored copy and link a real, minimal, separately-versioned CAF instead.
 #
-# COMMIT is zeek 8.0.x's caf submodule pin; net-analyzer/zeek depends on the
+# COMMIT is zeek 9.0.x's caf submodule pin; net-analyzer/zeek depends on the
 # exact matching version. Re-derive on every zeek bump from the caf gitlink at:
 #   github.com/zeek/zeek @ vX.Y.Z  ->  auxil/broker  ->  caf
 # The _pYYYYMMDD in ${PV} is this commit's date.
-COMMIT="4aa660d003d8bbb922a33fb7a31f80d9d3271262"
+COMMIT="6e045454686670f5f72c0e02167739fa8b2fa815"
 
 DESCRIPTION="Minimal CAF (C++ Actor Framework) fork used by Zeek's Broker"
 HOMEPAGE="https://github.com/zeek/actor-framework"
