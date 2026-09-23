@@ -10,7 +10,7 @@ inherit toolchain-funcs
 # nsjail edit. But an API-compatible kafel can still emit different BPF, so a
 # bump is not done until nsjail is re-emerged and a KILL{mkdir} policy is
 # confirmed to kill while ALLOW{mkdir} passes.
-COMMIT="18f207428068a50f2c35706c5d0b21f53c769016"
+COMMIT="00065052c52c42a084fa0423f1a486f6c21d2a04"
 
 DESCRIPTION="Seccomp-bpf policy language and compiler library"
 HOMEPAGE="https://github.com/google/kafel"
@@ -27,7 +27,7 @@ BDEPEND="
 	app-alternatives/yacc
 "
 
-PATCHES=( "${FILESDIR}/${P}-respect-user-flags.patch" )
+PATCHES=( "${FILESDIR}/${PN}-20231004_p20260404-respect-user-flags.patch" )
 
 src_compile() {
 	tc-export CC AR LD OBJCOPY OBJDUMP
