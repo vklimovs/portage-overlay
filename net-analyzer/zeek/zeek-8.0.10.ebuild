@@ -38,9 +38,8 @@ fi
 LICENSE="BSD BSD-4 CC-BY-4.0 ISC UoI-NCSA
 	spicy? ( BSD-2 Boost-1.0 LGPL-3 MIT )"
 SLOT="0"
-# nodejs/javascript is auto-detected upstream so defaults off here.
 IUSE="+btest cron curl debug geoip2 ipsumdump jemalloc kerberos
-	nodejs +python redis sendmail +spicy static-libs tcmalloc +tools +zeek-client
+	+python redis sendmail +spicy static-libs tcmalloc +tools +zeek-client
 	+zeekctl +zkg +zeromq"
 
 RDEPEND="
@@ -64,7 +63,6 @@ RDEPEND="
 	ipsumdump? ( net-analyzer/ipsumdump )
 	jemalloc? ( dev-libs/jemalloc:0= )
 	kerberos? ( virtual/krb5 )
-	nodejs? ( net-libs/nodejs:= )
 	python? ( ${PYTHON_DEPS} )
 	redis? ( dev-libs/hiredis:= )
 	sendmail? ( virtual/mta )
@@ -294,7 +292,8 @@ src_configure() {
 		-DINSTALL_ZKG=$(usex zkg)
 		-DINSTALL_ZEEK_CLIENT=$(usex zeek-client)
 		-DDISABLE_PYTHON_BINDINGS=$(usex python no yes)
-		-DDISABLE_JAVASCRIPT=$(usex nodejs no yes)
+		# ZeekJS needs libnode, which ::gentoo's nodejs does not build.
+		-DDISABLE_JAVASCRIPT=yes
 		# Native Linux capture backend; pinned on rather than left to the default.
 		-DDISABLE_AF_PACKET=no
 		-DDISABLE_SPICY=$(usex spicy no yes)
