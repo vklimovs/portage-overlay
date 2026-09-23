@@ -69,7 +69,7 @@ src_prepare() {
 }
 
 src_install() {
-	rm -rf .github doc licenses tests || die
+	rm -rf .agents .github doc licenses tests || die
 	# No -f: an entry upstream has dropped must fail the build rather than be
 	# skipped, since the file it was replaced by would otherwise ship silently
 	# (26.8.2 swapped .php-cs-fixer.php for pint.json this way).
