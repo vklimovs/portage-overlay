@@ -5,11 +5,12 @@ EAPI=8
 
 inherit cmake
 
-# Past 12.0.1 because net-analyzer/zeek >=8.2.2 calls IXSocketServer::
-# setCloseOnExec(), added after the release; upstream has not tagged since. The
-# snapshot also carries the HttpServer path-traversal fix (upstream #608) and
-# the first correct SOVERSION (#607). ${PV}'s _pYYYYMMDD is this commit's date.
-COMMIT="5da103b0da9183757301ea1676b26795a996e443"
+# Past 12.0.1 because net-analyzer/zeek calls IXSocketServer::setCloseOnExec(),
+# added after the release; upstream has not tagged since. The snapshot also
+# carries the HttpServer path-traversal fix (upstream #608), the first correct
+# SOVERSION (#607), and a shutdown race that hangs _thread.join() (#609).
+# ${PV}'s _pYYYYMMDD is this commit's date.
+COMMIT="514a0b968503d758a2954ff9016289f41f489616"
 
 DESCRIPTION="Lightweight C++ WebSocket and HTTP client and server library"
 HOMEPAGE="https://github.com/machinezone/IXWebSocket"
