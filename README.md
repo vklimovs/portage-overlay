@@ -145,16 +145,19 @@ provokes read timeouts from a throttling mirror.
 - **zeek** — most of the small C and C++ library packages in this overlay
   exist only as unbundling targets for it, and are maintained rather than
   warehoused; UNBUNDLING.md's appendix says which tree each one replaces.
-  Two zeek lines are kept: 8.0.x and the current feature line, 8.2.x.
-  Superseded feature lines are dropped rather than carried; 8.1 was never
-  packaged. The unbundle series is regenerated in a scratch clone of upstream
+  Two zeek lines are kept, both LTS: the current 9.0.x and the outgoing 8.0.x,
+  which upstream maintains for one further feature release after a new LTS
+  ships. Feature lines (x.1, x.2) lose support the moment the next line
+  appears, so they are not carried. The unbundle series is regenerated in a
+  scratch clone of upstream
   (`zeek-<ver>-pristine` tag, `unbundle-<ver>` branch) and shipped inside the
   vendor tarball — recipe in the ebuild header.
 - **zeek-caf is not caf.** `dev-libs/zeek-caf` is zeek's own CAF fork at
   0.18.5, pinned to the commit Broker expects; `dev-libs/caf` is upstream CAF
   1.1.0. Same SONAME line, same install paths, so zeek-caf carries
   `RDEPEND="!dev-libs/caf"` and the two cannot coexist. Not consolidation
-  candidates.
+  candidates. Each zeek line pins a different CAF commit, so there is one
+  zeek-caf version per line and each zeek ebuild depends on its own with `~`.
 - **reproc** — `>=dev-libs/reproc-14.2.5` is masked: that release made
   `reproc::event::source::process` by-value and broke zeek's Spicy, which
   pins `<14.2.5`.

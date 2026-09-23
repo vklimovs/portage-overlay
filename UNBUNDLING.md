@@ -218,15 +218,15 @@ a `keep_bundled` entry with a reason, in the ebuild, where it is enforced.
 Changing this policy means changing this file, in the same commit series as
 the ebuild change that motivates it.
 
-## Appendix: zeek class assignments (8.0.10 / 8.2.2)
+## Appendix: zeek class assignments (8.0.10 / 9.0.0)
 
 | Class | Trees |
 |-------|-------|
 | A | c-ares, expected-lite, rapidjson†, libkqueue†, sqlite, prometheus-cpp (+ civetweb), cppzmq, pybind11, nlohmann_json, libb64, utfcpp, doctest (btest-conditional) |
-| B | highwayhash, IXWebSocket, out_ptr, reproc, utf8proc (dropped from ::gentoo), LightPcapNg (8.2+) |
+| B | highwayhash, IXWebSocket, out_ptr, reproc, utf8proc (dropped from ::gentoo), LightPcapNg (9.0 only) |
 | C-lib | CAF → `dev-libs/zeek-caf` |
 | C-src | spicy fiber, justrx |
-| D | patricia, ConvertUTF, in_cksum, bsd-getopt-long, modp_numtoa, setsignal, strsep, zeek_inet_ntop, jthread/stop_token, SafeInt, tinyformat, ArticleEnumClass-v2, pathfind (8.0.x), libaca (8.2+) |
-| E | google-benchmark (`SPICY_ENABLE_BENCHMARKS=no`), libunistd, vcpkg glue |
+| D | patricia, ConvertUTF, in_cksum, bsd-getopt-long, modp_numtoa, setsignal, strsep, zeek_inet_ntop, jthread/stop_token, SafeInt, tinyformat, ArticleEnumClass-v2, pathfind (8.0 only), libaca (9.0 only) |
+| E | google-benchmark (8.0 only; `SPICY_ENABLE_BENCHMARKS=no`), libunistd, vcpkg glue |
 
 † vendor forks at `ahead_by == 0`, treated as pristine snapshots.
