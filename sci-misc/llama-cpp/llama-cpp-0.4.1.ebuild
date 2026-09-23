@@ -90,10 +90,10 @@ src_configure() {
 	local mycmakeargs=(
 		# Not in the tarball: build-info.cmake defaults BUILD_NUMBER to 0 and otherwise
 		# reads it from git. The value is `git rev-list --count` at the tag, which is
-		# also what the bNNNN nightly tag on that same commit is named after -- v0.4.0
-		# is b10809 -- so re-read it there on each bump. -DBUILD_NUMBER is read by
+		# also what the bNNNN nightly tag on that same commit is named after -- v0.4.1
+		# is b10964 -- so re-read it there on each bump. -DBUILD_NUMBER is read by
 		# nothing.
-		-DLLAMA_BUILD_NUMBER=10809
+		-DLLAMA_BUILD_NUMBER=10964
 		# Defaults ON, which suffixes LLAMA_VERSION with -dev and carries that into
 		# the installed llama.pc and llama-config-version.cmake; docs/release.md
 		# requires OFF when building from a release tag.
