@@ -51,7 +51,7 @@ RDEPEND="
 	dev-libs/libkqueue:=
 	dev-libs/openssl:0=
 	>=dev-libs/rapidjson-1.1.0_p20250205
-	dev-libs/zeek-caf:=
+	~dev-libs/zeek-caf-0.18.5_p20250723:=
 	net-dns/c-ares:=
 	>=net-libs/IXWebSocket-12.0.1_p20260910:=
 	net-libs/libpcap:=
