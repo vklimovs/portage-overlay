@@ -6,8 +6,8 @@ to ${WORKDIR}/${P}_build) the common prefix falls on the "_build" boundary, so
 absolute build paths leak and the diff fails. Substitute the resolved $BUILD and
 $DIST absolute paths directly instead; this works in- and out-of-source.
 
---- a/testing/btest/coverage/bare-load-baseline.test	2026-07-17 04:09:39.322569472 -0000
-+++ b/testing/btest/coverage/bare-load-baseline.test	2026-07-17 04:10:01.318685101 -0000
+--- a/testing/btest/coverage/bare-load-baseline.test
++++ b/testing/btest/coverage/bare-load-baseline.test
 @@ -13,8 +13,6 @@
  # @TEST-REQUIRES: ! have-spicy-ssl  # Enabling Spicy SSL changes the loaded scripts, skip in this case
  # @TEST-EXEC: zeek -b misc/loaded-scripts
@@ -16,10 +16,10 @@ $DIST absolute paths directly instead; this works in- and out-of-source.
 -# @TEST-EXEC: (cd $BUILD && pwd) | sed "s#^$(cd $DIST && pwd)/##" >buildprefix
 -# @TEST-EXEC: cat loaded_scripts.log | sed "s#`cat buildprefix`#build#g" | sed "s#`cat prefix`##g" >prefix_canonified_loaded_scripts.log
 +# @TEST-EXEC: cat loaded_scripts.log | sed "s#$(readlink -f $BUILD)#build#g" | sed "s#$(readlink -f $DIST)/##g" >prefix_canonified_loaded_scripts.log
- # @TEST-EXEC: grep -E -v 'Zeek_(AF_Packet|JavaScript)' prefix_canonified_loaded_scripts.log > canonified_loaded_scripts.log
+ # @TEST-EXEC: grep -E -v 'Zeek_(AF_Packet|JavaScript|PacketSourceUDP)' prefix_canonified_loaded_scripts.log > canonified_loaded_scripts.log
  # @TEST-EXEC: btest-diff canonified_loaded_scripts.log
---- a/testing/btest/coverage/default-load-baseline.test	2026-07-17 04:09:39.325310556 -0000
-+++ b/testing/btest/coverage/default-load-baseline.test	2026-07-17 04:10:15.115170694 -0000
+--- a/testing/btest/coverage/default-load-baseline.test
++++ b/testing/btest/coverage/default-load-baseline.test
 @@ -12,8 +12,6 @@
  # @TEST-REQUIRES: ! have-spicy-ssl  # Enabling Spicy SSL changes the loaded scripts, skip in this case
  # @TEST-EXEC: zeek misc/loaded-scripts
@@ -28,5 +28,5 @@ $DIST absolute paths directly instead; this works in- and out-of-source.
 -# @TEST-EXEC: (cd $BUILD && pwd) | sed "s#^$(cd $DIST && pwd)/##" >buildprefix
 -# @TEST-EXEC: cat loaded_scripts.log | sed "s#`cat buildprefix`#build#g" | sed "s#`cat prefix`##g" >prefix_canonified_loaded_scripts.log
 +# @TEST-EXEC: cat loaded_scripts.log | sed "s#$(readlink -f $BUILD)#build#g" | sed "s#$(readlink -f $DIST)/##g" >prefix_canonified_loaded_scripts.log
- # @TEST-EXEC: grep -E -v 'Zeek_(AF_Packet|JavaScript)' prefix_canonified_loaded_scripts.log > canonified_loaded_scripts.log
+ # @TEST-EXEC: grep -E -v 'Zeek_(AF_Packet|JavaScript|PacketSourceUDP)' prefix_canonified_loaded_scripts.log > canonified_loaded_scripts.log
  # @TEST-EXEC: btest-diff canonified_loaded_scripts.log

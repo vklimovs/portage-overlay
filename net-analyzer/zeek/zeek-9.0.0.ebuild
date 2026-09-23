@@ -38,9 +38,8 @@ fi
 LICENSE="BSD BSD-4 CC-BY-4.0 ISC UoI-NCSA
 	spicy? ( BSD-2 Boost-1.0 MIT )"
 SLOT="0"
-# nodejs/javascript is auto-detected upstream so defaults off here.
 IUSE="+btest cron curl debug geoip2 ipsumdump jemalloc kerberos
-	nodejs +python redis sendmail +spicy static-libs systemd tcmalloc +tools
+	+python redis sendmail +spicy static-libs systemd tcmalloc +tools
 	+zeek-client +zeekctl +zkg +zeromq"
 
 RDEPEND="
@@ -52,11 +51,12 @@ RDEPEND="
 	dev-libs/libkqueue:=
 	dev-libs/openssl:0=
 	>=dev-libs/rapidjson-1.1.0_p20250205
-	dev-libs/zeek-caf:=
+	~dev-libs/zeek-caf-0.18.5_p20260714:=
 	net-dns/c-ares:=
 	>=net-libs/IXWebSocket-12.0.1_p20260910:=
 	net-libs/LightPcapNg:=
 	net-libs/libpcap:=
+	sys-libs/liburing:=
 	virtual/zlib:0=
 	www-servers/civetweb[cxx]
 	cron? ( virtual/cron )
@@ -65,7 +65,6 @@ RDEPEND="
 	ipsumdump? ( net-analyzer/ipsumdump )
 	jemalloc? ( dev-libs/jemalloc:0= )
 	kerberos? ( virtual/krb5 )
-	nodejs? ( net-libs/nodejs:= )
 	python? ( ${PYTHON_DEPS} )
 	redis? ( dev-libs/hiredis:= )
 	sendmail? ( virtual/mta )
@@ -124,12 +123,11 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-8.0.9-do-not-create-run-dirs-at-install-time.patch
 	"${FILESDIR}"/${PN}-8.0.9-do-not-remove-stale-scripts-at-install-time.patch
 	"${FILESDIR}"/${PN}-8.0.9-from-json-full-precision.patch
-	# Tracks sqlite's float rendering (>=3.41 is shortest-round-trip); re-run
-	# btest -U if it shifts again.
-	"${FILESDIR}"/${PN}-8.0.9-sqlite-wikipedia-baseline.patch
-	# Rebased for 8.2.1's restructured loaded-scripts canonifier, so it is not
-	# shared with the 8.0.x line; unchanged since, hence the 8.2.1 filename.
-	"${FILESDIR}"/${PN}-8.2.1-coverage-load-baseline-canonifier.patch
+	# Regenerated against 9.0.0's load-baseline tests, so it is not shared with
+	# the 8.0.x line.
+	"${FILESDIR}"/${PN}-9.0.0-coverage-load-baseline-canonifier.patch
+	# Unbundling nlohmann_json stops Spicy installing its headers.
+	"${FILESDIR}"/${PN}-9.0.0-include-directory-baseline.patch
 )
 
 if [[ ! ${PV} == 9999 ]]; then
@@ -184,6 +182,7 @@ src_prepare() {
 		[auxil/spicy]=1
 		[auxil/zeek-aux]=1
 		[auxil/zeek-client]=1
+		[auxil/zeek-packet-source-udp]=1
 		[auxil/zeekctl]=1
 		[auxil/zeekjs]=1
 		[auxil/zeekctl/auxil/capstats]=1
@@ -223,14 +222,8 @@ src_prepare() {
 		[auxil/spicy/3rdparty/CMakeLists.txt]=1
 		[auxil/spicy/3rdparty/LICENSE.3rdparty]=1
 		[auxil/spicy/3rdparty/justrx/3rdparty/CMakeLists.txt]=1
-		[auxil/spicy/tests/Scripts/3rdparty/checkbashisms.pl]=1
 		[src/cluster/websocket/auxil/CMakeLists.txt]=1
 		[auxil/spicy/hilti/runtime/include/3rdparty/.clang-tidy]=1
-		[auxil/spicy/hilti/runtime/include/3rdparty/ArticleEnumClass-v2]=1
-		[auxil/spicy/hilti/runtime/include/3rdparty/SafeInt]=1
-		[auxil/spicy/hilti/runtime/include/3rdparty/tinyformat]=1
-		[auxil/spicy/hilti/runtime/include/3rdparty/any]=1  # dangling symlink; linb::any not shipped
-		[auxil/spicy/hilti/runtime/include/3rdparty/ghc]=1  # dangling symlink; ghc::filesystem not shipped
 	)
 
 	local -A keep_seen=()
@@ -275,12 +268,13 @@ src_configure() {
 		-DINSTALL_ZKG=$(usex zkg)
 		-DINSTALL_ZEEK_CLIENT=$(usex zeek-client)
 		-DDISABLE_PYTHON_BINDINGS=$(usex python no yes)
-		-DDISABLE_JAVASCRIPT=$(usex nodejs no yes)
-		# Native Linux capture backend; pinned on rather than left to the default.
-		-DDISABLE_AF_PACKET=no
+		# ZeekJS needs libnode, which ::gentoo's nodejs does not build.
+		-DDISABLE_JAVASCRIPT=yes
+		# Defaults on for Linux; pinned rather than left to the platform default.
+		-DENABLE_PACKET_SOURCE_UDP=yes
 		-DDISABLE_SPICY=$(usex spicy no yes)
-		# Never build Spicy's benchmarks; also lets src_prepare drop the
-		# vendored Google Benchmark tree.
+		# Defaults ON, but the release tarball ships no benchmark/ tree for
+		# Spicy's add_subdirectory() to find.
 		-DSPICY_ENABLE_BENCHMARKS=no
 		-DENABLE_CLUSTER_BACKEND_ZEROMQ=$(usex zeromq)
 		# The Redis storage backend otherwise auto-enables whenever hiredis is
