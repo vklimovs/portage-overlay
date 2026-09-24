@@ -1,0 +1,7 @@
+# shellcheck shell=sh disable=SC2034
+
+#cfgfile="/etc/dnscollector/config.yml"
+
+# Capabilities for the wire sniffers.
+#capabilities="^cap_net_raw,^cap_net_admin"                  # afpacket-sniffer
+#capabilities="^cap_net_raw,^cap_sys_resource,^cap_perfmon"  # xdp-sniffer

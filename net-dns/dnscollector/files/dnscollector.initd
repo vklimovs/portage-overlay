@@ -1,0 +1,42 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+# shellcheck shell=sh disable=SC2034
+
+description="DNS telemetry collection pipeline"
+description_reload="Reload the pipeline configuration"
+extra_started_commands="reload"
+
+: "${cfgfile:=/etc/dnscollector/config.yml}"
+
+command="/usr/bin/dnscollector"
+command_args="-config ${cfgfile}"
+command_background="true"
+command_user="dnscollector:dnscollector"
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+# Without this a collector that dies in listen() is reported as started.
+start_stop_daemon_args="--wait 500"
+# Shutdown flushes buffers under a 10s timeout of its own.
+retry="SIGTERM/15/SIGKILL/5"
+
+depend() {
+	use net
+}
+
+checkconfig() {
+	start-stop-daemon --start --user "${command_user}" --exec "${command}" \
+		-- -config "${cfgfile}" -test-config
+}
+
+start_pre() {
+	checkconfig || return 1
+}
+
+reload() {
+	checkconfig || return 1
+	ebegin "Reloading ${RC_SVCNAME}"
+	start-stop-daemon --signal HUP --pidfile "${pidfile}"
+	eend $?
+}
