@@ -39,7 +39,10 @@ RDEPEND="
 "
 BDEPEND=">=dev-lang/go-1.26.5"
 
-DOCS=( README.md docs/configuration.md docs/formats.md docs/pipelines.md )
+DOCS=( README.md
+	docs/{collectors,configuration,formats,loggers,pipelines,transformers}.md
+	docs/{collectors,loggers,transformers}
+)
 
 src_compile() {
 	ego build \
