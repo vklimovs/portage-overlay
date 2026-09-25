@@ -17,7 +17,8 @@ pidfile="/run/${RC_SVCNAME}.pid"
 output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
 error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
 # Without this a collector that dies in listen() is reported as started.
-start_stop_daemon_args="--wait 500"
+# The umask sets the mode of the sockets the collector creates.
+start_stop_daemon_args="--wait 500 --umask 0007"
 # Shutdown flushes buffers under a 10s timeout of its own.
 retry="SIGTERM/15/SIGKILL/5"
 
@@ -31,6 +32,7 @@ checkconfig() {
 }
 
 start_pre() {
+	checkpath -d -m 0750 -o "${command_user}" "/run/${RC_SVCNAME}" || return 1
 	checkconfig || return 1
 }
 
