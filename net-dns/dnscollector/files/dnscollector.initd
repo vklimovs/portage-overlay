@@ -4,7 +4,9 @@
 # shellcheck shell=sh disable=SC2034
 
 description="DNS telemetry collection pipeline"
+description_checkconfig="Validate the pipeline configuration"
 description_reload="Reload the pipeline configuration"
+extra_commands="checkconfig"
 extra_started_commands="reload"
 
 : "${cfgfile:=/etc/dnscollector/config.yml}"
@@ -16,27 +18,41 @@ command_user="dnscollector:dnscollector"
 pidfile="/run/${RC_SVCNAME}.pid"
 output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
 error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+# Nothing the collector writes should be world-readable.
+umask="0007"
 # Without this a collector that dies in listen() is reported as started.
-# The umask sets the mode of the sockets the collector creates.
-start_stop_daemon_args="--wait 500 --umask 0007"
+start_stop_daemon_args="--wait 500"
 # Shutdown flushes buffers under a 10s timeout of its own.
 retry="SIGTERM/15/SIGKILL/5"
 
 depend() {
-	use net
+	use net logger
 }
 
 checkconfig() {
-	start-stop-daemon --start --user "${command_user}" --exec "${command}" \
-		-- -config "${cfgfile}" -test-config
+	ebegin "Validating ${cfgfile}"
+	# -test-config opens the loggers, so their files land as whoever runs it.
+	out="$(umask "${umask}"; runuser -u "${command_user%%:*}" -- \
+		"${command}" -config "${cfgfile}" -test-config 2>&1)"
+	eend $? "${out}"
 }
 
 start_pre() {
 	checkpath -d -m 0750 -o "${command_user}" "/run/${RC_SVCNAME}" || return 1
-	checkconfig || return 1
+	# On a restart stop_pre checks first, so a failure keeps the old collector.
+	if [ "${RC_CMD}" != "restart" ]; then
+		checkconfig || return 1
+	fi
+}
+
+stop_pre() {
+	if [ "${RC_CMD}" = "restart" ]; then
+		checkconfig || return 1
+	fi
 }
 
 reload() {
+	# A config it cannot load makes the collector exit on SIGHUP.
 	checkconfig || return 1
 	ebegin "Reloading ${RC_SVCNAME}"
 	start-stop-daemon --signal HUP --pidfile "${pidfile}"

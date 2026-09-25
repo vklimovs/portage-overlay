@@ -28,11 +28,15 @@ LICENSE+=" AGPL-3 Apache-2.0 BSD BSD-2 EPL-2.0 ISC MPL-2.0"
 SLOT="0"
 KEYWORDS="~amd64"
 
-RDEPEND="
+DEPEND="
 	acct-group/${PN}
 	acct-user/${PN}
 "
-DEPEND="${RDEPEND}"
+# runuser, which the init script validates the config with, needs util-linux[pam].
+RDEPEND="
+	${DEPEND}
+	sys-apps/util-linux[pam]
+"
 BDEPEND=">=dev-lang/go-1.26.5"
 
 DOCS=( README.md docs/configuration.md docs/formats.md docs/pipelines.md )
