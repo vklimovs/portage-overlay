@@ -20,7 +20,10 @@ DEPEND="
 	dev-libs/libnl:3
 "
 
-RDEPEND="${DEPEND}"
+RDEPEND="
+	${DEPEND}
+	net-misc/passt
+"
 
 BDEPEND="
 	dev-libs/protobuf
