@@ -38,6 +38,7 @@ src_compile() {
 
 src_install() {
 	dobin nsjail
+	doman nsjail.1
 	dodoc README.md
 	dodoc -r configs
 }
