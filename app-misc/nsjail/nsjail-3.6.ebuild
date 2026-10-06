@@ -14,6 +14,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 DEPEND="
+	dev-cpp/abseil-cpp:=
 	dev-libs/kafel:=
 	dev-libs/protobuf:=
 	dev-libs/libnl:3
