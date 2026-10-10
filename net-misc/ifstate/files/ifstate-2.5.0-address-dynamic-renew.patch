@@ -1,0 +1,97 @@
+From 8f200a7291c0400c288ba6745bb78bbb80a9d0ed Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Fri, 9 Oct 2026 16:38:04 -0700
+Subject: [PATCH] address: keep renewed dynamic addresses (regression by
+ 0b95723f4)
+
+---
+ src/libifstate/address/__init__.py   | 13 +++----
+ src/libifstate/tests/test_address.py | 52 ++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+), 9 deletions(-)
+ create mode 100644 src/libifstate/tests/test_address.py
+
+diff --git a/src/libifstate/address/__init__.py b/src/libifstate/address/__init__.py
+index c002e1b..d7689b6 100644
+--- a/src/libifstate/address/__init__.py
++++ b/src/libifstate/address/__init__.py
+@@ -185,15 +185,10 @@ class Addresses:
+                     ignore = True
+                     break
+ 
+-            if (
+-                ip in addr_renew
+-                or not ignore
+-                and (
+-                    not ign_dynamic
+-                    or addr["ifa_flags"]
+-                    & (IFA_F_PERMANENT | IFA_F_STABLE_PRIVACY)
+-                    == IFA_F_PERMANENT
+-                )
++            if (ip in addr_renew or not ignore) and (
++                not ign_dynamic
++                or addr["ifa_flags"] & (IFA_F_PERMANENT | IFA_F_STABLE_PRIVACY)
++                == IFA_F_PERMANENT
+             ):
+                 logger.log_del("addresses", f"- {ip.with_prefixlen}")
+                 try:
+diff --git a/src/libifstate/tests/test_address.py b/src/libifstate/tests/test_address.py
+new file mode 100644
+index 0000000..104f8ef
+--- /dev/null
++++ b/src/libifstate/tests/test_address.py
+@@ -0,0 +1,52 @@
++from socket import AF_INET, AF_INET6
++from unittest.mock import Mock
++
++from pyroute2.netlink.rtnl.ifaddrmsg import (
++    IFA_F_DADFAILED,
++    IFA_F_PERMANENT,
++    ifaddrmsg,
++)
++
++from libifstate.address import Addresses
++
++
++def kernel_addr(address, flags):
++    ip, prefixlen = address.split("/")
++    msg = ifaddrmsg()
++    msg["family"] = AF_INET6 if ":" in ip else AF_INET
++    msg["prefixlen"] = int(prefixlen)
++    msg["scope"] = 0
++    msg["attrs"] = [("IFA_ADDRESS", ip), ("IFA_FLAGS", flags)]
++    return msg
++
++
++def deleted(config, kernel, ign_dynamic=True):
++    netns = Mock()
++    netns.ipr.link_lookup.return_value = [2]
++    netns.ipr.get_addr.return_value = [kernel_addr(*k) for k in kernel]
++
++    Addresses(netns, "eth0", config).apply([], ign_dynamic, True)
++
++    return {
++        f"{call.kwargs['address']}/{call.kwargs['prefixlen']}"
++        for call in netns.ipr.addr.call_args_list
++        if call.args[0] == "del"
++    }
++
++
++def test_addresses_renew_dynamic():
++    # dynamic addresses belong to someone else, even if renewed
++    assert deleted(["192.0.2.5/24"], [("192.0.2.5/32", 0)]) == set()
++    assert deleted([], [("2001:db8::5/64", IFA_F_DADFAILED)]) == set()
++
++    # unless dynamic addresses are not ignored
++    assert deleted(
++        ["192.0.2.5/24"], [("192.0.2.5/32", 0)], ign_dynamic=False
++    ) == {"192.0.2.5/32"}
++
++    # permanent addresses are renewed or removed
++    assert deleted(
++        ["2001:db8::5/64"],
++        [("2001:db8::5/64", IFA_F_PERMANENT | IFA_F_DADFAILED)],
++    ) == {"2001:db8::5/64"}
++    assert deleted([], [("192.0.2.6/24", IFA_F_PERMANENT)]) == {"192.0.2.6/24"}
+-- 
+2.55.0
+

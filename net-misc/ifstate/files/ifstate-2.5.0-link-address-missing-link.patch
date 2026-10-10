@@ -1,0 +1,95 @@
+From 196b911288b057fe6788a84f850babde5022714d Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Fri, 9 Oct 2026 18:01:52 -0700
+Subject: [PATCH] link: fix crash on a missing link with inherited vlan or
+ macsec address
+
+---
+ src/libifstate/link/macsec.py         |  4 ++++
+ src/libifstate/link/vlan.py           |  4 ++++
+ tests/data/link_addresses_missing.yml | 22 ++++++++++++++++++++++
+ tests/test_link_addresses.py          | 12 ++++++++++++
+ 4 files changed, 42 insertions(+)
+ create mode 100644 tests/data/link_addresses_missing.yml
+
+diff --git a/src/libifstate/link/macsec.py b/src/libifstate/link/macsec.py
+index ac362b9..6e494a5 100644
+--- a/src/libifstate/link/macsec.py
++++ b/src/libifstate/link/macsec.py
+@@ -26,6 +26,10 @@ class MacsecLink(Link):
+         if "link_netnsid" in self.settings:
+             return None
+ 
++        # the link was not found
++        if "link" not in self.settings:
++            return None
++
+         link_item = self.ifstate.link_registry.get_link(
+             index=self.settings["link"], netns=self.netns.netns
+         )
+diff --git a/src/libifstate/link/vlan.py b/src/libifstate/link/vlan.py
+index abe997e..348910c 100644
+--- a/src/libifstate/link/vlan.py
++++ b/src/libifstate/link/vlan.py
+@@ -75,6 +75,10 @@ class VlanLink(Link):
+             if "link_netnsid" in self.settings:
+                 return None
+ 
++            # the link was not found
++            if "link" not in self.settings:
++                return None
++
+             link_item = self.ifstate.link_registry.get_link(
+                 index=self.settings["link"], netns=self.netns.netns
+             )
+diff --git a/tests/data/link_addresses_missing.yml b/tests/data/link_addresses_missing.yml
+new file mode 100644
+index 0000000..a318520
+--- /dev/null
++++ b/tests/data/link_addresses_missing.yml
+@@ -0,0 +1,22 @@
++# yaml-language-server: $schema=../../schema/2/ifstate.conf.schema.json
++
++parameters:
++  machine_id: foobar42
++  link_address_default:
++    macsec: inherited
++    vlan: inherited
++
++interfaces:
++  # the link interface does not exist
++  macsec0:
++    link:
++      state: up
++      kind: macsec
++      link: eth0
++
++  vlan42:
++    link:
++      state: up
++      kind: vlan
++      vlan_id: 42
++      link: eth0
+diff --git a/tests/test_link_addresses.py b/tests/test_link_addresses.py
+index bf60673..6932eeb 100644
+--- a/tests/test_link_addresses.py
++++ b/tests/test_link_addresses.py
+@@ -31,3 +31,15 @@ def test_link_addresses_generated():
+         "generated",
+         {"macsec0": "7e:5c:e5:37:dd:1c", "vlan42": "56:ea:5b:e0:b2:66"},
+     )
++
++
++def test_link_addresses_missing_link():
++    config = resources.files(tests).joinpath(
++        "./data/link_addresses_missing.yml"
++    )
++
++    # a missing link interface must not abort the run
++    result = tests.apply(config)
++
++    assert "macsec0" not in result.link
++    assert "vlan42" not in result.link
+-- 
+2.55.0
+

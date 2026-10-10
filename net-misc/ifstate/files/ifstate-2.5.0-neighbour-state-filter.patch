@@ -1,0 +1,91 @@
+From 2b378ab0a53e40656776ea304243e302820fd81f Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sat, 10 Oct 2026 08:51:05 -0700
+Subject: [PATCH] neighbour: fix lookup of permanent entries without
+ libifstate-rs (regression by 3574a577c)
+
+---
+ src/libifstate/neighbour/__init__.py |  2 +-
+ tests/data/neighbours1.yml           | 14 ++++++++++++++
+ tests/data/neighbours2.yml           | 12 ++++++++++++
+ tests/test_neighbours.py             | 15 +++++++++++++++
+ 4 files changed, 42 insertions(+), 1 deletion(-)
+ create mode 100644 tests/data/neighbours1.yml
+ create mode 100644 tests/data/neighbours2.yml
+ create mode 100644 tests/test_neighbours.py
+
+diff --git a/src/libifstate/neighbour/__init__.py b/src/libifstate/neighbour/__init__.py
+index 775e94d..6a04e78 100644
+--- a/src/libifstate/neighbour/__init__.py
++++ b/src/libifstate/neighbour/__init__.py
+@@ -26,7 +26,7 @@ class Neighbours:
+                 yield msg
+         else:
+             yield from self.netns.ipr.get_neighbours(
+-                ifindex=ifindex, state_mask=NUD_PERMANENT
++                ifindex=ifindex, state=NUD_PERMANENT
+             )
+ 
+     def apply(self, do_apply):
+diff --git a/tests/data/neighbours1.yml b/tests/data/neighbours1.yml
+new file mode 100644
+index 0000000..d858f7e
+--- /dev/null
++++ b/tests/data/neighbours1.yml
+@@ -0,0 +1,14 @@
++# yaml-language-server: $schema=../../schema/2/ifstate.conf.schema.json
++
++interfaces:
++  br0:
++    addresses:
++      - 192.0.2.1/24
++    link:
++      state: up
++      kind: bridge
++    neighbours:
++      - dst: 192.0.2.10
++        lladdr: 02:00:00:00:00:10
++      - dst: 192.0.2.11
++        lladdr: 02:00:00:00:00:11
+diff --git a/tests/data/neighbours2.yml b/tests/data/neighbours2.yml
+new file mode 100644
+index 0000000..1639373
+--- /dev/null
++++ b/tests/data/neighbours2.yml
+@@ -0,0 +1,12 @@
++# yaml-language-server: $schema=../../schema/2/ifstate.conf.schema.json
++
++interfaces:
++  br0:
++    addresses:
++      - 192.0.2.1/24
++    link:
++      state: up
++      kind: bridge
++    neighbours:
++      - dst: 192.0.2.10
++        lladdr: 02:00:00:00:00:10
+diff --git a/tests/test_neighbours.py b/tests/test_neighbours.py
+new file mode 100644
+index 0000000..16d8f90
+--- /dev/null
++++ b/tests/test_neighbours.py
+@@ -0,0 +1,15 @@
++from importlib import resources
++
++import tests
++
++
++def test_neighbours():
++    config1 = resources.files(tests).joinpath("./data/neighbours1.yml")
++    config2 = resources.files(tests).joinpath("./data/neighbours2.yml")
++
++    result = tests.apply(config1, config2)
++
++    neighbours = result.neighbour["br0"]
++    assert set(neighbours) == {"192.0.2.10"}
++    assert neighbours["192.0.2.10"]["lladdr"] == "02:00:00:00:00:10"
++    assert "PERMANENT" in neighbours["192.0.2.10"]["state"]
+-- 
+2.55.0
+

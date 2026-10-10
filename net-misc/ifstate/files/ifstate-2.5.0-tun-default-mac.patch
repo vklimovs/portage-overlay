@@ -1,0 +1,84 @@
+From 2c51c4426457742f75e83cce74afc89254fed56d Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Fri, 9 Oct 2026 16:38:04 -0700
+Subject: [PATCH] link: do not assign default MAC to layer-3 TUN interfaces
+ (regression by e0122626f)
+
+---
+ src/libifstate/link/tun.py |  5 +++++
+ tests/data/link_tun.yml    | 19 +++++++++++++++++++
+ tests/test_link_tun.py     | 20 ++++++++++++++++++++
+ 3 files changed, 44 insertions(+)
+ create mode 100644 tests/data/link_tun.yml
+ create mode 100644 tests/test_link_tun.py
+
+diff --git a/src/libifstate/link/tun.py b/src/libifstate/link/tun.py
+index 7c86c79..3a264f9 100644
+--- a/src/libifstate/link/tun.py
++++ b/src/libifstate/link/tun.py
+@@ -46,6 +46,11 @@ class TunLink(Link):
+         )
+         self.cap_create = bool(link.get("tun_persist"))
+ 
++    def has_link_address_default(self: object) -> bool:
++        # layer-3 TUN interfaces have no link layer address
++        tun_type = self.settings["tun_type"]
++        return self.attr_value_maps["tun_type"].get(tun_type) != "tun"
++
+     def create(self, do_apply, sysctl, excpts, oper="add"):
+         if not self.cap_create:
+             logger.warning(
+diff --git a/tests/data/link_tun.yml b/tests/data/link_tun.yml
+new file mode 100644
+index 0000000..dbf1f04
+--- /dev/null
++++ b/tests/data/link_tun.yml
+@@ -0,0 +1,19 @@
++# yaml-language-server: $schema=../../schema/2/ifstate.conf.schema.json
++
++parameters:
++  machine_id: foobar42
++
++interfaces:
++  tun0:
++    link:
++      state: up
++      kind: tun
++      tun_type: tun
++      tun_persist: true
++
++  tap0:
++    link:
++      state: up
++      kind: tun
++      tun_type: tap
++      tun_persist: true
+diff --git a/tests/test_link_tun.py b/tests/test_link_tun.py
+new file mode 100644
+index 0000000..313766b
+--- /dev/null
++++ b/tests/test_link_tun.py
+@@ -0,0 +1,20 @@
++from importlib import resources
++
++import tests
++
++
++def test_link_tun():
++    config = resources.files(tests).joinpath("./data/link_tun.yml")
++
++    once = tests.apply(config)
++    twice = tests.apply(config, config)
++
++    # reapplying must not recreate the links
++    for ifname in ("tun0", "tap0"):
++        assert (
++            twice.get_link(ifname)["ifindex"]
++            == once.get_link(ifname)["ifindex"]
++        ), f"{ifname} was recreated"
++
++    # layer-2 TAP interfaces still get a reproducible address
++    assert twice.get_link("tap0")["address"] == "5e:2d:b3:92:b8:58"
+-- 
+2.55.0
+
