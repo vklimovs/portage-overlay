@@ -94,6 +94,7 @@ is the reference implementation.
 | Snapshots | Real PVs — `_p<YYYYMMDD>` at a pinned commit, `_pre<n>` for upstream build numbers. Not `-9999`. |
 | `metadata.xml` | vklimovs as sole maintainer, and an `<upstream><remote-id>` on everything with an upstream release axis (all but `acct-*` and `sec-keys/openpgp-keys-elastic`) — that is what `check_versions.py` walks. |
 | Build-time network | Never. Disable the feature first (`-DLLAMA_BUILD_UI=OFF`) and reach for a vendor tarball only if it is load-bearing. |
+| Line length | 80 columns in ebuilds, support files, docs and commit messages (subjects within 72). A URL token that cannot be split is the one exception. |
 
 ### Vendor tarballs
 
@@ -132,6 +133,12 @@ pkgdev commit -s && pkgdev push --pull
 read the VDB and compare built images, so they belong wherever the merge
 itself runs rather than alongside the repo checkout. Regenerating the
 composer and librenms vendor tarballs needs a PHP toolchain on hand.
+
+Full merges and runtime checks happen in the `gentoo-jail` sandbox, whose
+README covers the mechanics. Its seccomp policy kills a process that makes an
+unlisted syscall, and the only trace is an `audit: type=1326 ... syscall=N`
+line in the host's `dmesg`, which needs root there. A service that dies in
+the jail without a message is checked there first.
 
 `metadata/pkgcheck.conf` turns on URL checks (`net`, `timeout = 30`) and the
 two disables explained above, so `pkgcheck scan` needs no flags. It exits 0
