@@ -8,19 +8,15 @@ After=network-online.target
 Type=simple
 User=kibana
 Group=kibana
+PrivateTmp=true
 
 Environment=KBN_HOME=/opt/kibana
 Environment=KBN_PATH_CONF=/etc/kibana
-
-EnvironmentFile=-/etc/default/kibana
-EnvironmentFile=-/etc/sysconfig/kibana
 
 ExecStart=/opt/kibana/bin/kibana
 
 Restart=on-failure
 RestartSec=3
-TimeoutStopSec=120
-LimitNOFILE=65536
 
 StartLimitBurst=3
 StartLimitInterval=60
@@ -29,33 +25,6 @@ WorkingDirectory=/opt/kibana
 
 StandardOutput=journal
 StandardError=inherit
-
-UMask=0027
-NoNewPrivileges=true
-CapabilityBoundingSet=
-AmbientCapabilities=
-LockPersonality=true
-RestrictRealtime=true
-RestrictSUIDSGID=true
-RestrictNamespaces=true
-RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
-SystemCallArchitectures=native
-SystemCallFilter=@system-service
-SystemCallFilter=~@privileged @resources
-ProtectSystem=strict
-ProtectHome=true
-ProtectClock=true
-ProtectHostname=true
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectKernelLogs=true
-ProtectControlGroups=true
-ProtectProc=invisible
-ProcSubset=pid
-PrivateTmp=true
-PrivateIPC=true
-PrivateMounts=true
-ReadWritePaths=/var/lib/kibana /var/log/kibana
 
 [Install]
 WantedBy=multi-user.target

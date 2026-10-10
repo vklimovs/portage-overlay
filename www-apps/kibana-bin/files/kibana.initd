@@ -20,7 +20,7 @@ retry="60"
 
 depend() {
 	use net dns
-	after clock
+	after clock elasticsearch
 }
 
 start_pre() {
