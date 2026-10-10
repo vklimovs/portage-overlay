@@ -2,15 +2,38 @@
 # Copyright 2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-name=filebeat
+FILEBEAT_USER="${FILEBEAT_USER:-root}"
+FILEBEAT_GROUP="${FILEBEAT_GROUP:-root}"
+FILEBEAT_CONFIG="${FILEBEAT_CONFIG:-/etc/filebeat/filebeat.yml}"
+FILEBEAT_DATADIR="${FILEBEAT_DATADIR:-/var/lib/filebeat}"
+FILEBEAT_LOGDIR="${FILEBEAT_LOGDIR:-/var/log/filebeat}"
+
 description="Lightweight log shipper for Logstash and Elasticsearch"
-command="/usr/bin/filebeat"
-command_args="run --path.config=/etc/filebeat --path.home=/var/lib/filebeat"
-command_background=true
+command="/usr/share/filebeat/bin/filebeat"
+command_args="-c ${FILEBEAT_CONFIG} --path.home /usr/share/filebeat
+	--path.config ${FILEBEAT_CONFIG%/*} --path.data ${FILEBEAT_DATADIR}
+	--path.logs ${FILEBEAT_LOGDIR} ${FILEBEAT_OPTS}"
+command_background="true"
+command_user="${FILEBEAT_USER}:${FILEBEAT_GROUP}"
+extra_commands="checkconfig"
 pidfile="/run/${RC_SVCNAME}.pid"
-retry="60"
+retry="TERM/5/KILL/5"
+umask=027
 
 depend() {
-	use net dns
-	after clock
+	use net
+	after elasticsearch
+}
+
+checkconfig() {
+	ebegin "Checking ${FILEBEAT_CONFIG}"
+	${command} ${command_args} test config >/dev/null
+	eend $? "Configuration error, run '${command} ${command_args} test config'"
+}
+
+start_pre() {
+	checkconfig || return 1
+
+	checkpath -d -o "${FILEBEAT_USER}:${FILEBEAT_GROUP}" -m 0750 \
+		"${FILEBEAT_DATADIR}" "${FILEBEAT_LOGDIR}"
 }

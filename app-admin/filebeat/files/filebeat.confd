@@ -1,0 +1,13 @@
+# Run filebeat under this user/group
+#FILEBEAT_USER="root"
+#FILEBEAT_GROUP="root"
+
+# Configuration file
+#FILEBEAT_CONFIG="/etc/filebeat/filebeat.yml"
+
+# Data and log directories
+#FILEBEAT_DATADIR="/var/lib/filebeat"
+#FILEBEAT_LOGDIR="/var/log/filebeat"
+
+# Additional arguments passed to filebeat
+#FILEBEAT_OPTS=""
