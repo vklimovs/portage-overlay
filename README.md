@@ -15,6 +15,10 @@ emaint sync -r vklimovs
 Packages are keyworded `~amd64` (some also `~x86` or `~arm64`), so most need
 an entry in `/etc/portage/package.accept_keywords`.
 
+On the hosts the ansible sync procedure manages, the repos.conf section is
+named `local` while `profiles/repo_name` says `vklimovs`. That is deliberate,
+so packages from here show up as `::local` in `emerge` output and in the VDB.
+
 ## How this overlay differs from ::gentoo
 
 Ebuilds follow the [devmanual](https://devmanual.gentoo.org/) and the
