@@ -172,8 +172,26 @@ provokes read timeouts from a throttling mirror.
   cron, systemd, and logrotate files; writable state moves to
   `/var/{lib,cache,log}/librenms` and `/etc/librenms`, bridged by relative
   in-tree symlinks.
-- **kibana-bin, filebeat** — held at the elasticsearch version ::gentoo
-  ships, with newer ebuilds masked so they don't shadow the pin.
+- **Elastic stack** — `elasticsearch`, `kibana-bin` and `filebeat` move in
+  lockstep, since Kibana requires the matching Elasticsearch. ::gentoo
+  last-rited kibana-bin and its accounts (removal 2026-11-06). The `-atom`
+  lines in `profiles/package.mask` lift that mask for this overlay's copies
+  and go once ::gentoo drops them. pkgcheck reports them as
+  `UnmatchedProfilePackageUnmask` because it checks only the overlay's own
+  profile stack, while Portage stacks a repo's `-atom` against its masters'
+  masks. Kibana's launcher exits unless `process.version` equals the
+  `engines.node` of its `package.json` exactly, hence the `~net-libs/nodejs`
+  pin. Elasticsearch bundles Intel MKL, so it needs `ISSL` accepted alongside
+  `Elastic-2.0`. `/etc/elasticsearch` is root:elasticsearch 2750 with 0660
+  files, and the root-run keystore step relies on that setgid bit to leave a
+  keystore the service can read. `emerge --config` runs upstream's security
+  auto-configuration. The `LICENSE` lists are derived, not copied: every
+  `node_modules/*/package.json` plus www-client/chromium's set for the bundled
+  headless_shell (kibana), the tarball's NOTICE and LICENSE files
+  (elasticsearch), and `go version -m` on the built binary mapped to the
+  vendored licence files (filebeat). Filebeat's test phase skips the udp
+  input, whose `TestInput` fails about one run in ten, and the journald
+  input, whose tests need journalctl.
 - **nsjail** — built against `dev-libs/kafel` (packaged here) instead of its
   bundled copy.
 - **llama-cpp** — `-DLLAMA_BUILD_UI=OFF -DLLAMA_USE_PREBUILT_UI=OFF`: the

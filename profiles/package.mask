@@ -2,11 +2,10 @@
 # which pins <14.2.5. Masked to avoid RedundantVersion on 14.2.4.
 >=dev-libs/reproc-14.2.5
 
-# Held at 9.3.1, ::gentoo's max elasticsearch. Masked to avoid RedundantVersion.
->=www-apps/kibana-bin-9.4.3
-
-# Held at 9.3.1, ::gentoo's max elasticsearch. Masked to avoid RedundantVersion.
->=app-admin/filebeat-9.4.3
+# ::gentoo last-rites these for removal. This overlay maintains them.
+-acct-group/kibana
+-acct-user/kibana
+-www-apps/kibana-bin
 
 # Upstream keeps the old LTS alive one feature release past a new one, so 8.0.10
 # stays the default until 9.1 ships.
