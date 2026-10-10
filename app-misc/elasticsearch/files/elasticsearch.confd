@@ -1,0 +1,29 @@
+# Elasticsearch home directory
+#ES_HOME=/usr/share/elasticsearch
+
+# Java home. By default a Java 21 VM is selected through java-config
+#ES_JAVA_HOME=
+
+# Elasticsearch data and log directories
+#DATA_DIR=/var/lib/elasticsearch/_default/data
+#LOG_DIR=/var/log/elasticsearch/_default
+
+# Additional JVM options
+#ES_JAVA_OPTS=
+
+# User and group the service runs as
+#ES_USER=elasticsearch
+#ES_GROUP=elasticsearch
+
+# Maximum number of virtual memory areas. Set empty to leave the kernel value
+# alone
+#MAX_MAP_COUNT=262144
+
+MAX_OPEN_FILES=65535
+
+# Set to "unlimited" with bootstrap.memory_lock: true in elasticsearch.yml
+MAX_LOCKED_MEMORY=unlimited
+
+MAX_THREADS=4096
+
+rc_ulimit="-l ${MAX_LOCKED_MEMORY} -n ${MAX_OPEN_FILES} -u ${MAX_THREADS}"

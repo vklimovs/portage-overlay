@@ -1,0 +1,22 @@
+Upstream defaults to the bundled JDK, which the ebuild removes.
+
+--- a/bin/elasticsearch-env
++++ b/bin/elasticsearch-env
+@@ -32,6 +32,17 @@
+ done
+ ES_HOME=`dirname "$ES_HOME"`
+ 
++# Select a JDK via java-config unless ES_JAVA_HOME is set
++if [ -z "$ES_JAVA_HOME" ]; then
++  GENTOO_VM=$(depend-java-query --get-vm virtual/jdk:21)
++  if [ -n "$GENTOO_VM" ]; then
++    ES_JAVA_HOME=$(java-config-2 --select-vm="$GENTOO_VM" --jdk-home)
++  else
++    echo "no Java 21 VM found. Install virtual/jdk:21 or set ES_JAVA_HOME" >&2
++    exit 1
++  fi
++fi
++
+ # now set the path to java
+ if [ ! -z "$ES_JAVA_HOME" ]; then
+   JAVA="$ES_JAVA_HOME/bin/java"
