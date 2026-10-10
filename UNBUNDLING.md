@@ -222,8 +222,8 @@ the ebuild change that motivates it.
 
 | Class | Trees |
 |-------|-------|
-| A | c-ares, expected-lite, rapidjson†, libkqueue†, sqlite, prometheus-cpp (+ civetweb), cppzmq, pybind11, nlohmann_json, libb64, utfcpp, doctest (btest-conditional) |
-| B | highwayhash, IXWebSocket, out_ptr, reproc, utf8proc (dropped from ::gentoo), LightPcapNg (9.0 only) |
+| A | c-ares, expected-lite, rapidjson†, libkqueue†, sqlite, prometheus-cpp (+ civetweb), cppzmq, pybind11, nlohmann_json, libb64, utfcpp, utf8proc, doctest (btest-conditional) |
+| B | highwayhash, IXWebSocket, out_ptr, reproc, LightPcapNg (9.0 only) |
 | C-lib | CAF → `dev-libs/zeek-caf` |
 | C-src | spicy fiber, justrx |
 | D | patricia, ConvertUTF, in_cksum, bsd-getopt-long, modp_numtoa, setsignal, strsep, zeek_inet_ntop, jthread/stop_token, SafeInt, tinyformat, ArticleEnumClass-v2, pathfind (8.0 only), libaca (9.0 only) |

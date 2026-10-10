@@ -70,7 +70,7 @@ RDEPEND="
 		dev-cpp/nlohmann_json
 		dev-libs/libb64:=
 		<dev-libs/reproc-14.2.5:=
-		dev-libs/utf8proc:=
+		dev-libs/libutf8proc:=
 		>=dev-libs/utfcpp-4
 	)
 	tcmalloc? ( dev-util/google-perftools:= )
