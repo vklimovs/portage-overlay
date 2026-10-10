@@ -176,8 +176,10 @@ provokes read timeouts from a throttling mirror.
   ships, with newer ebuilds masked so they don't shadow the pin.
 - **nsjail** — built against `dev-libs/kafel` (packaged here) instead of its
   bundled copy.
-- **llama-cpp** — `-DLLAMA_BUILD_UI=OFF`: the web UI build chain fetches from
-  npm and HuggingFace, which `network-sandbox` rightly blocks. Its four
+- **llama-cpp** — `-DLLAMA_BUILD_UI=OFF -DLLAMA_USE_PREBUILT_UI=OFF`: the
+  first skips the web UI's npm build, the second the HuggingFace download of
+  prebuilt assets that silently replaces it, so llama-server ships without
+  the UI rather than fetching at build time. Its four
   `UncheckableDep` results are a pkgcore limit, not a defect: `ROCM_USEDEP`
   expands to 21 conditional `amdgpu_targets_*(-)?` deps and pkgcheck bails on
   any transitive-USE atom past 16, gated on its own
