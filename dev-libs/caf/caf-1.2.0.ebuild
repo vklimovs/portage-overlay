@@ -12,7 +12,7 @@ SRC_URI="https://github.com/actor-framework/actor-framework/archive/${PV}.tar.gz
 S="${WORKDIR}/actor-framework-${PV}"
 
 LICENSE="BSD"
-SLOT="0/1.1.0"
+SLOT="0/1.2.0"
 KEYWORDS="~amd64 ~x86"
 IUSE="debug doc examples +openssl static-libs test"
 RESTRICT="!test? ( test )"

@@ -154,7 +154,7 @@ provokes read timeouts from a throttling mirror.
   vendor tarball — recipe in the ebuild header.
 - **zeek-caf is not caf.** `dev-libs/zeek-caf` is zeek's own CAF fork at
   0.18.5, pinned to the commit Broker expects; `dev-libs/caf` is upstream CAF
-  1.1.0. Same SONAME line, same install paths, so zeek-caf carries
+  1.2.0. Same SONAME line, same install paths, so zeek-caf carries
   `RDEPEND="!dev-libs/caf"` and the two cannot coexist. Not consolidation
   candidates. Each zeek line pins a different CAF commit, so there is one
   zeek-caf version per line and each zeek ebuild depends on its own with `~`.
