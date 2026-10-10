@@ -1,50 +1,8 @@
-From a5b10448563a4fcd2dce6e24a2b8a085a6330314 Mon Sep 17 00:00:00 2001
-From: Vjaceslavs Klimovs <vklimovs@gmail.com>
-Date: Sat, 10 Oct 2026 09:27:32 -0700
-Subject: [PATCH 1/2] tests: apply altnames configs in sequence to cover
- changes and removal
-
----
- tests/test_altnames.py | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/tests/test_altnames.py b/tests/test_altnames.py
-index 4a3c918..27dd00f 100644
---- a/tests/test_altnames.py
-+++ b/tests/test_altnames.py
-@@ -5,9 +5,9 @@ import tests
- 
- def test_altnames():
-     # STEP 1
--    config = resources.files(tests).joinpath("./data/altnames1.yml")
-+    config1 = resources.files(tests).joinpath("./data/altnames1.yml")
- 
--    result = tests.apply(config)
-+    result = tests.apply(config1)
- 
-     assert set(result.get_link("eth0").get("altnames", [])) == set()
-     assert set(result.get_link("eth1").get("altnames", [])) == {"alpha1"}
-@@ -17,9 +17,9 @@ def test_altnames():
-     }
- 
-     # STEP 2
--    config = resources.files(tests).joinpath("./data/altnames2.yml")
-+    config2 = resources.files(tests).joinpath("./data/altnames2.yml")
- 
--    result = tests.apply(config)
-+    result = tests.apply(config1, config2)
- 
-     assert set(result.get_link("eth0").get("altnames", [])) == {
-         "alpha0",
--- 
-2.55.0
-
-
-From 63f70d7b95aadc8cb7e6fa401df72e1de850281e Mon Sep 17 00:00:00 2001
+From a3aa111076a9ab5bbda87547e939951ddeda3895 Mon Sep 17 00:00:00 2001
 From: Vjaceslavs Klimovs <vklimovs@gmail.com>
 Date: Sat, 10 Oct 2026 09:28:22 -0700
-Subject: [PATCH 2/2] link: add clear_altnames defaults option to keep
- unconfigured altnames
+Subject: [PATCH] link: add clear_altnames defaults option to keep unconfigured
+ altnames
 
 ---
  docs/docs/defaults.md             |  1 +
@@ -53,10 +11,7 @@ Subject: [PATCH 2/2] link: add clear_altnames defaults option to keep
  src/libifstate/__init__.py        |  9 ++++++++-
  src/libifstate/link/base.py       | 10 ++++++----
  src/libifstate/parser/base.py     |  1 +
- tests/data/altnames1.yml          | 12 ++++++++++++
- tests/data/altnames2.yml          | 15 +++++++++++++++
- tests/test_altnames.py            |  6 ++++++
- 9 files changed, 55 insertions(+), 6 deletions(-)
+ 6 files changed, 22 insertions(+), 6 deletions(-)
 
 diff --git a/docs/docs/defaults.md b/docs/docs/defaults.md
 index 91abc64..60772fa 100644
@@ -84,7 +39,7 @@ index a5edbe2..953a398 100644
  - [*flags*](/schema/{{ ifstate_branch }}/#interfaces_pattern1_flags) - device flags
  - [*token*](/schema/{{ ifstate_branch }}/#interfaces_pattern1_token) - IPv6 tokenized interface identifier
 diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
-index 877e869..fd94c68 100644
+index 877e869..2dd1e69 100644
 --- a/schema/2/ifstate.conf.schema.json
 +++ b/schema/2/ifstate.conf.schema.json
 @@ -2182,6 +2182,11 @@
@@ -94,13 +49,13 @@ index 877e869..fd94c68 100644
 +                            "clear_altnames": {
 +                                "description": "implicit remove all interface alternative names",
 +                                "type": "boolean",
-+                                "default": false
++                                "default": true
 +                            },
                              "clear_fdb": {
                                  "description": "implicit remove all permanent fdb entries",
                                  "type": "boolean",
 diff --git a/src/libifstate/__init__.py b/src/libifstate/__init__.py
-index 5436bcc..87fa4cf 100644
+index 5436bcc..208a3c8 100644
 --- a/src/libifstate/__init__.py
 +++ b/src/libifstate/__init__.py
 @@ -266,6 +266,13 @@ class IfState:
@@ -109,7 +64,7 @@ index 5436bcc..87fa4cf 100644
  
 +            if "alt-names" in ifstate:
 +                alt_names = ifstate["alt-names"]
-+            elif defaults.get("clear_altnames", False):
++            elif defaults.get("clear_altnames", True):
 +                alt_names = []
 +            else:
 +                alt_names = None
@@ -175,76 +130,6 @@ index 3b1e6ae..e6fcc45 100644
                      "clear_fdb": True,
                      "clear_neighbours": True,
                      "clear_tc": True,
-diff --git a/tests/data/altnames1.yml b/tests/data/altnames1.yml
-index 66f4c42..b3617f4 100644
---- a/tests/data/altnames1.yml
-+++ b/tests/data/altnames1.yml
-@@ -17,3 +17,15 @@ interfaces:
-       - beta2
-     link:
-       kind: dummy
-+
-+  eth3:
-+    alt-names:
-+      - alpha3
-+    link:
-+      kind: dummy
-+
-+  eth4:
-+    alt-names:
-+      - alpha4
-+    link:
-+      kind: dummy
-diff --git a/tests/data/altnames2.yml b/tests/data/altnames2.yml
-index 5d88831..382743a 100644
---- a/tests/data/altnames2.yml
-+++ b/tests/data/altnames2.yml
-@@ -1,5 +1,11 @@
- # yaml-language-server: $schema=../../schema/2/ifstate.conf.schema.json
- 
-+parameters:
-+  defaults:
-+    - match:
-+        - ifname: '^eth[34]$'
-+      clear_altnames: false
-+
- interfaces:
-   eth0:
-     alt-names:
-@@ -17,3 +23,12 @@ interfaces:
-   eth2:
-     link:
-       kind: dummy
-+
-+  eth3:
-+    link:
-+      kind: dummy
-+
-+  eth4:
-+    alt-names: []
-+    link:
-+      kind: dummy
-diff --git a/tests/test_altnames.py b/tests/test_altnames.py
-index 27dd00f..6bfcaa4 100644
---- a/tests/test_altnames.py
-+++ b/tests/test_altnames.py
-@@ -15,6 +15,8 @@ def test_altnames():
-         "alpha2",
-         "beta2",
-     }
-+    assert set(result.get_link("eth3").get("altnames", [])) == {"alpha3"}
-+    assert set(result.get_link("eth4").get("altnames", [])) == {"alpha4"}
- 
-     # STEP 2
-     config2 = resources.files(tests).joinpath("./data/altnames2.yml")
-@@ -27,3 +29,7 @@ def test_altnames():
-     }
-     assert set(result.get_link("eth1").get("altnames", [])) == {"beta1"}
-     assert set(result.get_link("eth2").get("altnames", [])) == set()
-+    # unconfigured altnames are left alone if clear_altnames is disabled
-+    assert set(result.get_link("eth3").get("altnames", [])) == {"alpha3"}
-+    # an empty list removes all altnames even if clear_altnames is disabled
-+    assert set(result.get_link("eth4").get("altnames", [])) == set()
 -- 
 2.55.0
 

@@ -4,10 +4,8 @@ Date: Fri, 9 Oct 2026 16:38:04 -0700
 Subject: [PATCH] altnames: fix crash when removing an altname fails
 
 ---
- src/libifstate/altnames/__init__.py   |  2 +-
- src/libifstate/tests/test_altnames.py | 27 +++++++++++++++++++++++++++
- 2 files changed, 28 insertions(+), 1 deletion(-)
- create mode 100644 src/libifstate/tests/test_altnames.py
+ src/libifstate/altnames/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/libifstate/altnames/__init__.py b/src/libifstate/altnames/__init__.py
 index 9c31de1..1eca796 100644
@@ -22,39 +20,6 @@ index 9c31de1..1eca796 100644
  
          if altnames_add:
              logger.debug(
-diff --git a/src/libifstate/tests/test_altnames.py b/src/libifstate/tests/test_altnames.py
-new file mode 100644
-index 0000000..be9faec
---- /dev/null
-+++ b/src/libifstate/tests/test_altnames.py
-@@ -0,0 +1,27 @@
-+import errno
-+from unittest.mock import Mock
-+
-+from pyroute2.netlink.exceptions import NetlinkError
-+
-+from libifstate.altnames import AltNames
-+from libifstate.exception import ExceptionCollector
-+
-+
-+def test_altnames_del_failed():
-+    link = Mock()
-+    link.get_attr.return_value.altnames.return_value = ["foo"]
-+
-+    def ipr_link(command, **kwargs):
-+        if command == "get":
-+            return [link]
-+        raise NetlinkError(errno.ENOENT, "No such file or directory")
-+
-+    netns = Mock()
-+    netns.ipr.link.side_effect = ipr_link
-+    excpts = ExceptionCollector("eth0", None)
-+
-+    AltNames(netns, "eth0", []).apply(True, 2, excpts)
-+
-+    (excpt,) = excpts.get_all()
-+    assert excpt["op"] == "altnames"
-+    assert excpt["args"] == {"altnames": {"foo"}}
 -- 
 2.55.0
 

@@ -38,6 +38,8 @@ PATCHES=(
 	"${FILESDIR}/${P}-link-address-missing-link.patch"
 	"${FILESDIR}/${P}-neighbour-state-filter.patch"
 	"${FILESDIR}/${P}-clear-altnames.patch"
+	"${FILESDIR}/${P}-merge-defaults.patch"
+	"${FILESDIR}/${P}-link-state-ignore.patch"
 )
 
 DOCS=( README.md CHANGELOG.md )

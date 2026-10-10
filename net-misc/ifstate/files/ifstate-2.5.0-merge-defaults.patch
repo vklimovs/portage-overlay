@@ -1,0 +1,173 @@
+From 80f553f83168fd62089570c130537b493dae59d1 Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sat, 10 Oct 2026 13:38:00 -0700
+Subject: [PATCH] interfaces: merge all matching defaults entries
+
+---
+ docs/docs/defaults.md             | 13 ++++++++-----
+ docs/docs/upgrades.md             |  6 ++++++
+ schema/2/ifstate.conf.schema.json | 10 +++++-----
+ src/libifstate/__init__.py        | 14 ++++++++++----
+ src/libifstate/parser/base.py     |  5 +++--
+ 5 files changed, 32 insertions(+), 16 deletions(-)
+
+diff --git a/docs/docs/defaults.md b/docs/docs/defaults.md
+index 60772fa..57bf256 100644
+--- a/docs/docs/defaults.md
++++ b/docs/docs/defaults.md
+@@ -1,4 +1,4 @@
+-With *defaults* it is possible to configure implicit default settings for interfaces. The `match:` option is a filter to select on which interfaces the defaults should be applied. Only the defaults of the first match are applied. There are several [*clear_…* settings](../schema/{{ ifstate_branch }}/#defaults_items) which allows clearing interface settings blocks (*addresses*, *fdb*, …).
++With *defaults* it is possible to configure implicit default settings for interfaces. The `match:` option is a filter to select on which interfaces the defaults should be applied. The settings of all matching entries are merged: if more than one entry sets the same option, the first one wins, also within `link:` and `ethtool:`. There are several [*clear_…* settings](../schema/{{ ifstate_branch }}/#defaults_items) which allows clearing interface settings blocks (*addresses*, *fdb*, …).
+ 
+ [Schema description](/schema/{{ ifstate_branch }}/#defaults)
+ 
+@@ -9,15 +9,14 @@ parameters:
+     - match:
+         # regex matching on interface name
+         - ifname: '^HA$'
+-      # remove any ip addresses if an interface has no `addresses:` setting
+-      clear_addresses: true
++      # keep any ip addresses if an interface has no `addresses:` setting
++      clear_addresses: false
+       # add some implicit link settings
+       link:
+-        state: down
+         ifalias: ''
+ ```
+ 
+-There is also an implicit builtin `defaults_builtin` setting which clears settings not specified in the `interfaces` settings:
++There is also an implicit builtin `defaults_builtin` setting which clears settings not specified in the `interfaces` settings. It matches every interface and has the lowest precedence, so any matching entry in `defaults` overrides its settings:
+ 
+ ```yaml
+ parameters:
+@@ -39,4 +38,8 @@ parameters:
+     The implicit cleanup since ifstate 2.0 differse from the behavior of ifstate 1.x,
+     where unspecified settings were just ignored.
+ 
++!!! warning "Breaking Change"
++
++    Up to ifstate 2.5 only the first matching entry was applied, so an entry in `defaults` replaced the builtin defaults for the interfaces it matched. See [Upgrades](upgrades.md) for details.
++
+ These built-in entries can be viewed with the `ìfstatecli showall` action.
+diff --git a/docs/docs/upgrades.md b/docs/docs/upgrades.md
+index 4967ed6..541de84 100644
+--- a/docs/docs/upgrades.md
++++ b/docs/docs/upgrades.md
+@@ -1,5 +1,11 @@
+ This site summarizes **breaking changes** you should consider when upgrading between major releases. You should also check the [ChangeLog](../changelog.md) for a complete list of changes.
+ 
++## IfState 2.6
++
++### Merged defaults
++
++Up to IfState 2.5 only the first matching entry of [`parameters.defaults`](defaults.md) was applied, so the builtin defaults were skipped for any interface matching an entry in `defaults`. IfState now merges all matching entries: a setting an entry leaves out is taken from the next matching entry, and finally from the builtin defaults. An entry that relied on leaving out a *clear_…* setting now has to set it to `false`, and the builtin link settings `state: down` and `master: null` now apply unless the interface or an entry sets them.
++
+ ## IfState 2.4
+ 
+ ### ethtool Feature Names
+diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
+index 2dd1e69..f6dbac4 100644
+--- a/schema/2/ifstate.conf.schema.json
++++ b/schema/2/ifstate.conf.schema.json
+@@ -2144,7 +2144,7 @@
+                     "description": "default settings for configured interfaces",
+                     "type": "array",
+                     "items": {
+-                        "description": "first matching entry will be used, settings will be overriden by explicit configured interface settings",
++                        "description": "settings of all matching entries are merged with earlier entries taking precedence over later ones and the builtin defaults, settings will be overridden by explicit configured interface settings",
+                         "type": "object",
+                         "required": [
+                             "match"
+@@ -2180,7 +2180,7 @@
+                             "clear_addresses": {
+                                 "description": "implicit remove all ip addresses",
+                                 "type": "boolean",
+-                                "default": false
++                                "default": true
+                             },
+                             "clear_altnames": {
+                                 "description": "implicit remove all interface alternative names",
+@@ -2190,17 +2190,17 @@
+                             "clear_fdb": {
+                                 "description": "implicit remove all permanent fdb entries",
+                                 "type": "boolean",
+-                                "default": false
++                                "default": true
+                             },
+                             "clear_neighbours": {
+                                 "description": "implicit remove all permanent ip neighbours",
+                                 "type": "boolean",
+-                                "default": false
++                                "default": true
+                             },
+                             "clear_tc": {
+                                 "description": "implicit remove all tc qdiscs",
+                                 "type": "boolean",
+-                                "default": false
++                                "default": true
+                             },
+                             "ethtool": {
+                                 "$ref": "#/$defs/iface-ethtool"
+diff --git a/src/libifstate/__init__.py b/src/libifstate/__init__.py
+index 208a3c8..f5b6880 100644
+--- a/src/libifstate/__init__.py
++++ b/src/libifstate/__init__.py
+@@ -268,7 +268,7 @@ class IfState:
+ 
+             if "alt-names" in ifstate:
+                 alt_names = ifstate["alt-names"]
+-            elif defaults.get("clear_altnames", True):
++            elif defaults.get("clear_altnames", False):
+                 alt_names = []
+             else:
+                 alt_names = None
+@@ -1192,7 +1192,12 @@ class IfState:
+         return {"interfaces": ifs_links, "routing": routing}
+ 
+     def get_defaults(self, **kwargs):
+-        for default in self.defaults:
++        defaults = {}
++
++        # merge in reverse order: earlier entries take precedence, and the
++        # builtin defaults, being the last entries, have the lowest
++        # precedence
++        for default in reversed(self.defaults):
+             for match in default["match"]:
+                 matching = True
+ 
+@@ -1203,9 +1208,10 @@ class IfState:
+                         matching = False
+ 
+                 if matching:
+-                    return default
++                    Parser.merge(defaults, deepcopy(default))
++                    break
+ 
+-        return {}
++        return defaults
+ 
+     def gen_unique_ifname(self):
+         """
+diff --git a/src/libifstate/parser/base.py b/src/libifstate/parser/base.py
+index e6fcc45..3bae4c5 100644
+--- a/src/libifstate/parser/base.py
++++ b/src/libifstate/parser/base.py
+@@ -135,12 +135,13 @@ class Parser(ABC):
+         self.ifstate = {}
+         pass
+ 
+-    def merge(self, a, b):
++    @staticmethod
++    def merge(a, b):
+         if b is not None:
+             for key in b:
+                 if key in a:
+                     if isinstance(a[key], dict) and isinstance(b[key], dict):
+-                        self.merge(a[key], b[key])
++                        Parser.merge(a[key], b[key])
+                     else:
+                         a[key] = b[key]
+                 else:
+-- 
+2.55.0
+

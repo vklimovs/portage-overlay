@@ -1,0 +1,88 @@
+From ce06ba6211bbf057e9ab7e8e8713d9b9df19a97f Mon Sep 17 00:00:00 2001
+From: Vjaceslavs Klimovs <vklimovs@gmail.com>
+Date: Sat, 10 Oct 2026 14:45:13 -0700
+Subject: [PATCH] link: add ignore state to keep the current link state
+
+---
+ docs/docs/interfaces.md           |  2 ++
+ docs/docs/upgrades.md             |  2 +-
+ schema/2/ifstate.conf.schema.json |  5 +++--
+ src/libifstate/link/base.py       | 18 ++++++++++++++++++
+ 4 files changed, 24 insertions(+), 3 deletions(-)
+
+diff --git a/docs/docs/interfaces.md b/docs/docs/interfaces.md
+index 953a398..51fed45 100644
+--- a/docs/docs/interfaces.md
++++ b/docs/docs/interfaces.md
+@@ -33,6 +33,8 @@ The `link` setting defines the type and states of the interfaces. In contrast to
+ 
+ These parameters cannot be changed by the running operating system and are therefore reliable identifiers.
+ 
++The `state` of an interface is either `up` or `down`, or `ignore` to keep its current state. Interfaces created by *IfState* with `state: ignore` stay down. If an interface has to be taken down to change other settings, to be recreated or to be moved into another network namespace, its previous state is restored. It is still taken down if its master or link interface is missing, or by a [VRRP](vrrp.md) state not matching its *vrrp* settings.
++
+ Other settings available for an inteface:
+ 
+ - [*alt-names*](/schema/{{ ifstate_branch }}/#interfaces_pattern1_alt-names) - interface altnames, unconfigured altnames are removed unless disabled by *clear_altnames* in [defaults](defaults.md)
+diff --git a/docs/docs/upgrades.md b/docs/docs/upgrades.md
+index 541de84..2c2aea5 100644
+--- a/docs/docs/upgrades.md
++++ b/docs/docs/upgrades.md
+@@ -4,7 +4,7 @@ This site summarizes **breaking changes** you should consider when upgrading bet
+ 
+ ### Merged defaults
+ 
+-Up to IfState 2.5 only the first matching entry of [`parameters.defaults`](defaults.md) was applied, so the builtin defaults were skipped for any interface matching an entry in `defaults`. IfState now merges all matching entries: a setting an entry leaves out is taken from the next matching entry, and finally from the builtin defaults. An entry that relied on leaving out a *clear_…* setting now has to set it to `false`, and the builtin link settings `state: down` and `master: null` now apply unless the interface or an entry sets them.
++Up to IfState 2.5 only the first matching entry of [`parameters.defaults`](defaults.md) was applied, so the builtin defaults were skipped for any interface matching an entry in `defaults`. IfState now merges all matching entries: a setting an entry leaves out is taken from the next matching entry, and finally from the builtin defaults. An entry that relied on leaving out a *clear_…* setting now has to set it to `false`, and the builtin link settings `state: down` and `master: null` now apply unless the interface or an entry sets them. To keep IfState from changing the state of an interface, set its `state` to `ignore`, either at the interface or in a `defaults` entry.
+ 
+ ## IfState 2.4
+ 
+diff --git a/schema/2/ifstate.conf.schema.json b/schema/2/ifstate.conf.schema.json
+index f6dbac4..9888a0d 100644
+--- a/schema/2/ifstate.conf.schema.json
++++ b/schema/2/ifstate.conf.schema.json
+@@ -1129,10 +1129,11 @@
+         },
+         "iface-link_state": {
+             "type": "string",
+-            "description": "set device state",
++            "description": "set device state, `ignore` keeps the current state (created devices stay down)",
+             "enum": [
+                 "up",
+-                "down"
++                "down",
++                "ignore"
+             ]
+         },
+         "iface-link_txqlen": {
+diff --git a/src/libifstate/link/base.py b/src/libifstate/link/base.py
+index a1d86a8..7d33c41 100644
+--- a/src/libifstate/link/base.py
++++ b/src/libifstate/link/base.py
+@@ -735,6 +735,24 @@ class Link(ABC):
+         # get interface from registry
+         item = self.search_link_registry()
+ 
++        # keep the current state if the state should be ignored, this needs
++        # to be done before the link might be moved or recreated (which takes
++        # it down) - a created link stays down
++        if self.settings.get("state") == "ignore":
++            link = None if item is None else item.netns.ipr.get_link(item.index)
++            if link is None:
++                del self.settings["state"]
++            else:
++                self.settings["state"] = link["state"]
++                logger.debug(
++                    "ignoring state, keeping it %s",
++                    link["state"],
++                    extra={
++                        "iface": self.settings["ifname"],
++                        "netns": self.netns,
++                    },
++                )
++
+         # set default L2 address
+         if "address" not in self.settings and self.has_link_address_default():
+             set_address = True
+-- 
+2.55.0
+

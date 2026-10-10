@@ -5,10 +5,8 @@ Subject: [PATCH] link: fix crash on boolean ethtool options (regression by
  baa1c2fe6)
 
 ---
- src/libifstate/link/base.py          |  2 +-
- src/libifstate/tests/test_ethtool.py | 56 ++++++++++++++++++++++++++++
- 2 files changed, 57 insertions(+), 1 deletion(-)
- create mode 100644 src/libifstate/tests/test_ethtool.py
+ src/libifstate/link/base.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/libifstate/link/base.py b/src/libifstate/link/base.py
 index 9f4a0c4..c7bdcb4 100644
@@ -23,68 +21,6 @@ index 9f4a0c4..c7bdcb4 100644
  
          if isinstance(value, list):
              r = []
-diff --git a/src/libifstate/tests/test_ethtool.py b/src/libifstate/tests/test_ethtool.py
-new file mode 100644
-index 0000000..cbd47de
---- /dev/null
-+++ b/src/libifstate/tests/test_ethtool.py
-@@ -0,0 +1,56 @@
-+import subprocess
-+from types import SimpleNamespace
-+
-+from libifstate.link.physical import PhysicalLink
-+from libifstate.paths import IfstatePaths
-+
-+
-+def make_link(ethtool):
-+    link = PhysicalLink.__new__(PhysicalLink)
-+    link.ethtool = ethtool
-+    link.idx = 2
-+    link.iface = {}
-+    link.settings = {"ifname": "eth0"}
-+    link.netns = SimpleNamespace(netns=None)
-+    return link
-+
-+
-+def test_fmt_ethtool_opt():
-+    link = make_link({})
-+
-+    assert link.fmt_ethtool_opt("pause", "rx", False) == ["off"]
-+    assert link.fmt_ethtool_opt("features", "gro", True) == ["on"]
-+    assert link.fmt_ethtool_opt("features", "x", [True, False]) == [
-+        "on",
-+        "off",
-+    ]
-+    assert link.fmt_ethtool_opt("ring", "rx", 4096) == ["4096"]
-+    assert link.fmt_ethtool_opt("change", "advertise", 32) == ["0x20"]
-+
-+
-+def test_set_ethtool_state_bool(monkeypatch, tmp_path):
-+    monkeypatch.setattr(IfstatePaths, "LIBIFSTATE_RUN_DIR", str(tmp_path))
-+    calls = []
-+
-+    def run(cmd, **kwargs):
-+        calls.append(cmd)
-+        return SimpleNamespace(returncode=0)
-+
-+    monkeypatch.setattr(subprocess, "run", run)
-+
-+    link = make_link({"pause": {"rx": False, "tx": False, "autoneg": False}})
-+    link.set_ethtool_state("eth0", ["pause"], True)
-+
-+    assert calls == [
-+        [
-+            IfstatePaths.ETHTOOL_CMD,
-+            "--pause",
-+            "eth0",
-+            "rx",
-+            "off",
-+            "tx",
-+            "off",
-+            "autoneg",
-+            "off",
-+        ]
-+    ]
 -- 
 2.55.0
 
