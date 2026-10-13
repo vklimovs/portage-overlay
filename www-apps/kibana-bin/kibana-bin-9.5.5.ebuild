@@ -28,6 +28,7 @@ LICENSE="0BSD Apache-2.0 Apache-2.0-with-LLVM-exceptions Base64 BlueOak-1.0.0
 	Unicode-3.0 Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB"
 SLOT="0"
 KEYWORDS="-* ~amd64"
+RESTRICT="strip"
 
 # Kibana refuses to start on any other Node.js version.
 RDEPEND="
