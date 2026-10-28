@@ -5,7 +5,7 @@ EAPI=8
 
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/elastic.asc
 
-inherit systemd verify-sig
+inherit systemd tmpfiles verify-sig
 
 DESCRIPTION="Free and Open, Distributed, RESTful Search Engine"
 HOMEPAGE="https://www.elastic.co/elasticsearch/"
@@ -85,6 +85,7 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_install_serviced "${FILESDIR}"/${PN}.service.conf
+	newtmpfiles "${FILESDIR}"/${PN}.tmpfiles ${PN}.conf
 
 	diropts -o ${PN} -g ${PN} -m 0750
 	keepdir /var/{lib,log}/${PN}
@@ -97,6 +98,8 @@ pkg_postinst() {
 	# Was the service user's home before acct-user/elasticsearch-0-r4, and
 	# merging does not reset ownership of an existing directory.
 	chown root:root "${EROOT}"/usr/share/${PN} || die
+
+	tmpfiles_process ${PN}.conf
 
 	if [[ -z ${REPLACING_VERSIONS} ]]; then
 		elog "Security is enabled by default. To generate TLS certificates and a"

@@ -47,7 +47,6 @@ start_pre() {
 		sysctl -q -w vm.max_map_count="${MAX_MAP_COUNT}"
 	fi
 
-	checkpath -d -o "${ES_USER}:${ES_GROUP}" -m750 /run/elasticsearch
 	checkpath -d -o "${ES_USER}:${ES_GROUP}" -m750 "${ES_BASE_PATH}"
 	checkpath -d -o "${ES_USER}:${ES_GROUP}" -m750 "${LOG_DIR}"
 
