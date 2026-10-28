@@ -30,14 +30,15 @@ SLOT="0"
 KEYWORDS="-* ~amd64"
 RESTRICT="strip"
 
-# Kibana refuses to start on any other Node.js version.
+# The launcher version check is disabled below, so this dep is the only guard.
+# ::gentoo does not always carry the exact nodejs version upstream pins.
 RDEPEND="
 	acct-group/kibana
 	acct-user/kibana
 	dev-libs/expat
 	dev-libs/nspr
 	dev-libs/nss
-	~net-libs/nodejs-24.21.0[inspector,ssl]
+	~net-libs/nodejs-24.22.1[inspector,ssl]
 "
 BDEPEND="
 	acct-group/kibana
@@ -55,7 +56,10 @@ src_prepare() {
 	local script
 	for script in bin/*; do
 		grep -q '^NODE="' "${script}" || die
-		sed -i "s|^NODE=.*|NODE=\"${EPREFIX}/usr/bin/node\"|" "${script}" || die
+		sed -i \
+			-e "s|^NODE=.*|NODE=\"${EPREFIX}/usr/bin/node\"|" \
+			-e '/^NODE="/a export UNSAFE_DISABLE_NODE_VERSION_VALIDATION=1' \
+			"${script}" || die
 	done
 }
 
