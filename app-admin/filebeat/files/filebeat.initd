@@ -21,7 +21,7 @@ retry="TERM/5/KILL/5"
 umask=027
 
 depend() {
-	use net
+	use net dns
 	after elasticsearch
 }
 
