@@ -14,7 +14,7 @@ pidfile="/run/${RC_SVCNAME}.pid"
 retry="SIGTERM/30/SIGKILL/5"
 
 depend() {
-	use net logger
+	use net dns logger
 	after clock
 }
 
