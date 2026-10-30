@@ -1,4 +1,3 @@
 # shellcheck shell=sh disable=SC2034
-# Arguments for ipmi_exporter, see `ipmi_exporter --help`. FreeIPMI's tools
-# are not on the service PATH, so the exporter is told where they are.
-command_args="--freeipmi.path=/usr/bin"
+# Arguments for ipmi_exporter, see `ipmi_exporter --help`.
+command_args=""
