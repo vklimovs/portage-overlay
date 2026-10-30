@@ -58,10 +58,4 @@ src_install() {
 
 	newinitd "${FILESDIR}/${PN}.initd" "${PN}"
 	newconfd "${FILESDIR}/${PN}.confd" "${PN}"
-
-	insinto /etc/logrotate.d
-	newins "${FILESDIR}/${PN}.logrotate" "${PN}"
-
-	keepdir /var/log/${PN}
-	fowners ${PN}:${PN} /var/log/${PN}
 }
