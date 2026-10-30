@@ -9,12 +9,10 @@ command="/usr/bin/ipmi_exporter"
 command_background="true"
 command_user="ipmi_exporter:ipmi_exporter"
 pidfile="/run/${RC_SVCNAME}.pid"
-# Backgrounding would otherwise discard every scrape failure.
-# Same file for both: the exporter switches its logger to stderr right after
-# flag parsing, so stdout stays empty and the two never interleave.
-output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
-error_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+# logger truncates a line at 1024 bytes without -S, silently.
+error_logger="/usr/bin/logger -S 65536 -t ${RC_SVCNAME} -p daemon.err"
+output_logger="/usr/bin/logger -S 65536 -t ${RC_SVCNAME} -p daemon.info"
 
 depend() {
-	use net
+	use net logger
 }
