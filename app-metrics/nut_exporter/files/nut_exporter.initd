@@ -14,6 +14,6 @@ error_logger="/usr/bin/logger -S 65536 -t ${RC_SVCNAME} -p daemon.err"
 output_logger="/usr/bin/logger -S 65536 -t ${RC_SVCNAME} -p daemon.info"
 
 depend() {
-	use net logger
+	use logger
 	after upsd
 }
