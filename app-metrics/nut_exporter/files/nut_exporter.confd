@@ -1,3 +1,4 @@
+# shellcheck shell=sh disable=SC2034
 # Arguments for nut_exporter, see `nut_exporter --help`. It listens on every
 # interface, and UPS metrics live at /ups_metrics rather than /metrics.
 command_args=""
