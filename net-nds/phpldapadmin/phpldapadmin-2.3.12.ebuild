@@ -51,8 +51,8 @@ src_install() {
 
 	insinto "${PLA_HOME}"
 	doins -r app bootstrap config database public resources routes \
-		storage templates
-	doins artisan composer.json composer.lock
+		storage templates vendor
+	doins VERSION artisan composer.json composer.lock
 
 	# Rename the example env file to the live config
 	newins .env.example .env
