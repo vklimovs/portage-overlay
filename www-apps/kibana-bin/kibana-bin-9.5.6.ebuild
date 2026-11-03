@@ -53,8 +53,9 @@ src_prepare() {
 
 	rm -r data node plugins || die
 
+	# bin/kibana_env is sourced by the launchers, not one itself.
 	local script
-	for script in bin/*; do
+	for script in bin/kibana bin/kibana-*; do
 		grep -q '^NODE="' "${script}" || die
 		sed -i \
 			-e "s|^NODE=.*|NODE=\"${EPREFIX}/usr/bin/node\"|" \
