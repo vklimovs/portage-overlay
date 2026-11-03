@@ -30,18 +30,6 @@ RDEPEND="
 	')
 "
 
-PATCHES=(
-	"${FILESDIR}/${P}-ethtool-bool-options.patch"
-	"${FILESDIR}/${P}-tun-default-mac.patch"
-	"${FILESDIR}/${P}-altnames-del-crash.patch"
-	"${FILESDIR}/${P}-address-dynamic-renew.patch"
-	"${FILESDIR}/${P}-link-address-missing-link.patch"
-	"${FILESDIR}/${P}-neighbour-state-filter.patch"
-	"${FILESDIR}/${P}-clear-altnames.patch"
-	"${FILESDIR}/${P}-merge-defaults.patch"
-	"${FILESDIR}/${P}-link-state-ignore.patch"
-)
-
 DOCS=( README.md CHANGELOG.md )
 
 EPYTEST_PLUGINS=()
