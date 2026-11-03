@@ -21,7 +21,10 @@ SRC_URI="https://github.com/vklimovs/portage-overlay/releases/download/${P}-vend
 EGIT_REPO_URI="https://github.com/${PN}/${PN}"
 EGIT_COMMIT="472b418967419c6124edd91dc6310a3bec091dae"
 
+# composer itself
 LICENSE="MIT"
+# Vendored package licenses
+LICENSE+=" BSD MPL-2.0"
 SLOT="0"
 KEYWORDS=""
 IUSE="doc"
