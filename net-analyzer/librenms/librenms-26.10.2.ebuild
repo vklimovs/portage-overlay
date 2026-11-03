@@ -125,6 +125,11 @@ src_install() {
 }
 
 pkg_postinst() {
+	# Upstream's composer post-autoload-dump hook clears these, and the vendor
+	# tarball's --no-scripts skips it. Stale copies name removed providers.
+	local bootstrap="${EROOT}${LIBRENMS_CACHE}/bootstrap"
+	rm -f "${bootstrap}"/{config,packages,services}.php || die
+
 	elog
 	elog "Configure your database (MariaDB recommended) before first use:"
 	elog "  CREATE DATABASE librenms"
