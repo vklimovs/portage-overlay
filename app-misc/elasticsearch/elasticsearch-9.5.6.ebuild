@@ -42,7 +42,7 @@ QA_PREBUILT="
 	usr/share/${PN}/modules/x-pack-ml/platform/linux-x86_64/*
 "
 
-PATCHES=( "${FILESDIR}"/${P}-java-home.patch )
+PATCHES=( "${FILESDIR}"/${PN}-9.5.5-java-home.patch )
 
 src_prepare() {
 	default
