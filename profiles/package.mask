@@ -11,5 +11,5 @@
 # stays the default until 9.1 ships.
 >=net-analyzer/zeek-9.0
 
-# zeek 9.0.x's CAF pin. Unmasks with net-analyzer/zeek-9.0.0.
+# zeek 9.0.x's CAF pin. Unmasks with net-analyzer/zeek-9.0.
 >=dev-libs/zeek-caf-0.18.5_p20260714
