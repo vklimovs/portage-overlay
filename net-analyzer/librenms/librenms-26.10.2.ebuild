@@ -73,7 +73,7 @@ src_install() {
 	# No -f: an entry upstream has dropped must fail the build rather than be
 	# skipped, since the file it was replaced by would otherwise ship silently
 	# (26.8.2 swapped .php-cs-fixer.php for pint.json this way).
-	rm .editorconfig .git-blame-ignore-revs .styleci.yml \
+	rm .editorconfig .git-blame-ignore-revs \
 		LICENSE.txt mkdocs.yml package.json package-lock.json phpunit.xml \
 		phpstan-baseline-deprecated.neon phpstan-deprecated.neon \
 		phpstan-legacy.neon phpstan.neon pint.json \
