@@ -37,7 +37,7 @@ RDEPEND="
 	${DEPEND}
 	sys-apps/util-linux[pam]
 "
-BDEPEND=">=dev-lang/go-1.26.5"
+BDEPEND=">=dev-lang/go-1.26.10"
 
 DOCS=( README.md
 	docs/{collectors,configuration,formats,loggers,pipelines,transformers}.md
