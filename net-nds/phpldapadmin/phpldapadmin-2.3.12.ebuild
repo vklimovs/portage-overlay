@@ -25,7 +25,10 @@ SRC_URI="https://github.com/leenooks/${MY_PN}/archive/${PV}.tar.gz -> ${P}.tar.g
 
 S="${WORKDIR}/${MY_PN}-${PV}"
 
+# phpLDAPadmin itself
 LICENSE="GPL-2"
+# Vendored package licenses
+LICENSE+=" Apache-2.0 BSD CC-BY-4.0 MIT OFL-1.1"
 SLOT="2.3.12"
 KEYWORDS="~amd64"
 
