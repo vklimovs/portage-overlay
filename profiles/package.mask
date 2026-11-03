@@ -7,7 +7,7 @@
 -acct-user/kibana
 -www-apps/kibana-bin
 
-# Upstream keeps the old LTS alive one feature release past a new one, so 8.0.10
+# Upstream keeps the old LTS alive one feature release past a new one, so 8.0.x
 # stays the default until 9.1 ships.
 >=net-analyzer/zeek-9.0
 
