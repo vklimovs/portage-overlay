@@ -8,7 +8,7 @@ inherit acct-user
 DESCRIPTION="user for step-ca"
 ACCT_USER_ID=-1
 ACCT_USER_GROUPS=( step )
-# Upstream's STEPPATH for the service; `step ca init` lays the CA out here.
+# The STEPPATH that upstream's step-ca.service and the OpenRC conf.d both set.
 ACCT_USER_HOME=/etc/step-ca
 ACCT_USER_HOME_OWNER=step:step
 
