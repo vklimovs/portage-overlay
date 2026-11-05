@@ -38,7 +38,8 @@ BDEPEND=">=dev-lang/go-1.26.0"
 src_compile() {
 	# Unset, BuildTime makes `step version` print the current time.
 	ego build -trimpath \
-		-ldflags "-X main.Version=${PV} -X main.BuildTime=${PV##*_p}" ./cmd/step
+		-ldflags "-X main.Version=${PV} -X main.BuildTime=${PV##*_p}" \
+		./cmd/step
 
 	if ! tc-is-cross-compiler; then
 		local sh
