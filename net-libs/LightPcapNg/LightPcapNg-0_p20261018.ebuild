@@ -5,7 +5,7 @@ EAPI=8
 
 inherit cmake
 
-COMMIT="b36c701a2b4f48714e9c23a993c2758717c84123"
+COMMIT="42702392d2c0b3e03efcfbe6095816137cc2a89a"
 
 DESCRIPTION="Light PcapNg read, write and manipulation API"
 HOMEPAGE="https://github.com/Technica-Engineering/LightPcapNg"
@@ -16,18 +16,21 @@ S="${WORKDIR}/LightPcapNg-${COMMIT}"
 LICENSE="MIT"
 SLOT="0/0"
 KEYWORDS="~amd64"
+IUSE="test"
+RESTRICT="!test? ( test )"
 
 src_prepare() {
-	sed -i '/^add_library(light_pcapng/a set_target_properties(light_pcapng PROPERTIES SOVERSION 0)' \
+	local soversion='set_target_properties(light_pcapng PROPERTIES SOVERSION 0)'
+	sed -i "/^add_library(light_pcapng/a ${soversion}" CMakeLists.txt || die
+	sed -i '/target_compile_options(light_pcapng PRIVATE -Werror)/d' \
 		CMakeLists.txt || die
-	sed -i '/target_compile_options(light_pcapng PRIVATE -Werror)/d' CMakeLists.txt || die
 	cmake_src_prepare
 }
 
 src_configure() {
 	local mycmakeargs=(
 		-DBUILD_SHARED_LIBS=ON
-		-DBUILD_TESTING=OFF
+		-DBUILD_TESTING=$(usex test)
 		-DCMAKE_INSTALL_LIBDIR="$(get_libdir)"
 		-DLIGHT_USE_ZLIB=OFF
 		-DLIGHT_USE_ZSTD=OFF
