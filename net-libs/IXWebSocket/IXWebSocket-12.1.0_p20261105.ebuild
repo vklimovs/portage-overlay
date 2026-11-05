@@ -9,7 +9,7 @@ inherit cmake
 # on its only accept thread with no deadline, so one TCP peer that never sends a
 # ClientHello locks everyone out of net-analyzer/zeek's TLS WebSocket API.
 # ${PV}'s _pYYYYMMDD is this commit's date.
-COMMIT="7eea66b15925f98f524b48a0939356a3e94b8784"
+COMMIT="4ce4f871a9ae324dfbe9b84cbf59f9ba34510ab2"
 
 DESCRIPTION="Lightweight C++ WebSocket and HTTP client and server library"
 HOMEPAGE="https://github.com/machinezone/IXWebSocket"
@@ -21,7 +21,7 @@ LICENSE="BSD"
 # Upstream breaks ABI under the libixwebsocket.so.12 SONAME (12.1.0 made
 # Socket::isReadyToWrite() virtual; later commits grow ix::WebSocket), so the
 # subslot is ${PV} and every bump rebuilds consumers.
-SLOT="0/12.1.0_p20261102"
+SLOT="0/12.1.0_p20261105"
 KEYWORDS="~amd64"
 
 RDEPEND="
