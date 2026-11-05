@@ -56,7 +56,9 @@ src_compile() {
 }
 
 src_test() {
-	# Fetches https://smallstep.com.
+	# Upstream also tests with -tags tpmsimulator, but go mod vendor leaves
+	# out the ms-tpm-20-ref C sources go-tpm-tools' simulator compiles.
+	# The skipped test fetches https://smallstep.com.
 	ego test -skip 'Test_newHTTPClient/SystemCertPool' ./...
 }
 
