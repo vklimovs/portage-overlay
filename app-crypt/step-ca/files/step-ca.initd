@@ -1,0 +1,16 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+# shellcheck shell=sh disable=SC2034
+
+command="/usr/bin/step-ca"
+command_background="true"
+command_user="step:step"
+pidfile="/run/${RC_SVCNAME}.pid"
+capabilities="^cap_net_bind_service"
+error_logger="/usr/bin/logger -S 65536 -t ${RC_SVCNAME} -p daemon.err"
+output_logger="/usr/bin/logger -S 65536 -t ${RC_SVCNAME} -p daemon.info"
+
+depend() {
+	use logger
+}

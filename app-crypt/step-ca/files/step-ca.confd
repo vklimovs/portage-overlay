@@ -1,0 +1,4 @@
+# shellcheck shell=sh disable=SC2034
+export STEPPATH="/etc/step-ca"
+command_args="${STEPPATH}/config/ca.json \
+	--password-file ${STEPPATH}/password.txt"

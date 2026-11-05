@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>vklimovs@gmail.com</email>
+		<name>Vjaceslavs Klimovs</name>
+	</maintainer>
+	<use>
+		<flag name="pcsc-lite">Hold CA keys on a YubiKey PIV applet through <pkg>sys-apps/pcsc-lite</pkg></flag>
+		<flag name="pkcs11">Hold CA keys on PKCS#11 tokens such as HSMs</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">smallstep/certificates</remote-id>
+	</upstream>
+</pkgmetadata>
