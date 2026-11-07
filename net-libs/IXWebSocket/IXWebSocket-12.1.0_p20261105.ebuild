@@ -9,7 +9,7 @@ inherit cmake
 # on its only accept thread with no deadline, so one TCP peer that never sends a
 # ClientHello locks everyone out of net-analyzer/zeek's TLS WebSocket API.
 # ${PV}'s _pYYYYMMDD is this commit's date.
-COMMIT="4ce4f871a9ae324dfbe9b84cbf59f9ba34510ab2"
+COMMIT="ac84ac854e093c766353a14e36b9543e9ff1840b"
 
 DESCRIPTION="Lightweight C++ WebSocket and HTTP client and server library"
 HOMEPAGE="https://github.com/machinezone/IXWebSocket"
