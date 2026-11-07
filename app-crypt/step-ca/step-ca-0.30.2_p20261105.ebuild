@@ -6,7 +6,7 @@ EAPI=8
 inherit go-module systemd
 
 # Upstream tags rarely; ${PV}'s _pYYYYMMDD is this commit's date.
-COMMIT="9d1c281d8d7e5473ae5120c0282978778d8a865e"
+COMMIT="6d5a251fbe010383c93ead1ab451a329986b80ca"
 
 DESCRIPTION="Private certificate authority and ACME server"
 HOMEPAGE="https://github.com/smallstep/certificates"
